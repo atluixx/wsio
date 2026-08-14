@@ -4,8 +4,8 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: "/api/:path*",
-        destination: "https://wsio-2p7e5pv3q-atluixx.vercel.app/api/:path*",
+        source: "/api/v1/:path*",
+        destination: "/api/main.go",
       },
     ];
   },

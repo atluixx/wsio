@@ -1,10 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { createShortLink, deleteShortLink, LinkItem } from "@/lib/api";
-import { Link2, Copy, Check, ExternalLink, Trash2, ArrowRight, ShieldAlert, Sparkles } from "lucide-react";
+import {
+  getGuestLinks,
+  saveGuestLink,
+  removeGuestLink,
+  generateGuestHash,
+  normalizeUrl,
+} from "@/lib/guestLinks";
+import {
+  Link2,
+  Copy,
+  Check,
+  ExternalLink,
+  Trash2,
+  ArrowRight,
+  ShieldAlert,
+  Sparkles,
+  UserCheck,
+  UserX,
+} from "lucide-react";
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
@@ -15,20 +33,47 @@ export default function Home() {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [recentLinks, setRecentLinks] = useState<LinkItem[]>([]);
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setRecentLinks(getGuestLinks());
+    }
+  }, [isAuthenticated]);
+
   const handleShorten = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputUrl.trim()) return;
-
-    if (!isAuthenticated) {
-      setErrorMessage("Please log in or register to create and store shortened links.");
-      return;
-    }
 
     setLoading(true);
     setErrorMessage("");
     setCreatedLink(null);
 
-    const res = await createShortLink(inputUrl.trim());
+    const formattedUrl = normalizeUrl(inputUrl);
+
+    if (!isAuthenticated) {
+      // Guest link creation mode
+      setTimeout(() => {
+        const code = generateGuestHash(formattedUrl);
+        const newGuestLink: LinkItem = {
+          id: "guest_" + Date.now(),
+          code,
+          url: formattedUrl,
+          createdAt: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        };
+
+        const updated = saveGuestLink(newGuestLink);
+        setCreatedLink(newGuestLink);
+        setRecentLinks(updated);
+        setInputUrl("");
+        setLoading(false);
+      }, 250);
+      return;
+    }
+
+    // Authenticated API mode
+    const res = await createShortLink(formattedUrl);
     setLoading(false);
 
     if (res.error) {
@@ -41,7 +86,10 @@ export default function Home() {
         id: res.id || Math.random().toString(),
         code: res.code,
         url: res.url,
-        createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        createdAt: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       };
       setCreatedLink(newLink);
       setRecentLinks((prev) => [newLink, ...prev]);
@@ -56,6 +104,15 @@ export default function Home() {
   };
 
   const handleDelete = async (code: string) => {
+    if (!isAuthenticated) {
+      const updated = removeGuestLink(code);
+      setRecentLinks(updated);
+      if (createdLink?.code === code) {
+        setCreatedLink(null);
+      }
+      return;
+    }
+
     const res = await deleteShortLink(code);
     if (res.success) {
       setRecentLinks((prev) => prev.filter((l) => l.code !== code));
@@ -118,29 +175,33 @@ export default function Home() {
           </button>
         </form>
 
+        {/* Guest Mode Status Banner */}
+        <div className="mt-3 flex items-center justify-between font-mono text-xs text-zinc-500 px-1">
+          <div className="flex items-center gap-1.5">
+            {isAuthenticated ? (
+              <>
+                <UserCheck className="h-3.5 w-3.5 text-white" />
+                <span>Account mode ({user?.email})</span>
+              </>
+            ) : (
+              <>
+                <UserX className="h-3.5 w-3.5 text-zinc-400" />
+                <span>Guest mode (links saved in browser)</span>
+              </>
+            )}
+          </div>
+          {!isAuthenticated && (
+            <Link href="/login" className="text-zinc-400 hover:text-white underline">
+              Log in to sync
+            </Link>
+          )}
+        </div>
+
         {/* Error notification */}
         {errorMessage && (
-          <div className="mt-4 flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 p-3.5 text-xs text-zinc-300">
-            <div className="flex items-center gap-2.5">
-              <ShieldAlert className="h-4 w-4 text-zinc-400" />
-              <span>{errorMessage}</span>
-            </div>
-            {!isAuthenticated && (
-              <div className="flex items-center gap-2">
-                <Link
-                  href="/login"
-                  className="rounded border border-zinc-700 bg-zinc-900 px-2.5 py-1 font-mono text-xs text-white hover:bg-zinc-800"
-                >
-                  Log in
-                </Link>
-                <Link
-                  href="/register"
-                  className="rounded bg-white px-2.5 py-1 font-mono text-xs font-semibold text-black hover:bg-zinc-200"
-                >
-                  Register
-                </Link>
-              </div>
-            )}
+          <div className="mt-4 flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950 p-3.5 font-mono text-xs text-zinc-300">
+            <ShieldAlert className="h-4 w-4 text-zinc-400 shrink-0" />
+            <span>{errorMessage}</span>
           </div>
         )}
 
@@ -150,7 +211,7 @@ export default function Home() {
             <div className="mb-2 flex items-center justify-between font-mono text-xs text-zinc-400">
               <span className="flex items-center gap-1.5 text-white font-semibold">
                 <Sparkles className="h-3.5 w-3.5" />
-                Short Link Created
+                Short Link Created {!isAuthenticated && "(Guest)"}
               </span>
               <span>{createdLink.createdAt}</span>
             </div>
@@ -209,7 +270,7 @@ export default function Home() {
             Active Links {recentLinks.length > 0 && `(${recentLinks.length})`}
           </h2>
           <span className="font-mono text-xs text-zinc-500">
-            {isAuthenticated ? `Logged in as ${user?.email}` : "Guest Session"}
+            {isAuthenticated ? `Logged in as ${user?.email}` : "Guest Session (Local Storage)"}
           </span>
         </div>
 
@@ -217,7 +278,7 @@ export default function Home() {
           <div className="rounded-lg border border-dashed border-zinc-800 py-12 text-center">
             <Link2 className="mx-auto mb-3 h-8 w-8 text-zinc-600" />
             <p className="font-mono text-xs text-zinc-500">
-              No links created in this session yet.
+              No links created yet. Enter a URL above to shorten.
             </p>
           </div>
         ) : (

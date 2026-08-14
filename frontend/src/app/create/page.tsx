@@ -1,10 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { createShortLink, LinkItem } from "@/lib/api";
-import { Link2, Copy, Check, ExternalLink, ArrowRight, ShieldAlert, Sparkles, Plus, History } from "lucide-react";
+import {
+  getGuestLinks,
+  saveGuestLink,
+  generateGuestHash,
+  normalizeUrl,
+} from "@/lib/guestLinks";
+import {
+  Link2,
+  Copy,
+  Check,
+  ExternalLink,
+  ArrowRight,
+  ShieldAlert,
+  Sparkles,
+  Plus,
+  History,
+  UserCheck,
+  UserX,
+} from "lucide-react";
 
 export default function CreateLinkPage() {
   const { isAuthenticated, user } = useAuth();
@@ -14,19 +32,43 @@ export default function CreateLinkPage() {
   const [createdLinks, setCreatedLinks] = useState<LinkItem[]>([]);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setCreatedLinks(getGuestLinks());
+    }
+  }, [isAuthenticated]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
 
-    if (!isAuthenticated) {
-      setError("Authentication required to store created links.");
-      return;
-    }
-
     setLoading(true);
     setError("");
 
-    const res = await createShortLink(url.trim());
+    const formattedUrl = normalizeUrl(url);
+
+    if (!isAuthenticated) {
+      setTimeout(() => {
+        const code = generateGuestHash(formattedUrl);
+        const newGuestLink: LinkItem = {
+          id: "guest_" + Date.now(),
+          code,
+          url: formattedUrl,
+          createdAt: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        };
+
+        const updated = saveGuestLink(newGuestLink);
+        setCreatedLinks(updated);
+        setUrl("");
+        setLoading(false);
+      }, 250);
+      return;
+    }
+
+    const res = await createShortLink(formattedUrl);
     setLoading(false);
 
     if (res.error) {
@@ -39,7 +81,10 @@ export default function CreateLinkPage() {
         id: res.id || Math.random().toString(),
         code: res.code,
         url: res.url,
-        createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        createdAt: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       };
       setCreatedLinks((prev) => [newLink, ...prev]);
       setUrl("");
@@ -81,14 +126,6 @@ export default function CreateLinkPage() {
               <ShieldAlert className="h-4 w-4 text-zinc-400 shrink-0" />
               <span>{error}</span>
             </div>
-            {!isAuthenticated && (
-              <Link
-                href="/login"
-                className="rounded bg-white px-3 py-1 font-mono text-xs font-semibold text-black hover:bg-zinc-200"
-              >
-                Log In
-              </Link>
-            )}
           </div>
         )}
 
@@ -113,8 +150,18 @@ export default function CreateLinkPage() {
           </div>
 
           <div className="flex items-center justify-between pt-2">
-            <span className="font-mono text-xs text-zinc-500">
-              {isAuthenticated ? `Session active as ${user?.email}` : "Guest Mode"}
+            <span className="flex items-center gap-1.5 font-mono text-xs text-zinc-500">
+              {isAuthenticated ? (
+                <>
+                  <UserCheck className="h-3.5 w-3.5 text-white" />
+                  <span>Session active as {user?.email}</span>
+                </>
+              ) : (
+                <>
+                  <UserX className="h-3.5 w-3.5 text-zinc-400" />
+                  <span>Guest Mode (Saved in browser)</span>
+                </>
+              )}
             </span>
 
             <button
@@ -141,7 +188,7 @@ export default function CreateLinkPage() {
           <div className="mb-4 flex items-center gap-2">
             <History className="h-4 w-4 text-zinc-400" />
             <h2 className="font-mono text-xs font-semibold uppercase tracking-wider text-white">
-              Generated in this session ({createdLinks.length})
+              Generated Links ({createdLinks.length})
             </h2>
           </div>
 
