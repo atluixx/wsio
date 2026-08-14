@@ -11,6 +11,14 @@ func SetupRoutes(
 	linkHandler *handlers.LinkHandler,
 	userHandler *handlers.UserHandler,
 ) {
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status":  "online",
+			"service": "wsio API engine",
+			"version": "1.0",
+		})
+	})
+
 	base := r.Group("/api/v1")
 
 	auth := base.Group("/auth")
@@ -29,4 +37,6 @@ func SetupRoutes(
 		protected.POST("", linkHandler.NewLink)
 		protected.DELETE("/:code", linkHandler.DeleteLink)
 	}
+
+	r.GET("/:code", linkHandler.RedirectLink)
 }

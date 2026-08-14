@@ -18,8 +18,13 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	router := gin.New()
 	router.Use(gin.Recovery())
 
+	dsn := os.Getenv("DATABASE_DSN")
+	if dsn == "" {
+		dsn = os.Getenv("DATABASE_URL")
+	}
+
 	db, err := gorm.Open(
-		postgres.Open(os.Getenv("DATABASE_URL")),
+		postgres.Open(dsn),
 		&gorm.Config{},
 	)
 
