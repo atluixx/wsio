@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+:root {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #121215;
+  --card-border: #27272a;
+  --muted: #a1a1aa;
+  --muted-dark: #71717a;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  letter-spacing: -0.01em;
+}
+
+/* Minimalist technical grid pattern overlay */
+.bg-grid-pattern {
+  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Monospace font class */
+.font-mono-custom {
+  font-family: var(--font-geist-mono), monospace;
+}
+
+/* Crisp Monochrome Button styles */
+.btn-mono-primary {
+  background-color: #ffffff;
+  color: #000000;
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-mono-primary:hover {
+  background-color: #e4e4e7;
+  transform: translateY(-1px);
+}
+
+.btn-mono-primary:active {
+  transform: translateY(0);
+}
+
+.btn-mono-secondary {
+  background-color: #18181b;
+  color: #fafafa;
+  border: 1px solid #27272a;
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-mono-secondary:hover {
+  background-color: #27272a;
+  border-color: #3f3f46;
+}
+
+/* Monospaced badge pill */
+.mono-badge {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #d4d4d8;
+  text-transform: uppercase;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #09090b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
