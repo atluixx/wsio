@@ -25,6 +25,14 @@ export interface LinkResponse {
   error?: string;
 }
 
+function parseErrorMessage(data: any, fallback: string): string {
+  if (!data) return fallback;
+  if (typeof data.error === "string") return data.error;
+  if (data.error && typeof data.error.message === "string") return data.error.message;
+  if (typeof data.message === "string") return data.message;
+  return fallback;
+}
+
 export async function registerUser(email: string, password: string): Promise<AuthResponse> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
@@ -34,13 +42,13 @@ export async function registerUser(email: string, password: string): Promise<Aut
       body: JSON.stringify({ email, password }),
     });
 
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      return { id: "", email: "", error: data.error || "Registration failed" };
+      return { id: "", email: "", error: parseErrorMessage(data, "Registration failed") };
     }
     return data;
   } catch (err: any) {
-    return { id: "", email: "", error: err.message || "Network error" };
+    return { id: "", email: "", error: String(err?.message || "Network error") };
   }
 }
 
@@ -53,13 +61,13 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
       body: JSON.stringify({ email, password }),
     });
 
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      return { id: "", email: "", error: data.error || "Login failed" };
+      return { id: "", email: "", error: parseErrorMessage(data, "Login failed") };
     }
     return data;
   } catch (err: any) {
-    return { id: "", email: "", error: err.message || "Network error" };
+    return { id: "", email: "", error: String(err?.message || "Network error") };
   }
 }
 
@@ -72,13 +80,13 @@ export async function createShortLink(url: string): Promise<LinkResponse> {
       body: JSON.stringify({ url }),
     });
 
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      return { error: data.error || "Failed to shorten URL" };
+      return { error: parseErrorMessage(data, "Failed to shorten URL") };
     }
     return data;
   } catch (err: any) {
-    return { error: err.message || "Network error" };
+    return { error: String(err?.message || "Network error") };
   }
 }
 
@@ -91,10 +99,10 @@ export async function deleteShortLink(code: string): Promise<{ success: boolean;
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      return { success: false, error: data.error || "Failed to delete link" };
+      return { success: false, error: parseErrorMessage(data, "Failed to delete link") };
     }
     return { success: true };
   } catch (err: any) {
-    return { success: false, error: err.message || "Network error" };
+    return { success: false, error: String(err?.message || "Network error") };
   }
 }

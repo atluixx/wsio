@@ -43,7 +43,7 @@ export default function RegisterPage() {
     setLoading(false);
 
     if (res.error) {
-      setError(res.error);
+      setError(String(res.error));
       return;
     }
 
