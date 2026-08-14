@@ -21,7 +21,7 @@ func main() {
 	router := gin.Default()
 
 	db, err := gorm.Open(
-		postgres.Open(os.Getenv("DATABASE_DSN")),
+		postgres.Open(os.Getenv("DATABASE_URL")),
 		&gorm.Config{},
 	)
 
