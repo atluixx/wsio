@@ -51,23 +51,14 @@ func init() {
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	// Fix Vercel Next.js rewrite path normalization
-	if pathParam := r.URL.Query().Get("path"); pathParam != "" {
-		r.URL.Path = "/api/v1/" + strings.TrimPrefix(pathParam, "/")
-	} else if strings.HasPrefix(r.URL.Path, "/api/main") {
-		r.URL.Path = strings.Replace(r.URL.Path, "/api/main.go", "/api/v1", 1)
-		r.URL.Path = strings.Replace(r.URL.Path, "/api/main", "/api/v1", 1)
-	}
-
+	// CORS Headers
 	origin := r.Header.Get("Origin")
-	if origin != "" {
-		w.Header().Set("Access-Control-Allow-Origin", origin)
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-	} else {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+	if origin == "" {
+		origin = "*"
 	}
-
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie, X-Requested-With, Accept, Origin, X-User-ID, X-API-Key")
 	w.Header().Set("Access-Control-Expose-Headers", "Content-Length, Set-Cookie")
 	w.Header().Set("Vary", "Origin")
@@ -77,10 +68,19 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fix Vercel rewrite URL path normalization
+	path := r.URL.Path
+	if pathParam := r.URL.Query().Get("path"); pathParam != "" {
+		path = "/api/v1/" + strings.TrimPrefix(pathParam, "/")
+	}
+	if !strings.HasPrefix(path, "/api/v1") {
+		path = "/api/v1/" + strings.TrimPrefix(strings.TrimPrefix(path, "/api"), "/")
+	}
+	r.URL.Path = path
+
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Recovery())
-
 
 	userHandler := handlers.NewUserHandler(userRepo)
 	linkHandler := handlers.NewLinkHandler(linkRepo, analyticsRepo)
@@ -93,3 +93,4 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	router.ServeHTTP(w, r)
 }
+
