@@ -1,12 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: #121215;
-  --card-border: #27272a;
+  --background: #08080a;
+  --foreground: #f4f4f5;
+  --card: #0f0f12;
+  --card-border: rgba(255, 255, 255, 0.08);
   --muted: #a1a1aa;
   --muted-dark: #71717a;
+  
+  /* Pastel Accent Tokens */
+  --pastel-red-bg: rgba(253, 235, 236, 0.12);
+  --pastel-red-text: #fca5a5;
+  --pastel-blue-bg: rgba(225, 243, 254, 0.12);
+  --pastel-blue-text: #7dd3fc;
+  --pastel-green-bg: rgba(237, 243, 236, 0.12);
+  --pastel-green-text: #86efac;
+  --pastel-yellow-bg: rgba(251, 243, 219, 0.12);
+  --pastel-yellow-text: #fde047;
 }
 
 body {
@@ -14,71 +24,165 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   min-height: 100vh;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
+  overflow-x: hidden;
 }
 
-/* Minimalist technical grid pattern overlay */
-.bg-grid-pattern {
-  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 32px 32px;
+/* Subtle editorial ambient background pattern */
+.bg-editorial-pattern {
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 60%),
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
 }
 
-/* Monospace font class */
+/* Monospace Utility Font */
 .font-mono-custom {
   font-family: var(--font-geist-mono), monospace;
 }
 
-/* Crisp Monochrome Button styles */
-.btn-mono-primary {
+/* Editorial Serif Utility Font */
+.font-serif-custom {
+  font-family: var(--font-playfair), Georgia, serif;
+}
+
+/* Utilitarian Minimalism Buttons */
+.btn-minimal-primary {
   background-color: #ffffff;
-  color: #000000;
-  font-weight: 500;
-  transition: all 0.15s ease-in-out;
+  color: #09090b;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 0.625rem 1.25rem;
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
 }
 
-.btn-mono-primary:hover {
+.btn-minimal-primary:hover {
   background-color: #e4e4e7;
-  transform: translateY(-1px);
+  transform: scale(0.99);
 }
 
-.btn-mono-primary:active {
-  transform: translateY(0);
+.btn-minimal-primary:active {
+  transform: scale(0.96);
 }
 
-.btn-mono-secondary {
-  background-color: #18181b;
-  color: #fafafa;
-  border: 1px solid #27272a;
-  transition: all 0.15s ease-in-out;
+.btn-minimal-secondary {
+  background-color: #121215;
+  color: #f4f4f5;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.625rem 1.25rem;
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease, border-color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
 }
 
-.btn-mono-secondary:hover {
-  background-color: #27272a;
-  border-color: #3f3f46;
+.btn-minimal-secondary:hover {
+  background-color: #1a1a1e;
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: scale(0.99);
 }
 
-/* Monospaced badge pill */
-.mono-badge {
+.btn-minimal-secondary:active {
+  transform: scale(0.96);
+}
+
+/* Minimalist Bento Cards */
+.bento-card {
+  background-color: #0f0f12;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1.75rem;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.bento-card:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+/* Monospaced Keystroke Micro-UI <kbd> */
+kbd {
   font-family: var(--font-geist-mono), monospace;
   font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  padding: 0.25rem 0.625rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  background-color: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e4e4e7;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Muted Pastel Tag Badges */
+.badge-pastel-green {
+  background-color: var(--pastel-green-bg);
+  color: var(--pastel-green-text);
+  border: 1px solid rgba(74, 222, 128, 0.2);
   border-radius: 9999px;
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #d4d4d8;
+  padding: 0.15rem 0.5rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
-/* Custom scrollbars */
+.badge-pastel-blue {
+  background-color: var(--pastel-blue-bg);
+  color: var(--pastel-blue-text);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 9999px;
+  padding: 0.15rem 0.5rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.badge-pastel-red {
+  background-color: var(--pastel-red-bg);
+  color: var(--pastel-red-text);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  border-radius: 9999px;
+  padding: 0.15rem 0.5rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.badge-pastel-yellow {
+  background-color: var(--pastel-yellow-bg);
+  color: var(--pastel-yellow-text);
+  border: 1px solid rgba(250, 204, 21, 0.2);
+  border-radius: 9999px;
+  padding: 0.15rem 0.5rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #09090b;
+  background: #08080a;
 }
 
 ::-webkit-scrollbar-thumb {
