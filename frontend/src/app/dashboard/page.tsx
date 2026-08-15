@@ -33,6 +33,7 @@ import {
   ArrowRight,
   Key,
   QrCode,
+  RefreshCw,
   ShieldCheck,
   CreditCard,
   Calendar,
@@ -132,14 +133,14 @@ export default function DashboardPage() {
     }
   };
 
-  const fetchAnalytics = async (code: string) => {
-    if (activeAnalytics === code) {
+  const fetchAnalytics = async (code: string, forceRefresh = false) => {
+    if (!forceRefresh && activeAnalytics === code) {
       setActiveAnalytics(null);
       return;
     }
 
     setActiveAnalytics(code);
-    if (analyticsData[code]) return;
+    if (!forceRefresh && analyticsData[code]) return;
 
     setLoadingAnalytics(code);
     try {
@@ -168,10 +169,10 @@ export default function DashboardPage() {
         ...prev,
         [code]: {
           code: code,
-          totalClicks: 1,
-          clicks24h: 1,
-          clicks7d: 1,
-          referrers: { "Direct Traffic": 1 },
+          totalClicks: 0,
+          clicks24h: 0,
+          clicks7d: 0,
+          referrers: { "Direct / Unknown": 0 },
         },
       }));
     } finally {
@@ -477,6 +478,23 @@ export default function DashboardPage() {
                     {/* Expandable Analytics Drawer */}
                     {isAnalyticsOpen && (
                       <div className="border-t border-white/10 pt-4 mt-3 space-y-4 animate-in fade-in-50 duration-200">
+                        <div className="flex items-center justify-between pb-1">
+                          <span className="text-xs font-semibold text-zinc-300 font-mono flex items-center gap-1.5">
+                            <BarChart2 className="h-3.5 w-3.5 text-emerald-400" />
+                            Analytics Summary
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => fetchAnalytics(link.code, true)}
+                            disabled={loadingAnalytics === link.code}
+                            className="h-7 text-[11px] gap-1 px-2.5 text-zinc-400 hover:text-white border border-white/10 hover:bg-zinc-800"
+                          >
+                            <RefreshCw className={`h-3 w-3 ${loadingAnalytics === link.code ? "animate-spin text-emerald-400" : ""}`} />
+                            <span>Refresh</span>
+                          </Button>
+                        </div>
+
                         {loadingAnalytics === link.code ? (
                           <div className="flex items-center gap-2 text-xs text-zinc-400 py-2">
                             <span className="h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
