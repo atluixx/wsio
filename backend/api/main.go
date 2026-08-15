@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	app "github.com/atluixx/wsio/pkg/http"
 	"github.com/atluixx/wsio/pkg/http/handlers"
@@ -13,6 +14,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
+
 
 var (
 	userRepo      repositories.UserRepository
@@ -49,6 +51,14 @@ func init() {
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
+	// Fix Vercel Next.js rewrite path normalization
+	if pathParam := r.URL.Query().Get("path"); pathParam != "" {
+		r.URL.Path = "/api/v1/" + strings.TrimPrefix(pathParam, "/")
+	} else if strings.HasPrefix(r.URL.Path, "/api/main") {
+		r.URL.Path = strings.Replace(r.URL.Path, "/api/main.go", "/api/v1", 1)
+		r.URL.Path = strings.Replace(r.URL.Path, "/api/main", "/api/v1", 1)
+	}
+
 	origin := r.Header.Get("Origin")
 	if origin != "" {
 		w.Header().Set("Access-Control-Allow-Origin", origin)
@@ -70,6 +80,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Recovery())
+
 
 	userHandler := handlers.NewUserHandler(userRepo)
 	linkHandler := handlers.NewLinkHandler(linkRepo, analyticsRepo)
