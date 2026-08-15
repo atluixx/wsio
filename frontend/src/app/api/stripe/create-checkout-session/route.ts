@@ -7,7 +7,9 @@ export async function POST(req: Request) {
     const secretKey = process.env.STRIPE_SECRET_KEY;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://wsio.lol";
 
-    if (secretKey && !secretKey.startsWith("sk_test_mock")) {
+    if (secretKey) {
+
+
       const priceAmount = planType === "diamond" ? "900" : "300";
       const successUrl = `${appUrl}/dashboard?payment=success&plan=${planType}`;
       const cancelUrl = `${appUrl}/pricing?canceled=true`;

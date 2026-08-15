@@ -145,44 +145,26 @@ export async function deleteShortLink(code: string): Promise<{ success: boolean;
 
 export async function createCheckoutSession(planType: string): Promise<{ url?: string; error?: string }> {
   try {
-    const secretKey = process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY;
-    const appUrl = typeof window !== "undefined" ? window.location.origin : "https://wsio.lol";
-    const priceAmount = planType === "diamond" ? "900" : "300";
+    const res = await fetch("/api/stripe/create-checkout-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ planType }),
+    });
 
-    if (secretKey) {
-      const params = new URLSearchParams({
-        mode: "subscription",
-        success_url: `${appUrl}/dashboard?payment=success&plan=${planType}`,
-        cancel_url: `${appUrl}/pricing?canceled=true`,
-        "line_items[0][price_data][currency]": "usd",
-        "line_items[0][price_data][product_data][name]": `wsio ${planType.toUpperCase()} Plan`,
-        "line_items[0][price_data][unit_amount]": priceAmount,
-        "line_items[0][price_data][recurring][interval]": "month",
-        "line_items[0][quantity]": "1",
-      });
-
-      const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${secretKey}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: params.toString(),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.url) {
-        return { url: data.url };
-      } else if (data.error?.message) {
-        return { error: data.error.message };
-      }
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.url) {
+      return { url: data.url };
+    } else if (data.error) {
+      return { error: data.error };
     }
 
+    const appUrl = typeof window !== "undefined" ? window.location.origin : "https://wsio.lol";
     return { url: `${appUrl}/dashboard?payment=success&plan=${planType}` };
   } catch (err: any) {
     return { error: String(err?.message || "Network error") };
   }
 }
+
 
 
 
