@@ -23,11 +23,18 @@ export default function RedirectCodePage() {
     const resolveLink = async () => {
       try {
         const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.wsio.lol";
-        const res = await fetch(`${API_BASE_URL}/api/v1/links/${code}?json=true`, {
+        
+        let res = await fetch(`/api/v1/links/${code}?json=true`, {
           headers: { Accept: "application/json" },
-        });
+        }).catch(() => null);
 
-        if (res.ok) {
+        if (!res || !res.ok) {
+          res = await fetch(`${API_BASE_URL}/api/v1/links/${code}?json=true`, {
+            headers: { Accept: "application/json" },
+          }).catch(() => null);
+        }
+
+        if (res && res.ok) {
           const data = await res.json();
           if (data.url) {
             setStatusMessage(`Redirecting to ${data.url}...`);
@@ -41,7 +48,7 @@ export default function RedirectCodePage() {
 
       // Check localStorage guest links fallback
       const guestLinks = getGuestLinks();
-      const match = guestLinks.find((l) => l.code === code);
+      const match = guestLinks.find((l) => l.code.toLowerCase() === code.toLowerCase());
       if (match && match.url) {
         setStatusMessage(`Redirecting to ${match.url}...`);
         window.location.href = match.url;

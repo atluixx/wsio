@@ -1,5 +1,8 @@
 function getApiBaseUrl(): string {
-  return "";
+  if (typeof window !== "undefined") {
+    return process.env.NEXT_PUBLIC_API_URL || "https://api.wsio.lol";
+  }
+  return process.env.NEXT_PUBLIC_API_URL || "https://api.wsio.lol";
 }
 
 const API_BASE_URL = getApiBaseUrl();
@@ -107,18 +110,31 @@ export async function createShortLink(url: string, customAlias?: string, subdoma
       } catch {}
     }
 
-    const res = await fetch(`${API_BASE_URL}/api/v1/links`, {
+    let res = await fetch(`${API_BASE_URL}/api/v1/links`, {
       method: "POST",
       headers: headers,
       credentials: "include",
       body: JSON.stringify({ url, customAlias, subdomain }),
-    });
+    }).catch(() => null);
 
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      return { error: parseErrorMessage(data, "Failed to shorten URL") };
+    if (!res || !res.ok) {
+      res = await fetch(`/api/v1/links`, {
+        method: "POST",
+        headers: headers,
+        credentials: "include",
+        body: JSON.stringify({ url, customAlias, subdomain }),
+      }).catch(() => null);
     }
-    return data;
+
+    if (res) {
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return { error: parseErrorMessage(data, "Failed to shorten URL") };
+      }
+      return data;
+    }
+
+    return { error: "Network error" };
   } catch (err: any) {
     return { error: String(err?.message || "Network error") };
   }
