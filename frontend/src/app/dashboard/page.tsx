@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { deleteShortLink, LinkItem, fetchApiKeys, createApiKey, deleteApiKey, ApiKeyItem, createCheckoutSession } from "@/lib/api";
+import { deleteShortLink, LinkItem, fetchApiKeys, createApiKey, deleteApiKey, ApiKeyItem, createCheckoutSession, fetchUserLinks, fetchUserSubscription } from "@/lib/api";
 import {
   getGuestLinks,
   removeGuestLink,
@@ -125,9 +125,41 @@ export default function DashboardPage() {
     }
   };
 
-  const loadLinks = () => {
-    const stored = getGuestLinks();
-    setLinks(stored);
+  const loadLinks = async () => {
+    if (isAuthenticated && user?.id) {
+      // Fetch persistent database links
+      const dbLinks = await fetchUserLinks(user.id);
+      // Fetch user-scoped local links
+      const localLinks = getGuestLinks(user.id);
+
+      // Deduplicate by code
+      const codes = new Set(dbLinks.map((l) => l.code));
+      const combined = [...dbLinks];
+      for (const item of localLinks) {
+        if (!codes.has(item.code)) {
+          combined.push(item);
+          codes.add(item.code);
+        }
+      }
+      setLinks(combined);
+    } else {
+      const guestStored = getGuestLinks();
+      setLinks(guestStored);
+    }
+  };
+
+  const loadSubscription = async () => {
+    if (user?.role === "admin") {
+      setCurrentPlan("diamond");
+      return;
+    }
+
+    if (isAuthenticated && user?.id) {
+      const sub = await fetchUserSubscription(user.id);
+      if (sub?.planType) {
+        setCurrentPlan(sub.planType.toLowerCase());
+      }
+    }
   };
 
   const loadApiKeys = async () => {
@@ -140,13 +172,14 @@ export default function DashboardPage() {
   useEffect(() => {
     loadLinks();
     loadApiKeys();
+    loadSubscription();
     window.addEventListener("focus", loadLinks);
     window.addEventListener("storage", loadLinks);
     return () => {
       window.removeEventListener("focus", loadLinks);
       window.removeEventListener("storage", loadLinks);
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.id, user?.role]);
 
   const handleCreateApiKey = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,12 +254,13 @@ export default function DashboardPage() {
   };
 
   const handleDelete = async (code: string) => {
-    const updated = removeGuestLink(code);
+    const updated = removeGuestLink(code, user?.id);
     setLinks(updated);
     setDeleteConfirm(null);
 
     if (isAuthenticated) {
       deleteShortLink(code).catch(() => {});
+      setTimeout(() => loadLinks(), 300);
     }
   };
 

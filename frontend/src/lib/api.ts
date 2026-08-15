@@ -248,4 +248,46 @@ export async function deleteAdminApiKey(id: string): Promise<{ success: boolean;
   }
 }
 
+export async function fetchUserLinks(userId?: string): Promise<LinkItem[]> {
+  try {
+    const headers: Record<string, string> = {};
+    if (userId) headers["X-User-ID"] = userId;
+
+    let res = await fetch(`${API_BASE_URL}/api/v1/links`, {
+      headers,
+      credentials: "include",
+    }).catch(() => null);
+
+    if (!res || !res.ok) {
+      res = await fetch(`/api/v1/links`, {
+        headers,
+        credentials: "include",
+      }).catch(() => null);
+    }
+
+    if (res && res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) return data;
+    }
+  } catch {}
+  return [];
+}
+
+export async function fetchUserSubscription(userId?: string): Promise<{ planType?: string; status?: string } | null> {
+  try {
+    const headers: Record<string, string> = {};
+    if (userId) headers["X-User-ID"] = userId;
+
+    let res = await fetch(`${API_BASE_URL}/api/v1/stripe/subscription`, {
+      headers,
+      credentials: "include",
+    }).catch(() => null);
+
+    if (res && res.ok) {
+      return await res.json();
+    }
+  } catch {}
+  return null;
+}
+
 

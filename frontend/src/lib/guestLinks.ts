@@ -4,34 +4,37 @@ const GUEST_LINKS_KEY = "wsio_guest_links";
 const GUEST_USAGE_KEY = "wsio_guest_usage_track";
 export const GUEST_DAILY_LIMIT = 3;
 
-export function getGuestLinks(): LinkItem[] {
+export function getGuestLinks(userId?: string): LinkItem[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(GUEST_LINKS_KEY);
+    const key = userId ? `wsio_user_links_${userId}` : GUEST_LINKS_KEY;
+    const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : [];
   } catch (e) {
     return [];
   }
 }
 
-export function saveGuestLink(link: LinkItem): LinkItem[] {
-  const current = getGuestLinks();
-  // Avoid duplicates by code
+export function saveGuestLink(link: LinkItem, userId?: string): LinkItem[] {
+  const targetUserId = userId || link.userId;
+  const current = getGuestLinks(targetUserId);
   const filtered = current.filter((l) => l.code !== link.code);
   const updated = [link, ...filtered];
   try {
-    localStorage.setItem(GUEST_LINKS_KEY, JSON.stringify(updated));
+    const key = targetUserId ? `wsio_user_links_${targetUserId}` : GUEST_LINKS_KEY;
+    localStorage.setItem(key, JSON.stringify(updated));
   } catch (e) {
     console.error("Failed to save guest link to localStorage", e);
   }
   return updated;
 }
 
-export function removeGuestLink(code: string): LinkItem[] {
-  const current = getGuestLinks();
+export function removeGuestLink(code: string, userId?: string): LinkItem[] {
+  const current = getGuestLinks(userId);
   const updated = current.filter((l) => l.code !== code);
   try {
-    localStorage.setItem(GUEST_LINKS_KEY, JSON.stringify(updated));
+    const key = userId ? `wsio_user_links_${userId}` : GUEST_LINKS_KEY;
+    localStorage.setItem(key, JSON.stringify(updated));
   } catch (e) {
     console.error("Failed to remove guest link from localStorage", e);
   }
