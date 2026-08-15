@@ -17,7 +17,6 @@ import (
 var (
 	userRepo repositories.UserRepository
 	linkRepo repositories.LinkRepository
-	router   *gin.Engine
 )
 
 func init() {
@@ -33,25 +32,14 @@ func init() {
 			userRepo = repositories.NewUserRepository(db)
 			linkRepo = repositories.NewLinkRepository(db)
 			log.Println("Initialized PostgreSQL database repositories")
-		} else {
-			log.Printf("Failed to connect to PostgreSQL DSN: %v, falling back to memory repository", err)
-			userRepo = repositories.NewInMemoryUserRepository()
-			linkRepo = repositories.NewInMemoryLinkRepository()
+			return
 		}
-	} else {
-		userRepo = repositories.NewInMemoryUserRepository()
-		linkRepo = repositories.NewInMemoryLinkRepository()
-		log.Println("Initialized In-Memory repositories fallback")
+		log.Printf("Failed to connect to PostgreSQL DSN: %v, falling back to memory repository", err)
 	}
 
-	gin.SetMode(gin.ReleaseMode)
-	router = gin.New()
-	router.Use(gin.Recovery())
-
-	userHandler := handlers.NewUserHandler(userRepo)
-	linkHandler := handlers.NewLinkHandler(linkRepo)
-
-	app.SetupRoutes(router, linkHandler, userHandler)
+	userRepo = repositories.NewInMemoryUserRepository()
+	linkRepo = repositories.NewInMemoryLinkRepository()
+	log.Println("Initialized In-Memory repositories fallback")
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
@@ -68,10 +56,19 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Expose-Headers", "Content-Length, Set-Cookie")
 	w.Header().Set("Vary", "Origin")
 
-	if r.Method == "OPTIONS" {
-		w.WriteHeader(http.StatusOK)
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
+
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.New()
+	router.Use(gin.Recovery())
+
+	userHandler := handlers.NewUserHandler(userRepo)
+	linkHandler := handlers.NewLinkHandler(linkRepo)
+
+	app.SetupRoutes(router, linkHandler, userHandler)
 
 	router.ServeHTTP(w, r)
 }
