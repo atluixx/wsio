@@ -17,7 +17,6 @@ import {
   ArrowRight,
   ShieldAlert,
   Sparkles,
-  Plus,
   History,
   LayoutDashboard,
 } from "lucide-react";
@@ -87,17 +86,10 @@ export default function CreateLinkPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16 space-y-10">
+    <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16 space-y-8">
       {/* Header */}
       <ScrollReveal>
-        <div className="border-b border-white/10 pb-6">
-          <div className="mb-2 flex items-center gap-2">
-            <span className="badge-pastel-blue">Hash Generator</span>
-            <span className="font-mono text-xs text-zinc-500 uppercase tracking-widest">
-              Sub-15ms Edge
-            </span>
-          </div>
-
+        <div className="border-b border-white/10 pb-4">
           <h1 className="font-serif text-3xl sm:text-4xl text-white">
             Create Short Link
           </h1>
@@ -108,7 +100,7 @@ export default function CreateLinkPage() {
       </ScrollReveal>
 
       {/* Main Creation Card */}
-      <ScrollReveal delayMs={100}>
+      <ScrollReveal delayMs={50}>
         <div className="rounded-xl border border-white/10 bg-zinc-950 p-6 shadow-2xl backdrop-blur-xl space-y-6">
           {error && (
             <div className="flex items-center gap-2.5 rounded-lg border border-red-500/20 bg-red-950/30 p-4 font-mono text-xs text-red-300">
@@ -161,15 +153,15 @@ export default function CreateLinkPage() {
         </div>
       </ScrollReveal>
 
-      {/* Generated Links History in Create Session */}
+      {/* Generated Links History */}
       {createdLinks.length > 0 && (
-        <ScrollReveal delayMs={150}>
+        <ScrollReveal delayMs={100}>
           <div className="rounded-xl border border-white/10 bg-zinc-950 p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2">
                 <History className="h-4 w-4 text-zinc-400" />
                 <h2 className="font-mono text-xs font-semibold uppercase tracking-wider text-white">
-                  Recently Created Hashes ({createdLinks.length})
+                  Recently Created Links ({createdLinks.length})
                 </h2>
               </div>
               <Link
@@ -177,7 +169,7 @@ export default function CreateLinkPage() {
                 className="flex items-center gap-1.5 font-mono text-xs text-zinc-400 hover:text-white transition-colors"
               >
                 <LayoutDashboard className="h-3.5 w-3.5" />
-                <span>Manage in Dashboard</span>
+                <span>Dashboard</span>
               </Link>
             </div>
 

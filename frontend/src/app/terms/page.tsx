@@ -9,20 +9,16 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24 space-y-12 font-mono">
+    <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24 space-y-10 font-mono">
       <ScrollReveal>
-        <div className="border-b border-white/10 pb-6 space-y-4">
+        <div className="border-b border-white/10 pb-6 space-y-3">
           <Link
             href="/"
             className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            <span>Back to Engine Home</span>
+            <span>Back to Home</span>
           </Link>
-          <div className="flex items-center gap-2">
-            <span className="badge-pastel-blue">Legal Policy</span>
-            <span className="text-xs text-zinc-500">Effective: August 15, 2026</span>
-          </div>
           <h1 className="font-serif text-3xl sm:text-5xl text-white font-normal">
             Terms of Use
           </h1>
@@ -32,8 +28,8 @@ export default function TermsPage() {
         </div>
       </ScrollReveal>
 
-      <ScrollReveal delayMs={100}>
-        <div className="space-y-10 text-xs text-zinc-300 leading-relaxed">
+      <ScrollReveal delayMs={50}>
+        <div className="space-y-8 text-xs text-zinc-300 leading-relaxed">
           {/* Section 1 */}
           <section className="bento-card space-y-3">
             <div className="flex items-center gap-2 text-white font-bold text-sm">
@@ -53,7 +49,7 @@ export default function TermsPage() {
               <h2>2. Permitted Use &amp; Acceptable Behavior</h2>
             </div>
             <p>
-              wsio. is designed for high-performance, legitimate URL shortening and redirection. You strictly agree NOT to use the Service to:
+              wsio. is designed for URL shortening and redirection. You strictly agree NOT to use the Service to:
             </p>
             <ul className="list-disc pl-5 space-y-1 text-zinc-400">
               <li>Distribute malware, phishing links, ransomware, or malicious payloads.</li>
@@ -83,7 +79,7 @@ export default function TermsPage() {
               <h2>4. Disclaimer of Warranties</h2>
             </div>
             <p>
-              The Service is provided on an &ldquo;AS IS&rdquo; and &ldquo;AS AVAILABLE&rdquo; basis. While we strive for 99.9% edge uptime, wsio. makes no warranties regarding uninterrupted availability or total data preservation.
+              The Service is provided on an &ldquo;AS IS&rdquo; and &ldquo;AS AVAILABLE&rdquo; basis. wsio. makes no warranties regarding uninterrupted availability or total data preservation.
             </p>
           </section>
         </div>

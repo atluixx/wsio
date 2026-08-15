@@ -11,13 +11,21 @@ func SetupRoutes(
 	linkHandler *handlers.LinkHandler,
 	userHandler *handlers.UserHandler,
 ) {
+	// Robust CORS middleware supporting wsio.lol, localhost, and all web origins
 	r.Use(func(c *gin.Context) {
 		origin := c.GetHeader("Origin")
+
 		if origin != "" {
 			c.Header("Access-Control-Allow-Origin", origin)
 			c.Header("Access-Control-Allow-Credentials", "true")
 			c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-			c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie")
+			c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie, X-Requested-With, Accept, Origin")
+			c.Header("Access-Control-Expose-Headers", "Content-Length, Set-Cookie")
+			c.Header("Vary", "Origin")
+		} else {
+			c.Header("Access-Control-Allow-Origin", "*")
+			c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie, X-Requested-With, Accept, Origin")
 		}
 
 		if c.Request.Method == "OPTIONS" {

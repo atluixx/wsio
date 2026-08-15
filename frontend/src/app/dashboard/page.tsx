@@ -16,14 +16,9 @@ import {
   Trash2,
   Plus,
   Search,
-  BarChart3,
-  RefreshCw,
   UserCheck,
   UserX,
-  Activity,
-  ArrowRight,
 } from "lucide-react";
-import { FauxWindow } from "@/components/FauxWindow";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
 export default function DashboardPage() {
@@ -74,20 +69,16 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 space-y-12">
+    <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 space-y-10">
       {/* Header & Section Title */}
       <ScrollReveal>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/10 pb-6">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="badge-pastel-blue">Links Control Center</span>
-              <span className="font-mono text-xs text-zinc-500">v1.0.4</span>
-            </div>
             <h1 className="font-serif text-3xl sm:text-4xl text-white">
-              Dedicated Links Dashboard
+              Dashboard
             </h1>
             <p className="font-mono text-xs text-zinc-400 mt-1">
-              Monitor, copy, and inspect activity metrics across your short URLs.
+              Manage your short URLs, copy links, and inspect targets.
             </p>
           </div>
 
@@ -103,32 +94,16 @@ export default function DashboardPage() {
         </div>
       </ScrollReveal>
 
-      {/* Activity Overview Metrics (Bento Cards) */}
-      <ScrollReveal delayMs={100}>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* Overview Cards */}
+      <ScrollReveal delayMs={50}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bento-card">
             <div className="flex items-center justify-between">
               <span className="font-mono text-xs text-zinc-500 uppercase tracking-wider">Total Active Hashes</span>
               <Link2 className="h-4 w-4 text-zinc-400" />
             </div>
-            <div className="mt-3 font-mono text-3xl font-bold text-white">
+            <div className="mt-2 font-mono text-2xl font-bold text-white">
               {links.length}
-            </div>
-            <div className="mt-1 font-mono text-[11px] text-zinc-500">
-              Generated &amp; ready for edge redirection
-            </div>
-          </div>
-
-          <div className="bento-card">
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-xs text-zinc-500 uppercase tracking-wider">Estimated Activity</span>
-              <Activity className="h-4 w-4 text-emerald-400" />
-            </div>
-            <div className="mt-3 font-mono text-3xl font-bold text-white">
-              {links.length * 14 + 3} <span className="text-xs text-zinc-500 font-normal">clicks</span>
-            </div>
-            <div className="mt-1 font-mono text-[11px] text-zinc-500">
-              Avg resolution latency &lt; 14ms
             </div>
           </div>
 
@@ -141,13 +116,11 @@ export default function DashboardPage() {
                 <UserX className="h-4 w-4 text-zinc-400" />
               )}
             </div>
-            <div className="mt-3 font-mono text-sm font-semibold text-white truncate">
-              {isAuthenticated ? user?.email : "Guest Mode (Browser Cache)"}
+            <div className="mt-2 font-mono text-xs font-semibold text-white truncate">
+              {isAuthenticated ? user?.email : "Guest Session"}
             </div>
             <div className="mt-1 font-mono text-[11px] text-zinc-500">
-              {isAuthenticated ? (
-                "Synchronized with cloud store"
-              ) : (
+              {!isAuthenticated && (
                 <Link href="/login" className="text-zinc-300 underline hover:text-white">
                   Log in to sync links across devices
                 </Link>
@@ -158,8 +131,8 @@ export default function DashboardPage() {
       </ScrollReveal>
 
       {/* Links Search & Management Section */}
-      <ScrollReveal delayMs={150}>
-        <div className="space-y-6">
+      <ScrollReveal delayMs={100}>
+        <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="relative flex-1 max-w-md">
               <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
@@ -201,16 +174,15 @@ export default function DashboardPage() {
                   className="rounded-xl border border-white/10 bg-zinc-950 p-4 transition-all hover:border-white/20"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="min-w-0 flex-1 space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className="badge-pastel-green">ACTIVE</span>
-                        <span className="font-mono text-xs text-zinc-500">Hash:</span>
-                        <span className="font-mono text-xs font-bold text-white bg-zinc-900 border border-white/10 px-2 py-0.5 rounded">
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex items-center gap-2 font-mono text-xs text-zinc-400">
+                        <span>Code:</span>
+                        <span className="font-bold text-white bg-zinc-900 border border-white/10 px-2 py-0.5 rounded">
                           {link.code}
                         </span>
                         {link.createdAt && (
-                          <span className="font-mono text-[11px] text-zinc-600 ml-auto sm:ml-0">
-                            Created: {link.createdAt}
+                          <span className="text-[11px] text-zinc-600 ml-auto sm:ml-0">
+                            {link.createdAt}
                           </span>
                         )}
                       </div>
@@ -220,7 +192,7 @@ export default function DashboardPage() {
                       </div>
 
                       <div className="font-mono text-xs text-zinc-500 truncate">
-                        <span className="text-zinc-600">Target:</span> {link.url}
+                        Target: {link.url}
                       </div>
                     </div>
 
@@ -286,41 +258,6 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-      </ScrollReveal>
-
-      {/* Analytics Preview Chrome */}
-      <ScrollReveal delayMs={200}>
-        <FauxWindow title="wsio-dashboard-analytics ~ live-metrics">
-          <div className="space-y-4 font-mono text-xs">
-            <div className="flex items-center justify-between border-b border-white/10 pb-2">
-              <span className="text-white font-semibold">Activity Overview &amp; Resolution Metrics</span>
-              <span className="badge-pastel-blue">Live Telemetry</span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-              <div className="rounded border border-white/5 bg-zinc-900/60 p-3">
-                <div className="text-zinc-500 text-[11px]">Total Hashes</div>
-                <div className="text-lg font-bold text-white mt-0.5">{links.length}</div>
-              </div>
-              <div className="rounded border border-white/5 bg-zinc-900/60 p-3">
-                <div className="text-zinc-500 text-[11px]">Avg Latency</div>
-                <div className="text-lg font-bold text-emerald-400 mt-0.5">12.4ms</div>
-              </div>
-              <div className="rounded border border-white/5 bg-zinc-900/60 p-3">
-                <div className="text-zinc-500 text-[11px]">Edge Nodes</div>
-                <div className="text-lg font-bold text-white mt-0.5">Global</div>
-              </div>
-              <div className="rounded border border-white/5 bg-zinc-900/60 p-3">
-                <div className="text-zinc-500 text-[11px]">Health Status</div>
-                <div className="text-lg font-bold text-emerald-400 mt-0.5">100%</div>
-              </div>
-            </div>
-
-            <div className="text-zinc-500 text-[11px]">
-              &gt; Monospaced hash telemetry auto-refreshes every 30 seconds.
-            </div>
-          </div>
-        </FauxWindow>
       </ScrollReveal>
     </div>
   );
