@@ -29,15 +29,6 @@ func (h *AnalyticsHandler) GetAnalytics(c *gin.Context) {
 		return
 	}
 
-	// Verify link exists
-	link, err := h.linkRepo.FindByCode(code)
-	if err != nil || link == nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": "link not found",
-		})
-		return
-	}
-
 	stats, err := h.analyticsRepo.GetAnalyticsByCode(code)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{

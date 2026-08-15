@@ -144,8 +144,11 @@ export default function DashboardPage() {
     setLoadingAnalytics(code);
     try {
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.wsio.lol";
-      const res = await fetch(`${API_BASE_URL}/api/v1/links/${code}/analytics`);
-      if (res.ok) {
+      let res = await fetch(`/api/v1/links/${code}/analytics`).catch(() => null);
+      if (!res || !res.ok) {
+        res = await fetch(`${API_BASE_URL}/api/v1/links/${code}/analytics`).catch(() => null);
+      }
+      if (res && res.ok) {
         const data = await res.json();
         setAnalyticsData((prev) => ({ ...prev, [code]: data }));
       } else {
@@ -153,10 +156,10 @@ export default function DashboardPage() {
           ...prev,
           [code]: {
             code: code,
-            totalClicks: 1,
-            clicks24h: 1,
-            clicks7d: 1,
-            referrers: { "Direct Traffic": 1 },
+            totalClicks: 0,
+            clicks24h: 0,
+            clicks7d: 0,
+            referrers: { "Direct / Unknown": 0 },
           },
         }));
       }

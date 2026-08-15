@@ -35,7 +35,7 @@ func (r *linkRepository) FindByCode(code string) (*domain.Link, error) {
 	var link domain.Link
 
 	err := r.db.
-		Where("code = ?", code).
+		Where("LOWER(code) = LOWER(?) OR code = ?", code, code).
 		First(&link).
 		Error
 
@@ -54,7 +54,7 @@ func (r *linkRepository) FindByCodeAndUser(code string, userID uuid.UUID) (*doma
 	var link domain.Link
 
 	err := r.db.
-		Where("code = ? AND user_id = ?", code, userID).
+		Where("(LOWER(code) = LOWER(?) OR code = ?) AND user_id = ?", code, code, userID).
 		First(&link).
 		Error
 

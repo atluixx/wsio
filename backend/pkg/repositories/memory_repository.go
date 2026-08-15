@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"errors"
+	"strings"
 	"sync"
 	"time"
 
@@ -148,7 +149,7 @@ func (r *inMemoryAnalyticsRepository) GetAnalyticsByCode(code string) (*domain.L
 	since7d := now.Add(-7 * 24 * time.Hour)
 
 	for _, c := range r.clicks {
-		if c.Code == code {
+		if c.Code == code || strings.EqualFold(c.Code, code) {
 			totalClicks++
 			if c.Timestamp.After(since24h) {
 				clicks24h++

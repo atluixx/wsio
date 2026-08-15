@@ -44,9 +44,9 @@ func (r *analyticsRepository) GetAnalyticsByCode(code string) (*domain.LinkAnaly
 	since24h := now.Add(-24 * time.Hour)
 	since7d := now.Add(-7 * 24 * time.Hour)
 
-	r.db.Model(&domain.LinkClick{}).Where("code = ?", code).Count(&totalClicks)
-	r.db.Model(&domain.LinkClick{}).Where("code = ? AND timestamp >= ?", code, since24h).Count(&clicks24h)
-	r.db.Model(&domain.LinkClick{}).Where("code = ? AND timestamp >= ?", code, since7d).Count(&clicks7d)
+	r.db.Model(&domain.LinkClick{}).Where("LOWER(code) = LOWER(?) OR code = ?", code, code).Count(&totalClicks)
+	r.db.Model(&domain.LinkClick{}).Where("(LOWER(code) = LOWER(?) OR code = ?) AND timestamp >= ?", code, code, since24h).Count(&clicks24h)
+	r.db.Model(&domain.LinkClick{}).Where("(LOWER(code) = LOWER(?) OR code = ?) AND timestamp >= ?", code, code, since7d).Count(&clicks7d)
 
 	type ReferrerCount struct {
 		Referrer string
@@ -55,7 +55,7 @@ func (r *analyticsRepository) GetAnalyticsByCode(code string) (*domain.LinkAnaly
 	var referrerCounts []ReferrerCount
 	r.db.Model(&domain.LinkClick{}).
 		Select("COALESCE(NULLIF(referrer, ''), 'Direct / Unknown') as referrer, count(*) as count").
-		Where("code = ?", code).
+		Where("LOWER(code) = LOWER(?) OR code = ?", code, code).
 		Group("referrer").
 		Limit(10).
 		Scan(&referrerCounts)
