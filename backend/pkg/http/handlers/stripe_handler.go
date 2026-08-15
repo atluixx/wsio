@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
+
 
 
 type StripeHandler struct{}
@@ -52,20 +54,23 @@ func (h *StripeHandler) CreateCheckoutSession(c *gin.Context) {
 		successURL := appURL + "/dashboard?payment=success&plan=" + plan
 		cancelURL := appURL + "/pricing?canceled=true"
 
-		// Use standard form values for Stripe API
+		// Use standard form values for Stripe API with Managed Payments blueprint specs
 		client := &http.Client{Timeout: 10 * time.Second}
 		formReq, err := http.NewRequest("POST", "https://api.stripe.com/v1/checkout/sessions", strings.NewReader(
 			"mode=subscription"+
+				"&managed_payments[enabled]=true"+
 				"&success_url="+successURL+
 				"&cancel_url="+cancelURL+
 				"&line_items[0][price_data][currency]=usd"+
 				"&line_items[0][price_data][product_data][name]=wsio+"+plan+"+Plan"+
+				"&line_items[0][price_data][product_data][tax_code]=txcd_10103100"+
 				"&line_items[0][price_data][unit_amount]="+getPriceAmount(plan)+
 				"&line_items[0][price_data][recurring][interval]=month"+
 				"&line_items[0][quantity]=1",
 		))
 		if err == nil {
 			formReq.Header.Set("Authorization", "Bearer "+secretKey)
+			formReq.Header.Set("Stripe-Version", "2026-02-25.preview")
 			formReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			resp, err := client.Do(formReq)
 			if err == nil && resp.StatusCode == 200 {
@@ -108,10 +113,10 @@ func (h *StripeHandler) HandleWebhook(c *gin.Context) {
 		Type string `json:"type"`
 		Data struct {
 			Object struct {
-				ID         string `json:"id"`
-				Customer   string `json:"customer"`
+				ID           string `json:"id"`
+				Customer     string `json:"customer"`
 				Subscription string `json:"subscription"`
-				Status     string `json:"status"`
+				Status       string `json:"status"`
 			} `json:"object"`
 		} `json:"data"`
 	}
@@ -121,12 +126,21 @@ func (h *StripeHandler) HandleWebhook(c *gin.Context) {
 		return
 	}
 
-	// Log webhook event
+	customerId := event.Data.Object.Customer
+	subId := event.Data.Object.Subscription
+
+	if event.Type == "checkout.session.completed" {
+		log.Printf("Stripe checkout.session.completed received: Customer=%s, Subscription=%s", customerId, subId)
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"received": true,
-		"eventType": event.Type,
+		"received":       true,
+		"eventType":      event.Type,
+		"customerId":     customerId,
+		"subscriptionId": subId,
 	})
 }
+
 
 func getPriceAmount(plan string) string {
 	if plan == "diamond" {
