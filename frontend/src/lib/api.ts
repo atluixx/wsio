@@ -145,7 +145,7 @@ export async function deleteShortLink(code: string): Promise<{ success: boolean;
 
 export async function createCheckoutSession(planType: string): Promise<{ url?: string; error?: string }> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/stripe/create-checkout-session`, {
+    const res = await fetch(`/api/stripe/create-checkout-session`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -164,7 +164,7 @@ export async function createCheckoutSession(planType: string): Promise<{ url?: s
 
 export async function fetchApiKeys(): Promise<ApiKeyItem[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/keys`, {
+    const res = await fetch(`/api/keys`, {
       credentials: "include",
     });
     if (!res.ok) return [];
@@ -176,7 +176,7 @@ export async function fetchApiKeys(): Promise<ApiKeyItem[]> {
 
 export async function createApiKey(name: string, planType?: string): Promise<{ key?: string; keyMasked?: string; id?: string; error?: string }> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/keys`, {
+    const res = await fetch(`/api/keys`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -192,7 +192,7 @@ export async function createApiKey(name: string, planType?: string): Promise<{ k
 
 export async function deleteApiKey(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/keys/${id}`, {
+    const res = await fetch(`/api/keys/${id}`, {
       method: "DELETE",
       credentials: "include",
     });
@@ -205,7 +205,7 @@ export async function deleteApiKey(id: string): Promise<{ success: boolean; erro
 
 export async function fetchAdminApiKeys(): Promise<ApiKeyItem[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/admin/keys`, {
+    const res = await fetch(`/api/admin/keys`, {
       credentials: "include",
     });
     if (!res.ok) return [];
@@ -217,7 +217,7 @@ export async function fetchAdminApiKeys(): Promise<ApiKeyItem[]> {
 
 export async function deleteAdminApiKey(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/admin/keys/${id}`, {
+    const res = await fetch(`/api/admin/keys/${id}`, {
       method: "DELETE",
       credentials: "include",
     });
@@ -227,4 +227,5 @@ export async function deleteAdminApiKey(id: string): Promise<{ success: boolean;
     return { success: false, error: String(err?.message || "Network error") };
   }
 }
+
 
