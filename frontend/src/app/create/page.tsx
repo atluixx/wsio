@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { createShortLink, LinkItem } from "@/lib/api";
 import {
   getGuestLinks,
   saveGuestLink,
-  generateGuestHash,
   normalizeUrl,
 } from "@/lib/guestLinks";
 import {
@@ -47,27 +45,6 @@ export default function CreateLinkPage() {
 
     const formattedUrl = normalizeUrl(url);
 
-    if (!isAuthenticated) {
-      setTimeout(() => {
-        const code = generateGuestHash(formattedUrl);
-        const newGuestLink: LinkItem = {
-          id: "guest_" + Date.now(),
-          code,
-          url: formattedUrl,
-          createdAt: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        };
-
-        const updated = saveGuestLink(newGuestLink);
-        setCreatedLinks(updated);
-        setUrl("");
-        setLoading(false);
-      }, 250);
-      return;
-    }
-
     const res = await createShortLink(formattedUrl);
     setLoading(false);
 
@@ -86,7 +63,14 @@ export default function CreateLinkPage() {
           minute: "2-digit",
         }),
       };
-      setCreatedLinks((prev) => [newLink, ...prev]);
+
+      if (!isAuthenticated) {
+        const updated = saveGuestLink(newLink);
+        setCreatedLinks(updated);
+      } else {
+        setCreatedLinks((prev) => [newLink, ...prev]);
+      }
+
       setUrl("");
     }
   };
@@ -208,14 +192,14 @@ export default function CreateLinkPage() {
 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded border border-zinc-800 bg-zinc-900/80 p-3">
                   <div className="truncate font-mono text-sm text-white">
-                    https://www.wsio.lol/api/v1/links/{item.code}
+                    https://api.wsio.lol/api/v1/links/{item.code}
                   </div>
 
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() =>
                         copyToClipboard(
-                          `https://www.wsio.lol/api/v1/links/${item.code}`,
+                          `https://api.wsio.lol/api/v1/links/${item.code}`,
                           item.code
                         )
                       }
@@ -235,7 +219,7 @@ export default function CreateLinkPage() {
                     </button>
 
                     <a
-                      href={`https://www.wsio.lol/api/v1/links/${item.code}`}
+                      href={`https://api.wsio.lol/api/v1/links/${item.code}`}
                       target="_blank"
                       rel="noreferrer"
                       className="flex items-center gap-1.5 rounded border border-zinc-700 bg-zinc-800 px-3 py-1.5 font-mono text-xs text-white transition-colors hover:bg-zinc-700"

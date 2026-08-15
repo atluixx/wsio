@@ -8,7 +8,6 @@ import {
   getGuestLinks,
   saveGuestLink,
   removeGuestLink,
-  generateGuestHash,
   normalizeUrl,
 } from "@/lib/guestLinks";
 import {
@@ -49,30 +48,7 @@ export default function Home() {
 
     const formattedUrl = normalizeUrl(inputUrl);
 
-    if (!isAuthenticated) {
-      // Guest link creation mode
-      setTimeout(() => {
-        const code = generateGuestHash(formattedUrl);
-        const newGuestLink: LinkItem = {
-          id: "guest_" + Date.now(),
-          code,
-          url: formattedUrl,
-          createdAt: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        };
-
-        const updated = saveGuestLink(newGuestLink);
-        setCreatedLink(newGuestLink);
-        setRecentLinks(updated);
-        setInputUrl("");
-        setLoading(false);
-      }, 250);
-      return;
-    }
-
-    // Authenticated API mode
+    // Call API (works for both Guests and Authenticated Users!)
     const res = await createShortLink(formattedUrl);
     setLoading(false);
 
@@ -91,8 +67,16 @@ export default function Home() {
           minute: "2-digit",
         }),
       };
+
       setCreatedLink(newLink);
-      setRecentLinks((prev) => [newLink, ...prev]);
+
+      if (!isAuthenticated) {
+        const updated = saveGuestLink(newLink);
+        setRecentLinks(updated);
+      } else {
+        setRecentLinks((prev) => [newLink, ...prev]);
+      }
+
       setInputUrl("");
     }
   };
@@ -218,14 +202,14 @@ export default function Home() {
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded border border-zinc-800 bg-zinc-900/80 p-3">
               <div className="truncate font-mono text-sm text-white">
-                https://www.wsio.lol/api/v1/links/{createdLink.code}
+                https://api.wsio.lol/api/v1/links/{createdLink.code}
               </div>
 
               <div className="flex items-center gap-2">
                 <button
                   onClick={() =>
                     copyToClipboard(
-                      `https://www.wsio.lol/api/v1/links/${createdLink.code}`,
+                      `https://api.wsio.lol/api/v1/links/${createdLink.code}`,
                       createdLink.code
                     )
                   }
@@ -245,13 +229,13 @@ export default function Home() {
                 </button>
 
                 <a
-                  href={`https://www.wsio.lol/api/v1/links/${createdLink.code}`}
+                  href={`https://api.wsio.lol/api/v1/links/${createdLink.code}`}
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-1.5 rounded border border-zinc-700 bg-zinc-800 px-3 py-1.5 font-mono text-xs text-white transition-colors hover:bg-zinc-700"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
-                  <span>Test</span>
+                  <span>Test Link</span>
                 </a>
               </div>
             </div>
@@ -294,7 +278,7 @@ export default function Home() {
                       {link.code}
                     </span>
                     <span className="truncate">
-                      https://www.wsio.lol/api/v1/links/{link.code}
+                      https://api.wsio.lol/api/v1/links/{link.code}
                     </span>
                   </div>
                   <div className="mt-1 truncate font-mono text-xs text-zinc-500">
@@ -306,7 +290,7 @@ export default function Home() {
                   <button
                     onClick={() =>
                       copyToClipboard(
-                        `https://www.wsio.lol/api/v1/links/${link.code}`,
+                        `https://api.wsio.lol/api/v1/links/${link.code}`,
                         link.code
                       )
                     }
@@ -320,7 +304,7 @@ export default function Home() {
                   </button>
 
                   <a
-                    href={`https://www.wsio.lol/api/v1/links/${link.code}`}
+                    href={`https://api.wsio.lol/api/v1/links/${link.code}`}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-1 rounded border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 font-mono text-xs text-zinc-300 hover:border-zinc-700 hover:text-white"

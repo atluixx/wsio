@@ -34,10 +34,7 @@ func (h *LinkHandler) NewLink(c *gin.Context) {
 
 	userID, err := getUserID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "unauthorized",
-		})
-		return
+		userID = uuid.Nil
 	}
 
 	normalized, err := urlutil.Normalize(request.URL)

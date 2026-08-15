@@ -47,11 +47,11 @@ func SetupRoutes(
 	links := base.Group("/links")
 	{
 		links.GET("/:code", linkHandler.RedirectLink)
+		links.POST("", linkHandler.NewLink)
 
 		protected := links.Group("")
 		protected.Use(middleware.Auth())
 
-		protected.POST("", linkHandler.NewLink)
 		protected.DELETE("/:code", linkHandler.DeleteLink)
 	}
 
