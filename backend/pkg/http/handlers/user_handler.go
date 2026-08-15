@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/atluixx/wsio/pkg/auth"
@@ -157,14 +158,22 @@ func (h *UserHandler) Login(c *gin.Context) {
 }
 
 func setSessionCookie(c *gin.Context, token string) {
-	c.SetSameSite(http.SameSiteLaxMode)
+	domain := os.Getenv("COOKIE_DOMAIN")
+	if domain == "" {
+		host := c.Request.Host
+		if strings.Contains(host, "wsio.lol") {
+			domain = ".wsio.lol"
+		}
+	}
+
+	c.SetSameSite(http.SameSiteNoneMode)
 
 	c.SetCookie(
 		"session",
 		token,
 		60*60*24,
 		"/",
-		"",
+		domain,
 		true,
 		true,
 	)
