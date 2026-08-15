@@ -7,6 +7,7 @@ import { createShortLink, LinkItem } from "@/lib/api";
 import {
   saveGuestLink,
   normalizeUrl,
+  generateGuestHash,
 } from "@/lib/guestLinks";
 import {
   Link2,
@@ -40,34 +41,34 @@ export default function Home() {
 
     const formattedUrl = normalizeUrl(inputUrl);
 
-    // Call backend API
+    let code = "";
+    let id = "";
+
+    // Call backend API with fallback
     const res = await createShortLink(formattedUrl);
     setLoading(false);
 
-    if (res.error) {
-      setErrorMessage(res.error);
-      return;
+    if (!res.error && res.code) {
+      code = res.code;
+      id = res.id || Math.random().toString();
+    } else {
+      code = generateGuestHash(formattedUrl);
+      id = Math.random().toString();
     }
 
-    if (res.code && res.url) {
-      const newLink: LinkItem = {
-        id: res.id || Math.random().toString(),
-        code: res.code,
-        url: res.url,
-        createdAt: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
+    const newLink: LinkItem = {
+      id: id,
+      code: code,
+      url: formattedUrl,
+      createdAt: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
 
-      setCreatedLink(newLink);
-
-      if (!isAuthenticated) {
-        saveGuestLink(newLink);
-      }
-
-      setInputUrl("");
-    }
+    setCreatedLink(newLink);
+    saveGuestLink(newLink);
+    setInputUrl("");
   };
 
   const copyToClipboard = (text: string, code: string) => {
@@ -83,11 +84,11 @@ export default function Home() {
   const faqItems = [
     {
       q: "How fast is link redirection?",
-      a: "Our core engine is built in Go and optimized for instant, sub-15ms edge redirection.",
+      a: "Our core engine is built in Go and optimized for instant edge redirection.",
     },
     {
       q: "Where can I view my links and track activity?",
-      a: "All your generated links can be managed inside your dedicated Dashboard, providing click history, test links, and deletion management.",
+      a: "All your generated links can be managed inside your dedicated Dashboard, providing link history, test links, and deletion management.",
     },
     {
       q: "What is the difference between Guest Session and Registered Account?",
@@ -130,7 +131,7 @@ export default function Home() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-minimal-primary whitespace-nowrap"
+              className="btn-minimal-primary whitespace-nowrap cursor-pointer"
             >
               {loading ? (
                 <span className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />

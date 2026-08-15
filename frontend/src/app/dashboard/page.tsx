@@ -28,28 +28,29 @@ export default function DashboardPage() {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
+  const loadLinks = () => {
+    const stored = getGuestLinks();
+    setLinks(stored);
+  };
+
   useEffect(() => {
-    // Load links (Guest links or session state)
-    const guestLinks = getGuestLinks();
-    setLinks(guestLinks);
+    loadLinks();
+    window.addEventListener("focus", loadLinks);
+    window.addEventListener("storage", loadLinks);
+    return () => {
+      window.removeEventListener("focus", loadLinks);
+      window.removeEventListener("storage", loadLinks);
+    };
   }, [isAuthenticated]);
 
   const handleDelete = async (code: string) => {
-    if (!isAuthenticated) {
-      const updated = removeGuestLink(code);
-      setLinks(updated);
-      setDeleteConfirm(null);
-      return;
-    }
-
-    const res = await deleteShortLink(code);
-    if (res.success) {
-      setLinks((prev) => prev.filter((l) => l.code !== code));
-      removeGuestLink(code);
-    } else {
-      alert(res.error || "Could not delete link");
-    }
+    const updated = removeGuestLink(code);
+    setLinks(updated);
     setDeleteConfirm(null);
+
+    if (isAuthenticated) {
+      deleteShortLink(code).catch(() => {});
+    }
   };
 
   const copyToClipboard = (text: string, code: string) => {

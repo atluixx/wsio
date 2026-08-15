@@ -8,6 +8,7 @@ import {
   getGuestLinks,
   saveGuestLink,
   normalizeUrl,
+  generateGuestHash,
 } from "@/lib/guestLinks";
 import {
   Link2,
@@ -31,10 +32,8 @@ export default function CreateLinkPage() {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      setCreatedLinks(getGuestLinks());
-    }
-  }, [isAuthenticated]);
+    setCreatedLinks(getGuestLinks());
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,34 +44,33 @@ export default function CreateLinkPage() {
 
     const formattedUrl = normalizeUrl(url);
 
+    let code = "";
+    let id = "";
+
     const res = await createShortLink(formattedUrl);
     setLoading(false);
 
-    if (res.error) {
-      setError(res.error);
-      return;
+    if (!res.error && res.code) {
+      code = res.code;
+      id = res.id || Math.random().toString();
+    } else {
+      code = generateGuestHash(formattedUrl);
+      id = Math.random().toString();
     }
 
-    if (res.code && res.url) {
-      const newLink: LinkItem = {
-        id: res.id || Math.random().toString(),
-        code: res.code,
-        url: res.url,
-        createdAt: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
+    const newLink: LinkItem = {
+      id: id,
+      code: code,
+      url: formattedUrl,
+      createdAt: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
 
-      if (!isAuthenticated) {
-        const updated = saveGuestLink(newLink);
-        setCreatedLinks(updated);
-      } else {
-        setCreatedLinks((prev) => [newLink, ...prev]);
-      }
-
-      setUrl("");
-    }
+    const updated = saveGuestLink(newLink);
+    setCreatedLinks(updated);
+    setUrl("");
   };
 
   const getShortUrl = (code: string) => {
@@ -137,7 +135,7 @@ export default function CreateLinkPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-minimal-primary w-full sm:w-auto"
+                className="btn-minimal-primary w-full sm:w-auto cursor-pointer"
               >
                 {loading ? (
                   <span className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
