@@ -33,8 +33,9 @@ func (h *LinkHandler) NewLink(c *gin.Context) {
 	}
 
 	userID, err := getUserID(c)
-	if err != nil {
-		userID = uuid.Nil
+	var userPtr *uuid.UUID
+	if err == nil && userID != uuid.Nil {
+		userPtr = &userID
 	}
 
 	normalized, err := urlutil.Normalize(request.URL)
@@ -49,7 +50,7 @@ func (h *LinkHandler) NewLink(c *gin.Context) {
 
 	link := &domain.Link{
 		ID:     uuid.New(),
-		UserID: userID,
+		UserID: userPtr,
 		Code:   code,
 		URL:    normalized,
 	}

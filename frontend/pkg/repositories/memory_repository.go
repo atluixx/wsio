@@ -91,7 +91,7 @@ func (r *inMemoryLinkRepository) FindByCodeAndUser(code string, userID uuid.UUID
 	defer r.mu.RUnlock()
 
 	link, ok := r.links[code]
-	if !ok || link.UserID != userID {
+	if !ok || link.UserID == nil || *link.UserID != userID {
 		return nil, ErrLinkNotFound
 	}
 	return link, nil

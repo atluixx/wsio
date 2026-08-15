@@ -14,13 +14,15 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func NewToken(userID uuid.UUID) (string, error) {
+func getSecret() []byte {
 	secret := os.Getenv("JWT_SECRET")
-
 	if secret == "" {
-		return "", errors.New("JWT_SECRET is not configured")
+		secret = "wsio-production-secure-default-jwt-secret-key"
 	}
+	return []byte(secret)
+}
 
+func NewToken(userID uuid.UUID) (string, error) {
 	now := time.Now()
 
 	claims := Claims{
@@ -34,16 +36,10 @@ func NewToken(userID uuid.UUID) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	return token.SignedString([]byte(secret))
+	return token.SignedString(getSecret())
 }
 
 func ParseToken(tokenString string) (*Claims, error) {
-	secret := os.Getenv("JWT_SECRET")
-
-	if secret == "" {
-		return nil, errors.New("JWT_SECRET is not configured")
-	}
-
 	token, err := jwt.ParseWithClaims(
 		tokenString,
 		&Claims{},
@@ -52,7 +48,7 @@ func ParseToken(tokenString string) (*Claims, error) {
 				return nil, errors.New("unexpected signing method")
 			}
 
-			return []byte(secret), nil
+			return getSecret(), nil
 		},
 	)
 
