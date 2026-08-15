@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { deleteShortLink, LinkItem, fetchApiKeys, createApiKey, deleteApiKey, ApiKeyItem } from "@/lib/api";
+import { deleteShortLink, LinkItem, fetchApiKeys, createApiKey, deleteApiKey, ApiKeyItem, createCheckoutSession } from "@/lib/api";
 import {
   getGuestLinks,
   removeGuestLink,
@@ -68,22 +68,62 @@ export default function DashboardPage() {
   const [modalKeyInfo, setModalKeyInfo] = useState<{ key: string; name: string } | null>(null);
   const [qrModalLink, setQrModalLink] = useState<{ url: string; code: string } | null>(null);
 
-  // Mock subscription info for user area (explicitly satisfies Requirement #2)
-  const subscriptionInfo = isAuthenticated
-    ? {
-        planName: user?.role === "admin" ? "Diamond Plan (Admin)" : "Starter Plan",
-        price: user?.role === "admin" ? "$12 / mo" : "$4 / mo",
-        billingCycle: "Monthly Billing",
-        renewalDate: "Sept 15, 2026",
-        status: "Active",
+  const [currentPlan, setCurrentPlan] = useState<string>("free");
+  const [planStatusMessage, setPlanStatusMessage] = useState<string>("");
+  const [upgradingPlan, setUpgradingPlan] = useState<string | null>(null);
+  const [cancelingPlan, setCancelingPlan] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const planParam = params.get("plan");
+      const paymentParam = params.get("payment");
+
+      if (paymentParam === "success" && planParam) {
+        const cleanPlan = planParam.toLowerCase();
+        setCurrentPlan(cleanPlan);
+        localStorage.setItem("wsio_plan", cleanPlan);
+        setPlanStatusMessage(`Subscription active! Upgraded to ${cleanPlan === "diamond" ? "Diamond Plan ($12/mo)" : "Starter Plan ($4/mo)"}.`);
+      } else {
+        const storedPlan = localStorage.getItem("wsio_plan");
+        if (storedPlan) {
+          setCurrentPlan(storedPlan.toLowerCase());
+        } else if (user?.role === "admin") {
+          setCurrentPlan("diamond");
+        } else if (isAuthenticated) {
+          setCurrentPlan("starter");
+        } else {
+          setCurrentPlan("free");
+        }
       }
-    : {
-        planName: "Free Guest Tier",
-        price: "$0 / mo",
-        billingCycle: "Forever Free",
-        renewalDate: "N/A (Local Browser Storage)",
-        status: "Guest Mode",
-      };
+    }
+  }, [user, isAuthenticated]);
+
+  const handleSubscribePlan = async (planType: string) => {
+    setUpgradingPlan(planType);
+    const res = await createCheckoutSession(planType);
+    setUpgradingPlan(null);
+
+    if (res.url) {
+      window.location.href = res.url;
+    } else {
+      alert(res.error || "Failed to launch Checkout Session");
+    }
+  };
+
+  const handleCancelSubscription = () => {
+    if (window.confirm("Are you sure you want to cancel your subscription? Your account will revert to the Free tier.")) {
+      setCancelingPlan(true);
+      setTimeout(() => {
+        setCurrentPlan("free");
+        if (typeof window !== "undefined") {
+          localStorage.setItem("wsio_plan", "free");
+        }
+        setCancelingPlan(false);
+        setPlanStatusMessage("Subscription cancelled. Your account has been reverted to the Free tier.");
+      }, 400);
+    }
+  };
 
   const loadLinks = () => {
     const stored = getGuestLinks();
@@ -252,49 +292,89 @@ export default function DashboardPage() {
         </div>
       </ScrollReveal>
 
-      {/* Requirement #2: Explicit Subscription Status Display */}
+      {/* Interactive Subscription & Plan Management Section */}
       <ScrollReveal delayMs={50}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="p-5 border-white/15 space-y-2 md:col-span-2">
+          <Card className="p-5 border-white/15 space-y-3 md:col-span-2">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2">
                 <CreditCard className="h-4 w-4 text-emerald-400" />
-                <h3 className="text-sm font-semibold text-white">Current Subscription Details</h3>
+                <h3 className="text-sm font-semibold text-white">Subscription &amp; Plan Management</h3>
               </div>
-              <Badge variant={isAuthenticated ? "success" : "secondary"} className="text-[10px]">
-                {subscriptionInfo.status}
+              <Badge variant={currentPlan !== "free" ? "success" : "secondary"} className="text-[10px]">
+                {currentPlan !== "free" ? "Active Subscription" : "Free Tier"}
               </Badge>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
+            {planStatusMessage && (
+              <div className="rounded-lg border border-emerald-500/30 bg-emerald-950/40 p-3 text-xs text-emerald-300 flex items-center justify-between">
+                <span>{planStatusMessage}</span>
+                <button onClick={() => setPlanStatusMessage("")} className="text-emerald-400 font-bold ml-2 text-sm">&times;</button>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-1">
               <div className="space-y-0.5">
                 <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Active Plan</span>
-                <span className="text-sm font-bold text-white">{subscriptionInfo.planName}</span>
+                <span className="text-sm font-bold text-white uppercase">{currentPlan === "free" ? "Free / Guest" : `${currentPlan} Plan`}</span>
               </div>
               <div className="space-y-0.5">
                 <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Price</span>
-                <span className="text-sm font-bold text-emerald-300">{subscriptionInfo.price}</span>
+                <span className="text-sm font-bold text-emerald-300">
+                  {currentPlan === "diamond" ? "$12 / mo" : currentPlan === "starter" ? "$4 / mo" : "$0 / mo"}
+                </span>
               </div>
               <div className="space-y-0.5">
                 <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Billing Cycle</span>
-                <span className="text-xs text-zinc-300">{subscriptionInfo.billingCycle}</span>
+                <span className="text-xs text-zinc-300">{currentPlan === "free" ? "Forever Free" : "Monthly Auto-Renew"}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Renewal Date</span>
+                <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Status</span>
                 <span className="text-xs text-zinc-300 flex items-center gap-1">
                   <Calendar className="h-3 w-3 text-zinc-400" />
-                  {subscriptionInfo.renewalDate}
+                  {currentPlan === "free" ? "Free Tier" : "Active Subscription"}
                 </span>
               </div>
             </div>
 
-            <div className="pt-2 border-t border-white/10 flex justify-end">
-              <Button asChild variant="outline" size="sm" className="text-xs h-8 border-white/10">
-                <Link href="/pricing">
-                  <span>Manage / Upgrade Subscription</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </Button>
+            <div className="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                {currentPlan !== "starter" && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleSubscribePlan("starter")}
+                    disabled={upgradingPlan === "starter"}
+                    className="text-xs h-8 font-semibold"
+                  >
+                    {upgradingPlan === "starter" ? "Redirecting..." : "Upgrade / Switch to Starter ($4/mo)"}
+                  </Button>
+                )}
+
+                {currentPlan !== "diamond" && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => handleSubscribePlan("diamond")}
+                    disabled={upgradingPlan === "diamond"}
+                    className="text-xs h-8 font-semibold"
+                  >
+                    {upgradingPlan === "diamond" ? "Redirecting..." : "Upgrade to Diamond ($12/mo)"}
+                  </Button>
+                )}
+              </div>
+
+              {currentPlan !== "free" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCancelSubscription}
+                  disabled={cancelingPlan}
+                  className="text-xs h-8 text-red-400 hover:text-red-300 border-red-500/20 bg-red-950/20"
+                >
+                  {cancelingPlan ? "Cancelling..." : "Cancel Subscription"}
+                </Button>
+              )}
             </div>
           </Card>
 
