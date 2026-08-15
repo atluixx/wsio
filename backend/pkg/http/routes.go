@@ -54,7 +54,7 @@ func SetupRoutes(
 	links := base.Group("/links")
 	{
 		links.GET("/:code", linkHandler.RedirectLink)
-		links.POST("", linkHandler.NewLink)
+		links.POST("", middleware.OptionalAuth(), linkHandler.NewLink)
 
 		protected := links.Group("")
 		protected.Use(middleware.Auth())

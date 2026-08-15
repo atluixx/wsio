@@ -66,7 +66,8 @@ export default function DashboardPage() {
   const filteredLinks = links.filter(
     (l) =>
       l.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      l.url.toLowerCase().includes(searchQuery.toLowerCase())
+      l.url.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (l.userId && l.userId.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
@@ -121,7 +122,9 @@ export default function DashboardPage() {
               {isAuthenticated ? user?.email : "Guest Session"}
             </div>
             <div className="mt-1 font-mono text-[11px] text-zinc-500">
-              {!isAuthenticated && (
+              {isAuthenticated ? (
+                <span>User ID: {user?.id}</span>
+              ) : (
                 <Link href="/login" className="text-zinc-300 underline hover:text-white">
                   Log in to sync links across devices
                 </Link>
@@ -181,6 +184,11 @@ export default function DashboardPage() {
                         <span className="font-bold text-white bg-zinc-900 border border-white/10 px-2 py-0.5 rounded">
                           {link.code}
                         </span>
+                        {(link.userId || (isAuthenticated && user?.id)) && (
+                          <span className="text-[11px] text-zinc-400 border border-white/10 px-1.5 py-0.5 rounded">
+                            User ID: {(link.userId || user?.id || "").substring(0, 8)}...
+                          </span>
+                        )}
                         {link.createdAt && (
                           <span className="text-[11px] text-zinc-600 ml-auto sm:ml-0">
                             {link.createdAt}

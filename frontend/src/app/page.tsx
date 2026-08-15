@@ -23,7 +23,7 @@ import {
 import { ScrollReveal } from "@/components/ScrollReveal";
 
 export default function Home() {
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [inputUrl, setInputUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -43,6 +43,7 @@ export default function Home() {
 
     let code = "";
     let id = "";
+    let userId: string | undefined = undefined;
 
     // Call backend API with fallback
     const res = await createShortLink(formattedUrl);
@@ -51,15 +52,18 @@ export default function Home() {
     if (!res.error && res.code) {
       code = res.code;
       id = res.id || Math.random().toString();
+      userId = res.userId || (isAuthenticated ? user?.id : undefined);
     } else {
       code = generateGuestHash(formattedUrl);
       id = Math.random().toString();
+      userId = isAuthenticated ? user?.id : undefined;
     }
 
     const newLink: LinkItem = {
       id: id,
       code: code,
       url: formattedUrl,
+      userId: userId,
       createdAt: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
@@ -206,8 +210,13 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="mt-2 truncate font-mono text-xs text-zinc-500">
-                Destination: {createdLink.url}
+              <div className="mt-2 flex items-center justify-between font-mono text-xs text-zinc-500">
+                <span className="truncate">Destination: {createdLink.url}</span>
+                {createdLink.userId && (
+                  <span className="shrink-0 text-zinc-400 border border-white/10 px-2 py-0.5 rounded text-[11px]">
+                    User ID: {createdLink.userId.substring(0, 8)}...
+                  </span>
+                )}
               </div>
             </div>
           )}

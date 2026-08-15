@@ -9,6 +9,7 @@ export interface LinkItem {
   id: string;
   code: string;
   url: string;
+  userId?: string;
   createdAt?: string;
 }
 
@@ -22,6 +23,7 @@ export interface LinkResponse {
   id?: string;
   code?: string;
   url?: string;
+  userId?: string;
   error?: string;
 }
 
@@ -73,9 +75,21 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
 
 export async function createShortLink(url: string): Promise<LinkResponse> {
   try {
+    const storedUserStr = typeof window !== "undefined" ? localStorage.getItem("wsio_user") : null;
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    
+    if (storedUserStr) {
+      try {
+        const storedUser = JSON.parse(storedUserStr);
+        if (storedUser?.id) {
+          headers["X-User-ID"] = storedUser.id;
+        }
+      } catch (e) {}
+    }
+
     const res = await fetch(`${API_BASE_URL}/api/v1/links`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: headers,
       credentials: "include",
       body: JSON.stringify({ url }),
     });

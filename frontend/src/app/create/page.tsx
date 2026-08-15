@@ -46,6 +46,7 @@ export default function CreateLinkPage() {
 
     let code = "";
     let id = "";
+    let userId: string | undefined = undefined;
 
     const res = await createShortLink(formattedUrl);
     setLoading(false);
@@ -53,15 +54,18 @@ export default function CreateLinkPage() {
     if (!res.error && res.code) {
       code = res.code;
       id = res.id || Math.random().toString();
+      userId = res.userId || (isAuthenticated ? user?.id : undefined);
     } else {
       code = generateGuestHash(formattedUrl);
       id = Math.random().toString();
+      userId = isAuthenticated ? user?.id : undefined;
     }
 
     const newLink: LinkItem = {
       id: id,
       code: code,
       url: formattedUrl,
+      userId: userId,
       createdAt: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
@@ -220,8 +224,13 @@ export default function CreateLinkPage() {
                     </div>
                   </div>
 
-                  <div className="mt-2 truncate font-mono text-xs text-zinc-500">
-                    Target: {item.url}
+                  <div className="mt-2 flex items-center justify-between font-mono text-xs text-zinc-500">
+                    <span className="truncate">Target: {item.url}</span>
+                    {item.userId && (
+                      <span className="shrink-0 text-zinc-400 border border-white/10 px-2 py-0.5 rounded text-[11px]">
+                        User ID: {item.userId.substring(0, 8)}...
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

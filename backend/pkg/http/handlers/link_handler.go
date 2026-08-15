@@ -65,11 +65,16 @@ func (h *LinkHandler) NewLink(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
+	resp := gin.H{
 		"id":   link.ID,
 		"code": link.Code,
 		"url":  link.URL,
-	})
+	}
+	if link.UserID != nil {
+		resp["userId"] = link.UserID.String()
+	}
+
+	c.JSON(http.StatusCreated, resp)
 }
 
 func (h *LinkHandler) RedirectLink(c *gin.Context) {
@@ -98,11 +103,15 @@ func (h *LinkHandler) RedirectLink(c *gin.Context) {
 	}
 
 	if c.Query("json") == "true" || strings.Contains(c.GetHeader("Accept"), "application/json") {
-		c.JSON(http.StatusOK, gin.H{
+		resp := gin.H{
 			"id":   link.ID,
 			"code": link.Code,
 			"url":  link.URL,
-		})
+		}
+		if link.UserID != nil {
+			resp["userId"] = link.UserID.String()
+		}
+		c.JSON(http.StatusOK, resp)
 		return
 	}
 
