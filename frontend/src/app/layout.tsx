@@ -1,23 +1,24 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { CookieBanner } from "@/components/CookieBanner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const playfair = Playfair_Display({
+  variable: "--font-heading",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "wsio. | Minimalist Link Engine",
-  description: "High-performance minimalist URL shortener and redirect engine adhering to utilitarian design principles.",
+  title: "wsio. — Clean, Modern URL Shortener & Analytics",
+  description: "Fast, reliable, and human-centric URL redirection engine for creators, teams, and developers.",
 };
 
 export default function RootLayout({
@@ -28,13 +29,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      className={`${inter.variable} ${playfair.variable} h-full antialiased dark`}
     >
-      <body className="flex min-h-full flex-col bg-zinc-950 text-zinc-100 selection:bg-zinc-800 selection:text-white">
+      <body className="flex min-h-full flex-col bg-[#090a0f] text-slate-100 selection:bg-white/20 selection:text-white saas-bg-glow font-sans">
         <AuthProvider>
           <Navbar />
-          <main className="flex-1 bg-editorial-pattern">{children}</main>
+          <main className="flex-1">{children}</main>
           <Footer />
+          <CookieBanner />
         </AuthProvider>
       </body>
     </html>

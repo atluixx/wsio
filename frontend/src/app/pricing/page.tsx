@@ -2,18 +2,21 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, ArrowRight, Sparkles, HelpCircle } from "lucide-react";
+import { Check, ArrowRight, Sparkles, HelpCircle, Building2 } from "lucide-react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { createCheckoutSession } from "@/lib/api";
-
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default function PricingPage() {
   const [annualBilling, setAnnualBilling] = useState(true);
+  const [submittingPlan, setSubmittingPlan] = useState<string | null>(null);
 
   const plans = [
     {
-      name: "Guest / Free",
-      description: "Quick one-off link shortening with privacy-first redirection.",
+      name: "Free / Guest",
+      description: "Ideal for quick one-off link shortening with essential redirection.",
       priceMonthly: "$0",
       priceAnnual: "$0",
       billingPeriod: "Forever free",
@@ -21,76 +24,72 @@ export default function PricingPage() {
       highlight: false,
       ctaText: "Start Shortening Free",
       ctaHref: "/",
-      ctaVariant: "btn-minimal-secondary",
+      ctaVariant: "outline" as const,
       features: [
-        "3 link creations per 24-hour day",
-        "Sub-15ms edge redirection speed",
-        "Local browser storage history",
-        "100% zero third-party tracking",
-        "Basic monospaced hash codes",
+        "3 link creations per 24 hours",
+        "Fast global edge redirection",
+        "Local browser history storage",
+        "Zero third-party tracking",
+        "Standard short link hashes",
       ],
     },
     {
-      name: "Starter",
-      description: "For creators, marketers, freelancers, and indie builders.",
+      name: "Starter Plan",
+      description: "For creators, freelancers, and indie developers who need full link control.",
       priceMonthly: "$4",
       priceAnnual: "$3",
-      billingPeriod: annualBilling ? "per month, billed annually ($36/yr)" : "per month, billed monthly",
+      billingPeriod: annualBilling ? "$36 / year ($3/mo)" : "Billed monthly ($4/mo)",
       badge: "Most Popular",
       highlight: true,
       ctaText: "Upgrade to Starter",
       ctaHref: "/register?plan=starter",
-      ctaVariant: "btn-minimal-primary",
+      ctaVariant: "default" as const,
       features: [
         "Unlimited link creation (No daily caps)",
-        "Cloud multi-device dashboard sync",
+        "Cloud dashboard sync across devices",
         "Custom back-half slug aliases",
-        "Essential click analytics & velocity",
-        "Dynamic destination URL editing",
-        "Instant vector QR code generator",
+        "Click analytics & referrer origins",
+        "Dynamic target URL editing",
+        "Vector QR code generator",
         "90-Day API Keys access",
         "Standard email support",
       ],
     },
     {
-      name: "Diamond",
-      description: "For growth agencies, startups, enterprise marketers, and API developers.",
+      name: "Diamond Plan",
+      description: "For growth teams, enterprise brands, and developers scaling API usage.",
       priceMonthly: "$12",
       priceAnnual: "$9",
-      billingPeriod: annualBilling ? "per month, billed annually ($108/yr)" : "per month, billed monthly",
+      billingPeriod: annualBilling ? "$108 / year ($9/mo)" : "Billed monthly ($12/mo)",
       badge: "Power & Scale",
       highlight: false,
       ctaText: "Go Diamond",
       ctaHref: "/register?plan=diamond",
-      ctaVariant: "btn-minimal-secondary",
+      ctaVariant: "secondary" as const,
       features: [
-        "Company custom subdomains (company.wsio.lol)",
-        "Real-time live click telemetry",
-        "Geographic & referrer analytics breakdown",
+        "Company custom subdomains (brand.wsio.lol)",
+        "Real-time click telemetry stream",
+        "Geographic & referrer traffic breakdown",
         "REST API access & 365-day API Keys",
         "Password-protected & expiring links",
-        "Priority sub-10ms edge SLA (99.99% Uptime)",
+        "Priority edge SLA (99.99% Uptime)",
         "Team collaboration & shared workspaces",
         "Dedicated priority support",
       ],
     },
-
   ];
 
   const comparisonFeatures = [
-    { name: "Daily Link Creation Limit", free: "3 / day", starter: "Unlimited", diamond: "Unlimited" },
+    { name: "Daily Link Cap", free: "3 / day", starter: "Unlimited", diamond: "Unlimited" },
     { name: "Multi-Device Cloud Sync", free: "No", starter: "Yes", diamond: "Yes" },
-    { name: "Custom Back-Half Slugs", free: "No", starter: "Yes", diamond: "Yes" },
-    { name: "Dynamic Target URL Editing", free: "No", starter: "Yes", diamond: "Yes" },
-    { name: "Vector QR Code Export", free: "Basic", starter: "Vector SVG/PNG", diamond: "Custom Branded QR" },
-    { name: "Click Analytics History", free: "No", starter: "Essential (30 Days)", diamond: "Advanced Real-Time (Unlimited)" },
-    { name: "Custom Branded Domains", free: "No", starter: "No", diamond: "Unlimited Domains" },
-    { name: "REST API & Bulk Hashes", free: "No", starter: "No", diamond: "Included" },
-    { name: "Password & Expiry Protection", free: "No", starter: "No", diamond: "Included" },
-    { name: "Edge SLA Guarantee", free: "Standard", starter: "99.9%", diamond: "99.99% Priority" },
+    { name: "Custom Slugs / Aliases", free: "No", starter: "Yes", diamond: "Yes" },
+    { name: "Dynamic Destination Editing", free: "No", starter: "Yes", diamond: "Yes" },
+    { name: "Vector QR Code Generator", free: "Basic", starter: "Vector PNG", diamond: "Custom Branded QR" },
+    { name: "Click Telemetry History", free: "No", starter: "30 Days", diamond: "Unlimited Real-Time" },
+    { name: "Custom Branded Subdomains", free: "No", starter: "No", diamond: "Dedicated Domain Request" },
+    { name: "Headless REST API Access", free: "No", starter: "90-Day Keys", diamond: "365-Day Keys & SLA" },
+    { name: "Edge Uptime Guarantee", free: "Standard", starter: "99.9%", diamond: "99.99% Priority" },
   ];
-
-  const [submittingPlan, setSubmittingPlan] = useState<string | null>(null);
 
   const handleSubscribe = async (planType: string) => {
     if (planType === "free" || planType === "guest") {
@@ -105,26 +104,26 @@ export default function PricingPage() {
     if (res.url) {
       window.location.href = res.url;
     } else {
-      alert(res.error || "Failed to launch Stripe Checkout");
+      alert(res.error || "Failed to launch Checkout");
     }
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-20 space-y-12 sm:space-y-16 font-mono">
-      {/* Header & Title */}
+    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-20 space-y-12 sm:space-y-16 font-sans">
+      {/* Header */}
       <ScrollReveal>
         <div className="text-center space-y-4 max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-zinc-900 px-3.5 py-1 text-xs text-zinc-400">
+          <Badge variant="outline" className="gap-1.5 py-1 px-3 border-white/15 text-zinc-300">
             <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-            <span>Simple, Transparent Pricing</span>
-          </div>
+            <span>Transparent Pricing for All Scales</span>
+          </Badge>
 
-          <h1 className="font-serif text-3xl sm:text-6xl text-white font-normal leading-[1.15]">
-            Plans for every <span className="italic text-zinc-400">scale.</span>
+          <h1 className="font-heading text-4xl sm:text-6xl text-white font-bold leading-[1.12]">
+            Simple plans built to scale.
           </h1>
 
-          <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
-            High-performance link infrastructure. Start for free as a guest, or unlock unlimited links, custom slugs, and real-time telemetry.
+          <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
+            Start for free as a guest, or upgrade to unlock unlimited link shortening, custom slugs, and real-time click telemetry.
           </p>
 
           {/* Billing Toggle */}
@@ -132,7 +131,7 @@ export default function PricingPage() {
             <button
               onClick={() => setAnnualBilling(false)}
               className={`rounded-full px-4 py-2 transition-colors cursor-pointer min-h-[38px] ${
-                !annualBilling ? "bg-white text-black font-semibold" : "text-zinc-400 hover:text-white"
+                !annualBilling ? "bg-white text-zinc-950 font-semibold" : "text-zinc-400 hover:text-white"
               }`}
             >
               Monthly Billing
@@ -140,13 +139,13 @@ export default function PricingPage() {
             <button
               onClick={() => setAnnualBilling(true)}
               className={`flex items-center gap-1.5 rounded-full px-4 py-2 transition-colors cursor-pointer min-h-[38px] ${
-                annualBilling ? "bg-white text-black font-semibold" : "text-zinc-400 hover:text-white"
+                annualBilling ? "bg-white text-zinc-950 font-semibold" : "text-zinc-400 hover:text-white"
               }`}
             >
               <span>Annual Billing</span>
-              <span className="rounded-full bg-emerald-400/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5">
+              <Badge variant="success" className="text-[10px] font-bold px-2 py-0.5">
                 Save 20%
-              </span>
+              </Badge>
             </button>
           </div>
         </div>
@@ -163,44 +162,44 @@ export default function PricingPage() {
               : "free";
 
             return (
-              <div
+              <Card
                 key={idx}
-                className={`bento-card flex flex-col justify-between relative p-6 sm:p-7 ${
+                className={`flex flex-col justify-between relative p-6 sm:p-7 ${
                   plan.highlight ? "border-emerald-500/40 bg-zinc-900/90 shadow-2xl" : ""
                 }`}
               >
                 {plan.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border border-emerald-500/30 bg-emerald-400 px-3.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-black">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border border-emerald-500/30 bg-emerald-400 px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-950">
                     {plan.badge}
                   </div>
                 )}
 
                 <div className="space-y-6">
-                  <div className="border-b border-white/10 pb-4">
+                  <div className="border-b border-white/10 pb-4 space-y-2">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-serif text-2xl text-white font-normal">{plan.name}</h3>
+                      <h3 className="font-heading text-xl font-bold text-white">{plan.name}</h3>
                       {!plan.highlight && (
-                        <span className="text-[10px] text-zinc-500 uppercase border border-white/10 px-2 py-0.5 rounded">
+                        <Badge variant="outline" className="text-[10px]">
                           {plan.badge}
-                        </span>
+                        </Badge>
                       )}
                     </div>
-                    <p className="mt-2 text-xs text-zinc-400 min-h-[32px]">{plan.description}</p>
+                    <p className="text-xs text-zinc-400 leading-relaxed min-h-[36px]">{plan.description}</p>
                   </div>
 
                   <div className="space-y-1">
                     <div className="flex items-baseline gap-1">
-                      <span className="font-serif text-4xl font-bold text-white">
+                      <span className="font-heading text-4xl font-bold text-white">
                         {annualBilling ? plan.priceAnnual : plan.priceMonthly}
                       </span>
-                      <span className="text-xs text-zinc-500">/ month</span>
+                      <span className="text-xs text-zinc-400">/ month</span>
                     </div>
-                    <div className="text-[11px] text-zinc-500">{plan.billingPeriod}</div>
+                    <div className="text-[11px] text-zinc-400">{plan.billingPeriod}</div>
                   </div>
 
                   {/* Features List */}
                   <div className="space-y-2.5 pt-2">
-                    <span className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold block">
+                    <span className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold block">
                       What&apos;s Included:
                     </span>
                     <ul className="space-y-2 text-xs text-zinc-300">
@@ -215,45 +214,44 @@ export default function PricingPage() {
                 </div>
 
                 <div className="pt-8">
-                  <button
+                  <Button
+                    variant={plan.ctaVariant}
                     onClick={() => handleSubscribe(planKey)}
                     disabled={submittingPlan === planKey}
-                    className={`${plan.ctaVariant} w-full min-h-[44px] justify-center text-xs cursor-pointer`}
-                    title={`Subscribe to ${plan.name} plan`}
+                    className="w-full h-11 text-xs font-semibold"
                   >
                     {submittingPlan === planKey ? (
                       <span className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
                     ) : (
-                      <>
+                      <span className="flex items-center gap-2">
                         <span>{plan.ctaText}</span>
                         <ArrowRight className="h-4 w-4" />
-                      </>
+                      </span>
                     )}
-                  </button>
+                  </Button>
                 </div>
-              </div>
+              </Card>
             );
           })}
         </div>
       </ScrollReveal>
 
-
       {/* Feature Comparison Matrix */}
       <ScrollReveal delayMs={150}>
         <div className="space-y-6">
           <div className="border-b border-white/10 pb-4">
-            <h2 className="font-serif text-2xl sm:text-3xl text-white font-normal">Detailed Feature Matrix</h2>
-            <p className="text-xs text-zinc-400 mt-1">Compare features across Free, Starter, and Diamond tiers.</p>
+            <h2 className="font-heading text-2xl sm:text-3xl text-white font-semibold">Detailed Feature Matrix</h2>
+            <p className="text-xs text-zinc-400 mt-1">Compare plan capabilities across Free, Starter, and Diamond tiers.</p>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-white/10 bg-zinc-950">
+          <div className="overflow-x-auto rounded-xl border border-white/10 bg-zinc-950">
             <table className="w-full text-left text-xs min-w-[540px]">
               <thead>
                 <tr className="border-b border-white/10 bg-zinc-900/60 text-zinc-400 uppercase tracking-wider">
                   <th className="p-4 font-semibold">Feature</th>
                   <th className="p-4 font-semibold text-center">Guest / Free</th>
-                  <th className="p-4 font-semibold text-center text-white">Starter ($7-$9)</th>
-                  <th className="p-4 font-semibold text-center text-emerald-400">Diamond ($24-$29)</th>
+                  <th className="p-4 font-semibold text-center text-white">Starter ($3-$4)</th>
+                  <th className="p-4 font-semibold text-center text-emerald-400">Diamond ($9-$12)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-zinc-300">
@@ -273,29 +271,28 @@ export default function PricingPage() {
 
       {/* FAQ Section */}
       <ScrollReveal delayMs={200}>
-        <div className="rounded-2xl border border-white/10 bg-zinc-950 p-6 sm:p-8 space-y-4">
+        <Card className="p-6 sm:p-8 space-y-4">
           <div className="flex items-center gap-2 text-white font-bold">
             <HelpCircle className="h-5 w-5 text-emerald-400" />
-            <h2 className="font-serif text-2xl">Pricing FAQ</h2>
+            <h2 className="font-heading text-2xl">Pricing &amp; Account FAQ</h2>
           </div>
 
-          <div className="space-y-4 text-xs text-zinc-400 leading-relaxed">
+          <div className="space-y-4 text-xs sm:text-sm text-zinc-400 leading-relaxed">
             <div>
               <h3 className="font-semibold text-white">What happens when a guest reaches the 3 links/day limit?</h3>
               <p className="mt-1">
-                Guest sessions are restricted to 3 link creations per 24 hours. When you reach this limit, simply create a free account or upgrade to Starter for unlimited link creation.
+                Guest sessions are capped at 3 link creations per 24 hours. You can sign up for a free account or upgrade to Starter for unlimited link shortening.
               </p>
             </div>
             <div>
-              <h3 className="font-semibold text-white">Can I cancel or switch plans anytime?</h3>
+              <h3 className="font-semibold text-white">Can I change or cancel my plan anytime?</h3>
               <p className="mt-1">
-                Yes. You can upgrade, downgrade, or cancel your subscription at any time directly from your dashboard setting.
+                Yes. You can manage, upgrade, or cancel your subscription at any time directly from your dashboard.
               </p>
             </div>
           </div>
-        </div>
+        </Card>
       </ScrollReveal>
     </div>
   );
 }
-

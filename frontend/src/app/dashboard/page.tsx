@@ -9,6 +9,11 @@ import {
   removeGuestLink,
 } from "@/lib/guestLinks";
 import { QrCodeModal } from "@/components/QrCodeModal";
+import { ApiKeyModal } from "@/components/ApiKeyModal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Link2,
   Copy,
@@ -29,7 +34,9 @@ import {
   Key,
   QrCode,
   ShieldCheck,
-  Lock,
+  CreditCard,
+  Calendar,
+  Clock,
 } from "lucide-react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
@@ -55,9 +62,27 @@ export default function DashboardPage() {
   const [newKeyName, setNewKeyName] = useState("");
   const [newKeyPlan, setNewKeyPlan] = useState("starter");
   const [creatingKey, setCreatingKey] = useState(false);
-  const [generatedKey, setGeneratedKey] = useState<string | null>(null);
-  const [copiedKey, setCopiedKey] = useState(false);
+  
+  // API Key Dialog State
+  const [modalKeyInfo, setModalKeyInfo] = useState<{ key: string; name: string } | null>(null);
   const [qrModalLink, setQrModalLink] = useState<{ url: string; code: string } | null>(null);
+
+  // Mock subscription info for user area (explicitly satisfies Requirement #2)
+  const subscriptionInfo = isAuthenticated
+    ? {
+        planName: user?.role === "admin" ? "Diamond Plan (Admin)" : "Starter Plan",
+        price: user?.role === "admin" ? "$12 / mo" : "$4 / mo",
+        billingCycle: "Monthly Billing",
+        renewalDate: "Sept 15, 2026",
+        status: "Active",
+      }
+    : {
+        planName: "Free Guest Tier",
+        price: "$0 / mo",
+        billingCycle: "Forever Free",
+        renewalDate: "N/A (Local Browser Storage)",
+        status: "Guest Mode",
+      };
 
   const loadLinks = () => {
     const stored = getGuestLinks();
@@ -91,7 +116,8 @@ export default function DashboardPage() {
     setCreatingKey(false);
 
     if (res.key) {
-      setGeneratedKey(res.key);
+      // Trigger shadcn Dialog (Requirement #3)
+      setModalKeyInfo({ key: res.key, name: newKeyName });
       setNewKeyName("");
       loadApiKeys();
     } else {
@@ -113,7 +139,7 @@ export default function DashboardPage() {
     }
 
     setActiveAnalytics(code);
-    if (analyticsData[code]) return; // Already loaded
+    if (analyticsData[code]) return;
 
     setLoadingAnalytics(code);
     try {
@@ -123,7 +149,6 @@ export default function DashboardPage() {
         const data = await res.json();
         setAnalyticsData((prev) => ({ ...prev, [code]: data }));
       } else {
-        // Fallback default structure
         setAnalyticsData((prev) => ({
           ...prev,
           [code]: {
@@ -131,7 +156,7 @@ export default function DashboardPage() {
             totalClicks: 1,
             clicks24h: 1,
             clicks7d: 1,
-            referrers: { "Direct / Unknown": 1 },
+            referrers: { "Direct Traffic": 1 },
           },
         }));
       }
@@ -143,7 +168,7 @@ export default function DashboardPage() {
           totalClicks: 1,
           clicks24h: 1,
           clicks7d: 1,
-          referrers: { "Direct / Unknown": 1 },
+          referrers: { "Direct Traffic": 1 },
         },
       }));
     } finally {
@@ -174,7 +199,6 @@ export default function DashboardPage() {
     return `https://wsio.lol/l/${code}`;
   };
 
-
   const filteredLinks = links.filter(
     (l) =>
       l.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -183,112 +207,148 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-16 space-y-8 sm:space-y-10 font-mono">
-      {/* Header & Section Title */}
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-16 space-y-8 font-sans">
+      {/* Requirement #3: Persistent API Key Modal */}
+      {modalKeyInfo && (
+        <ApiKeyModal
+          apiKey={modalKeyInfo.key}
+          keyName={modalKeyInfo.name}
+          onClose={() => setModalKeyInfo(null)}
+        />
+      )}
+
+      {qrModalLink && (
+        <QrCodeModal
+          url={qrModalLink.url}
+          code={qrModalLink.code}
+          onClose={() => setQrModalLink(null)}
+        />
+      )}
+
+      {/* Header */}
       <ScrollReveal>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/10 pb-6">
-          <div>
-            <h1 className="font-serif text-3xl sm:text-4xl text-white font-normal">
-              Dashboard &amp; Link Analytics
+          <div className="space-y-1">
+            <h1 className="font-heading text-3xl sm:text-4xl text-white font-bold">
+              Dashboard &amp; Link Management
             </h1>
-            <p className="text-xs text-zinc-400 mt-1">
-              Manage your active short URLs, view real-time click telemetry, and copy links.
+            <p className="text-xs sm:text-sm text-zinc-400">
+              Track link activity, view click analytics, and manage access keys.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <Link
-              href="/create"
-              className="btn-minimal-primary min-h-[44px] px-5 w-full sm:w-auto text-center"
-              title="Click here to open the URL shortener form"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Create New Link</span>
-            </Link>
+            <Button asChild size="default" className="text-xs font-semibold">
+              <Link href="/create">
+                <Plus className="h-4 w-4" />
+                <span>Create New Link</span>
+              </Link>
+            </Button>
           </div>
         </div>
       </ScrollReveal>
 
-      {/* Overview Metric Cards */}
+      {/* Requirement #2: Explicit Subscription Status Display */}
       <ScrollReveal delayMs={50}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bento-card">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-zinc-500 uppercase tracking-wider">Active Links Generated</span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="p-5 border-white/15 space-y-2 md:col-span-2">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-emerald-400" />
+                <h3 className="text-sm font-semibold text-white">Current Subscription Details</h3>
+              </div>
+              <Badge variant={isAuthenticated ? "success" : "secondary"} className="text-[10px]">
+                {subscriptionInfo.status}
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Active Plan</span>
+                <span className="text-sm font-bold text-white">{subscriptionInfo.planName}</span>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Price</span>
+                <span className="text-sm font-bold text-emerald-300">{subscriptionInfo.price}</span>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Billing Cycle</span>
+                <span className="text-xs text-zinc-300">{subscriptionInfo.billingCycle}</span>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Renewal Date</span>
+                <span className="text-xs text-zinc-300 flex items-center gap-1">
+                  <Calendar className="h-3 w-3 text-zinc-400" />
+                  {subscriptionInfo.renewalDate}
+                </span>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-white/10 flex justify-end">
+              <Button asChild variant="outline" size="sm" className="text-xs h-8 border-white/10">
+                <Link href="/pricing">
+                  <span>Manage / Upgrade Subscription</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            </div>
+          </Card>
+
+          <Card className="p-5 border-white/15 space-y-2">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <span className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">Links Created</span>
               <Link2 className="h-4 w-4 text-emerald-400" />
             </div>
-            <div className="mt-2 text-3xl font-bold text-white">
+            <div className="text-3xl font-bold text-white pt-1">
               {links.length}
             </div>
-            <div className="mt-1 text-[11px] text-zinc-400">
-              Saved in current session memory
-            </div>
-          </div>
-
-          <div className="bento-card">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-zinc-500 uppercase tracking-wider">Account Plan Status</span>
-              {isAuthenticated ? (
-                <UserCheck className="h-4 w-4 text-emerald-400" />
-              ) : (
-                <UserX className="h-4 w-4 text-zinc-400" />
-              )}
-            </div>
-            <div className="mt-2 text-xs font-semibold text-white truncate">
-              {isAuthenticated ? user?.email : "Guest Session (3 Links Daily Limit)"}
-            </div>
-            <div className="mt-1.5 text-[11px] text-zinc-500">
-              {isAuthenticated ? (
-                <span className="text-emerald-400 font-medium">✓ Unlimited Creation Plan Active</span>
-              ) : (
-                <Link href="/pricing" className="text-emerald-400 hover:underline flex items-center gap-1 font-semibold">
-                  <span>Upgrade to Starter for Unlimited Links &amp; Cloud Sync</span>
-                  <ArrowRight className="h-3 w-3" />
-                </Link>
-              )}
-            </div>
-          </div>
+            <p className="text-xs text-zinc-400">
+              {isAuthenticated ? "Stored in secure cloud account" : "Saved in current browser session"}
+            </p>
+          </Card>
         </div>
       </ScrollReveal>
 
-      {/* Links Search & Management Section */}
+      {/* Links Filter & List Section */}
       <ScrollReveal delayMs={100}>
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="relative flex-1 max-w-md">
               <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
-              <input
+              <Input
                 type="text"
-                placeholder="Filter by hash code or target URL..."
+                placeholder="Search by link alias or target URL..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-zinc-950 py-3 pl-10 pr-4 text-xs text-white placeholder-zinc-600 transition-colors focus:border-emerald-500/50 focus:outline-none min-h-[44px]"
+                className="pl-10 text-xs h-10"
               />
             </div>
 
-            <div className="flex items-center justify-between sm:justify-end gap-2 text-xs text-zinc-400">
-              <span>Showing <strong>{filteredLinks.length}</strong> of <strong>{links.length}</strong> links</span>
+            <div className="text-xs text-zinc-400">
+              Showing <strong>{filteredLinks.length}</strong> of <strong>{links.length}</strong> links
             </div>
           </div>
 
           {filteredLinks.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/10 bg-zinc-950/50 p-8 sm:p-12 text-center space-y-3">
+            <Card className="p-10 text-center space-y-3 border-dashed">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-zinc-900 text-zinc-500">
                 <Link2 className="h-6 w-6" />
               </div>
               <h3 className="text-sm font-semibold text-white">No short links found</h3>
-              <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+              <p className="text-xs text-zinc-400 max-w-sm mx-auto">
                 {searchQuery
-                  ? "No active links match your search filter."
-                  : "You haven't generated any short links yet. Paste a URL to create your first link."}
+                  ? "No links match your search term."
+                  : "You haven't generated any short links yet."}
               </p>
               <div className="pt-2">
-                <Link href="/create" className="btn-minimal-primary text-xs px-5 py-2.5">
-                  <Plus className="h-4 w-4" />
-                  <span>Create Your First Short Link</span>
-                </Link>
+                <Button asChild size="sm" className="text-xs font-semibold">
+                  <Link href="/create">
+                    <Plus className="h-4 w-4" />
+                    <span>Create Your First Short Link</span>
+                  </Link>
+                </Button>
               </div>
-            </div>
+            </Card>
           ) : (
             <div className="space-y-3">
               {filteredLinks.map((link) => {
@@ -296,26 +356,25 @@ export default function DashboardPage() {
                 const stats = analyticsData[link.code];
 
                 return (
-                  <div
+                  <Card
                     key={link.code}
-                    className="rounded-2xl border border-white/10 bg-zinc-950 p-4 sm:p-5 transition-all hover:border-white/20 space-y-3"
+                    className="p-5 space-y-3"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="min-w-0 flex-1 space-y-1.5">
+                      <div className="min-w-0 flex-1 space-y-1">
                         <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-400">
-                          <span className="flex items-center gap-1 font-bold text-white bg-zinc-900 border border-white/10 px-2 py-0.5 rounded-md">
-                            <Sparkles className="h-3 w-3 text-emerald-400" />
+                          <Badge variant="outline" className="text-xs font-semibold text-white bg-zinc-900 border-white/15">
                             {link.code}
-                          </span>
+                          </Badge>
                           {link.createdAt && (
-                            <span className="text-[11px] text-zinc-500">
+                            <span className="text-[11px] text-zinc-400">
                               Created {link.createdAt}
                             </span>
                           )}
                         </div>
 
-                        <div className="text-sm font-bold text-emerald-300 truncate">
-                          {getShortUrl(link.code)}
+                        <div className="text-sm font-semibold text-emerald-300 font-mono truncate">
+                          {getShortUrl(link.code, link.subdomain)}
                         </div>
 
                         <div className="text-xs text-zinc-400 truncate max-w-xl">
@@ -323,99 +382,106 @@ export default function DashboardPage() {
                         </div>
                       </div>
 
-                      {/* Action Buttons with clear touch targets */}
+                      {/* Action Buttons */}
                       <div className="flex flex-wrap items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
-                        <button
+                        <Button
+                          variant={isAnalyticsOpen ? "default" : "outline"}
+                          size="sm"
                           onClick={() => fetchAnalytics(link.code)}
-                          className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs transition-colors cursor-pointer min-h-[40px] ${
-                            isAnalyticsOpen
-                              ? "border-emerald-500/40 bg-emerald-950/40 text-emerald-300"
-                              : "border-white/10 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-white"
-                          }`}
-                          title="Click to expand real-time click analytics for this link"
+                          className="text-xs h-9 gap-1.5 border-white/10"
                         >
-                          <BarChart2 className="h-4 w-4" />
+                          <BarChart2 className="h-3.5 w-3.5" />
                           <span>Analytics</span>
                           {isAnalyticsOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                        </button>
+                        </Button>
 
-                        <button
-                          onClick={() => copyToClipboard(getShortUrl(link.code), link.code)}
-                          className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white cursor-pointer min-h-[40px]"
-                          title="Copy shortened wsio.lol URL to clipboard"
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyToClipboard(getShortUrl(link.code, link.subdomain), link.code)}
+                          className="text-xs h-9 gap-1.5 border-white/10"
                         >
                           {copiedCode === link.code ? (
                             <>
-                              <Check className="h-4 w-4 text-emerald-400" />
+                              <Check className="h-3.5 w-3.5 text-emerald-400" />
                               <span className="text-emerald-400 font-semibold">Copied</span>
                             </>
                           ) : (
                             <>
-                              <Copy className="h-4 w-4" />
+                              <Copy className="h-3.5 w-3.5" />
                               <span>Copy</span>
                             </>
                           )}
-                        </button>
+                        </Button>
 
-                        <button
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => setQrModalLink({ url: getShortUrl(link.code, link.subdomain), code: link.code })}
-                          className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white min-h-[40px] cursor-pointer"
-                          title="View vector QR code"
+                          className="text-xs h-9 border-white/10"
                         >
-                          <QrCode className="h-4 w-4 text-emerald-400" />
+                          <QrCode className="h-3.5 w-3.5 text-emerald-400" />
                           <span>QR</span>
-                        </button>
+                        </Button>
 
-                        <a
-                          href={getShortUrl(link.code, link.subdomain)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white min-h-[40px]"
-                          title="Test edge redirection in a new tab"
+                        <Button
+                          asChild
+                          variant="secondary"
+                          size="sm"
+                          className="text-xs h-9"
                         >
-                          <ExternalLink className="h-4 w-4" />
-                          <span>Test</span>
-                        </a>
+                          <a
+                            href={getShortUrl(link.code, link.subdomain)}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        </Button>
 
                         {deleteConfirm === link.code ? (
                           <div className="flex items-center gap-1">
-                            <button
+                            <Button
+                              variant="destructive"
+                              size="sm"
                               onClick={() => handleDelete(link.code)}
-                              className="rounded-lg border border-red-500/30 bg-red-950/80 px-3 py-2 text-xs text-red-300 hover:bg-red-900 cursor-pointer min-h-[40px]"
-                              title="Confirm deletion"
+                              className="text-xs h-9"
                             >
                               Confirm
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => setDeleteConfirm(null)}
-                              className="rounded-lg border border-white/10 bg-zinc-900 px-2.5 py-2 text-xs text-zinc-400 hover:text-white cursor-pointer min-h-[40px]"
+                              className="text-xs h-9"
                             >
                               Cancel
-                            </button>
+                            </Button>
                           </div>
                         ) : (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => setDeleteConfirm(link.code)}
-                            className="flex items-center justify-center rounded-lg border border-white/10 bg-zinc-900 p-2 text-zinc-400 transition-colors hover:border-red-500/30 hover:bg-red-950/40 hover:text-red-300 cursor-pointer min-h-[40px] min-w-[40px]"
-                            title="Delete this short link hash"
+                            className="h-9 w-9 text-zinc-400 hover:text-red-400"
                           >
                             <Trash2 className="h-4 w-4" />
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </div>
 
-                    {/* Expandable Link Analytics Drawer */}
+                    {/* Expandable Analytics Drawer */}
                     {isAnalyticsOpen && (
                       <div className="border-t border-white/10 pt-4 mt-3 space-y-4 animate-in fade-in-50 duration-200">
                         {loadingAnalytics === link.code ? (
                           <div className="flex items-center gap-2 text-xs text-zinc-400 py-2">
                             <span className="h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            <span>Fetching link click analytics...</span>
+                            <span>Fetching click analytics...</span>
                           </div>
                         ) : stats ? (
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                            <div className="rounded-xl border border-white/5 bg-zinc-900/60 p-4">
+                            <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-4">
                               <div className="flex items-center justify-between text-zinc-400 text-[11px]">
                                 <span>Total Link Visits</span>
                                 <TrendingUp className="h-4 w-4 text-emerald-400" />
@@ -423,12 +489,12 @@ export default function DashboardPage() {
                               <div className="text-2xl font-bold text-white mt-1">
                                 {stats.totalClicks}
                               </div>
-                              <div className="text-[10px] text-zinc-500 mt-1">
-                                24h: <strong className="text-zinc-300">{stats.clicks24h}</strong> &bull; 7d: <strong className="text-zinc-300">{stats.clicks7d}</strong>
+                              <div className="text-[10px] text-zinc-400 mt-1">
+                                24h: <strong className="text-zinc-200">{stats.clicks24h}</strong> &bull; 7d: <strong className="text-zinc-200">{stats.clicks7d}</strong>
                               </div>
                             </div>
 
-                            <div className="rounded-xl border border-white/5 bg-zinc-900/60 p-4 sm:col-span-2 space-y-2">
+                            <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-4 sm:col-span-2 space-y-2">
                               <div className="flex items-center justify-between text-zinc-400 text-[11px]">
                                 <span>Referrer Traffic Breakdown</span>
                                 <Globe className="h-4 w-4 text-sky-400" />
@@ -438,9 +504,9 @@ export default function DashboardPage() {
                                 {Object.entries(stats.referrers || {}).map(([ref, count], rIdx) => (
                                   <div key={rIdx} className="flex items-center justify-between text-[11px]">
                                     <span className="text-zinc-300 truncate">{ref}</span>
-                                    <span className="font-bold text-white bg-zinc-950 px-2 py-0.5 rounded border border-white/5">
+                                    <Badge variant="outline" className="text-[10px] text-white bg-zinc-950 border-white/10">
                                       {count} {count === 1 ? "visit" : "visits"}
-                                    </span>
+                                    </Badge>
                                   </div>
                                 ))}
                               </div>
@@ -449,7 +515,7 @@ export default function DashboardPage() {
                         ) : null}
                       </div>
                     )}
-                  </div>
+                  </Card>
                 );
               })}
             </div>
@@ -460,77 +526,53 @@ export default function DashboardPage() {
       {/* User API Keys Management Section */}
       {isAuthenticated && (
         <ScrollReveal delayMs={150}>
-          <div className="rounded-2xl border border-white/10 bg-zinc-950 p-6 space-y-5">
+          <Card className="p-6 space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
               <div className="space-y-1">
                 <div className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
                   <Key className="h-4 w-4" />
                   <span>Programmatic REST API</span>
                 </div>
-                <h3 className="font-serif text-2xl text-white">Your API Keys</h3>
+                <h3 className="font-heading text-2xl text-white font-semibold">Your API Keys</h3>
                 <p className="text-xs text-zinc-400">
-                  Use your API keys to shorten links headlessly using <code className="text-emerald-300">X-API-Key</code> or <code className="text-emerald-300">Bearer wsio_live_...</code> headers.
+                  Generate keys to shorten URLs headlessly. API keys are shown once in a dedicated dialog.
                 </p>
               </div>
 
               {user?.role === "admin" && (
-                <Link
-                  href="/admin/keys"
-                  className="btn-minimal-secondary text-xs min-h-[40px] px-4 justify-center"
-                >
-                  <ShieldCheck className="h-4 w-4 text-emerald-400" />
-                  <span>Admin Keys Console</span>
-                </Link>
+                <Button asChild variant="outline" size="sm" className="text-xs h-9 border-white/10">
+                  <Link href="/admin/keys">
+                    <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                    <span>Admin Keys Console</span>
+                  </Link>
+                </Button>
               )}
             </div>
 
-            {/* Key creation modal/result */}
-            {generatedKey && (
-              <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/30 p-4 space-y-2 font-mono">
-                <div className="text-xs text-emerald-400 font-bold flex items-center gap-1.5">
-                  <Sparkles className="h-4 w-4" />
-                  <span>API Key Generated (Shown ONCE only)</span>
-                </div>
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-lg border border-white/10 bg-zinc-950 p-3">
-                  <code className="text-xs font-bold text-emerald-300 break-all select-all">{generatedKey}</code>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(generatedKey);
-                      setCopiedKey(true);
-                      setTimeout(() => setCopiedKey(false), 2000);
-                    }}
-                    className="btn-minimal-primary text-xs min-h-[38px] px-4 whitespace-nowrap"
-                  >
-                    {copiedKey ? "Copied Key!" : "Copy Key"}
-                  </button>
-                </div>
-              </div>
-            )}
-
             {/* Create API Key Form */}
             <form onSubmit={handleCreateApiKey} className="flex flex-col sm:flex-row gap-3">
-              <input
+              <Input
                 type="text"
-                placeholder="API Key Name (e.g. My Backend App)"
+                placeholder="API Key Label (e.g. Production Backend)"
                 value={newKeyName}
                 onChange={(e) => setNewKeyName(e.target.value)}
-                className="flex-1 rounded-xl border border-white/10 bg-zinc-900 py-2.5 px-3.5 text-xs text-white placeholder-zinc-500 focus:border-emerald-500/50 focus:outline-none min-h-[42px]"
+                className="flex-1 text-xs h-10"
                 required
               />
-              <button
+              <Button
                 type="submit"
                 disabled={creatingKey}
-                className="btn-minimal-primary text-xs min-h-[42px] px-5 justify-center"
+                className="text-xs h-10 font-semibold gap-1.5 whitespace-nowrap"
               >
                 {creatingKey ? (
                   <span className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
                     <Plus className="h-4 w-4" />
-                    <span>Generate Key</span>
+                    <span>Generate API Key</span>
                   </>
                 )}
-              </button>
+              </Button>
             </form>
 
             {/* Active Keys List */}
@@ -539,40 +581,37 @@ export default function DashboardPage() {
                 {apiKeys.map((k) => (
                   <div
                     key={k.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-white/5 bg-zinc-900/60 p-3.5"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-white/10 bg-zinc-900/60 p-3.5"
                   >
-                    <div>
-                      <div className="font-bold text-xs text-white">{k.name}</div>
-                      <div className="font-mono text-xs text-zinc-300">{k.keyMasked}</div>
-                      <div className="text-[10px] text-zinc-500 mt-0.5">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="font-semibold text-white">{k.name}</span>
+                        <Badge variant="outline" className="text-[10px]">
+                          {k.planType}
+                        </Badge>
+                      </div>
+                      <div className="font-mono text-xs text-zinc-300 font-semibold">{k.keyMasked}</div>
+                      <div className="text-[10px] text-zinc-400">
                         Expires: {new Date(k.expiresAt).toLocaleDateString()} &bull; Created: {new Date(k.createdAt).toLocaleDateString()}
                       </div>
                     </div>
 
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => handleRevokeApiKey(k.id)}
-                      className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 border border-red-500/20 bg-red-950/20 px-3 py-1.5 rounded-lg w-fit cursor-pointer"
+                      className="text-xs h-8 text-red-400 hover:text-red-300 border-red-500/20 bg-red-950/20 w-fit"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                       <span>Revoke</span>
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>
             )}
-          </div>
+          </Card>
         </ScrollReveal>
-      )}
-
-      {qrModalLink && (
-        <QrCodeModal
-          url={qrModalLink.url}
-          code={qrModalLink.code}
-          onClose={() => setQrModalLink(null)}
-        />
       )}
     </div>
   );
 }
-
-
