@@ -1,6 +1,8 @@
 import { LinkItem } from "./api";
 
 const GUEST_LINKS_KEY = "wsio_guest_links";
+const GUEST_USAGE_KEY = "wsio_guest_usage_track";
+export const GUEST_DAILY_LIMIT = 3;
 
 export function getGuestLinks(): LinkItem[] {
   if (typeof window === "undefined") return [];
@@ -34,6 +36,37 @@ export function removeGuestLink(code: string): LinkItem[] {
     console.error("Failed to remove guest link from localStorage", e);
   }
   return updated;
+}
+
+export function getGuestDailyUsage(): { count: number; date: string } {
+  if (typeof window === "undefined") return { count: 0, date: "" };
+  const today = new Date().toISOString().split("T")[0];
+  try {
+    const raw = localStorage.getItem(GUEST_USAGE_KEY);
+    if (!raw) return { count: 0, date: today };
+    const parsed = JSON.parse(raw);
+    if (parsed.date !== today) {
+      return { count: 0, date: today };
+    }
+    return parsed;
+  } catch (e) {
+    return { count: 0, date: today };
+  }
+}
+
+export function incrementGuestDailyUsage(): number {
+  const today = new Date().toISOString().split("T")[0];
+  const current = getGuestDailyUsage();
+  const newCount = current.date === today ? current.count + 1 : 1;
+  try {
+    localStorage.setItem(GUEST_USAGE_KEY, JSON.stringify({ date: today, count: newCount }));
+  } catch (e) {}
+  return newCount;
+}
+
+export function isGuestLimitReached(): boolean {
+  const usage = getGuestDailyUsage();
+  return usage.count >= GUEST_DAILY_LIMIT;
 }
 
 export function generateGuestHash(rawUrl: string): string {

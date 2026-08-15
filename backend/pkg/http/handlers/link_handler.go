@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/atluixx/wsio/pkg/domain"
 	"github.com/atluixx/wsio/pkg/repositories"
@@ -13,12 +14,18 @@ import (
 )
 
 type LinkHandler struct {
-	repository repositories.LinkRepository
+	repository    repositories.LinkRepository
+	analyticsRepo repositories.AnalyticsRepository
 }
 
-func NewLinkHandler(repository repositories.LinkRepository) *LinkHandler {
+func NewLinkHandler(repository repositories.LinkRepository, analyticsRepo ...repositories.AnalyticsRepository) *LinkHandler {
+	var aRepo repositories.AnalyticsRepository
+	if len(analyticsRepo) > 0 {
+		aRepo = analyticsRepo[0]
+	}
 	return &LinkHandler{
-		repository: repository,
+		repository:    repository,
+		analyticsRepo: aRepo,
 	}
 }
 
@@ -100,6 +107,21 @@ func (h *LinkHandler) RedirectLink(c *gin.Context) {
 			"error": "failed to find link",
 		})
 		return
+	}
+
+	// Record click asynchronously if analytics repository is available
+	if h.analyticsRepo != nil {
+		go func(lID uuid.UUID, cCode, ref, ua, ip string) {
+			_ = h.analyticsRepo.RecordClick(&domain.LinkClick{
+				ID:        uuid.New(),
+				LinkID:    lID,
+				Code:      cCode,
+				Referrer:  ref,
+				UserAgent: ua,
+				IP:        ip,
+				Timestamp: time.Now(),
+			})
+		}(link.ID, link.Code, c.GetHeader("Referer"), c.GetHeader("User-Agent"), c.ClientIP())
 	}
 
 	if c.Query("json") == "true" || strings.Contains(c.GetHeader("Accept"), "application/json") {

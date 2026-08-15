@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { LogOut, Plus, LayoutDashboard } from "lucide-react";
+import { LogOut, Plus, LayoutDashboard, Sparkles } from "lucide-react";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -12,7 +12,7 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-zinc-950/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        {/* Brand Logo - Written Only 'wsio.' without any 'W' icon box */}
+        {/* Brand Logo */}
         <Link href="/" className="group flex items-center gap-1.5 transition-opacity hover:opacity-90">
           <span className="font-mono text-xl font-bold tracking-tight text-white">
             wsio<span className="text-zinc-500">.</span>
@@ -43,6 +43,18 @@ export function Navbar() {
           >
             <Plus className="h-3.5 w-3.5" />
             <span>New Link</span>
+          </Link>
+
+          <Link
+            href="/pricing"
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 font-mono text-xs transition-colors ${
+              pathname === "/pricing"
+                ? "bg-zinc-800 text-white border border-zinc-700"
+                : "text-zinc-400 hover:text-white hover:bg-zinc-900"
+            }`}
+          >
+            <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+            <span>Pricing</span>
           </Link>
 
           <div className="mx-2 h-4 w-[1px] bg-zinc-800" />

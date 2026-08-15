@@ -3,6 +3,7 @@ package http
 import (
 	"github.com/atluixx/wsio/pkg/http/handlers"
 	"github.com/atluixx/wsio/pkg/http/middleware"
+	"github.com/atluixx/wsio/pkg/repositories"
 	"github.com/gin-gonic/gin"
 )
 
@@ -10,6 +11,8 @@ func SetupRoutes(
 	r *gin.Engine,
 	linkHandler *handlers.LinkHandler,
 	userHandler *handlers.UserHandler,
+	analyticsHandler *handlers.AnalyticsHandler,
+	analyticsRepo repositories.AnalyticsRepository,
 ) {
 	r.HandleMethodNotAllowed = true
 
@@ -23,7 +26,7 @@ func SetupRoutes(
 			c.Header("Access-Control-Allow-Origin", "*")
 		}
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie, X-Requested-With, Accept, Origin")
+		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie, X-Requested-With, Accept, Origin, X-User-ID")
 		c.Header("Access-Control-Expose-Headers", "Content-Length, Set-Cookie")
 		c.Header("Vary", "Origin")
 
@@ -54,7 +57,15 @@ func SetupRoutes(
 	links := base.Group("/links")
 	{
 		links.GET("/:code", linkHandler.RedirectLink)
-		links.POST("", middleware.OptionalAuth(), linkHandler.NewLink)
+		if analyticsHandler != nil {
+			links.GET("/:code/analytics", analyticsHandler.GetAnalytics)
+		}
+		
+		if analyticsRepo != nil {
+			links.POST("", middleware.OptionalAuth(), middleware.GuestLimitMiddleware(analyticsRepo), linkHandler.NewLink)
+		} else {
+			links.POST("", middleware.OptionalAuth(), linkHandler.NewLink)
+		}
 
 		protected := links.Group("")
 		protected.Use(middleware.Auth())

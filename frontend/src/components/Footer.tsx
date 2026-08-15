@@ -36,6 +36,11 @@ export function Footer() {
                   Create Short Link
                 </Link>
               </li>
+              <li>
+                <Link href="/pricing" className="transition-colors hover:text-white text-emerald-400 font-medium">
+                  Pricing Plans
+                </Link>
+              </li>
             </ul>
           </div>
 

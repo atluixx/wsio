@@ -3,6 +3,7 @@ package repositories
 import (
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/atluixx/wsio/pkg/domain"
 	"github.com/google/uuid"
@@ -102,5 +103,90 @@ func (r *inMemoryLinkRepository) Delete(link *domain.Link) error {
 	defer r.mu.Unlock()
 
 	delete(r.links, link.Code)
+	return nil
+}
+
+type inMemoryAnalyticsRepository struct {
+	mu         sync.RWMutex
+	clicks     []*domain.LinkClick
+	guestUsage map[string]int // key: "ident:date"
+}
+
+func NewInMemoryAnalyticsRepository() AnalyticsRepository {
+	return &inMemoryAnalyticsRepository{
+		clicks:     make([]*domain.LinkClick, 0),
+		guestUsage: make(map[string]int),
+	}
+}
+
+func (r *inMemoryAnalyticsRepository) RecordClick(click *domain.LinkClick) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if click.ID == uuid.Nil {
+		click.ID = uuid.New()
+	}
+	if click.Timestamp.IsZero() {
+		click.Timestamp = time.Now()
+	}
+
+	r.clicks = append(r.clicks, click)
+	return nil
+}
+
+func (r *inMemoryAnalyticsRepository) GetAnalyticsByCode(code string) (*domain.LinkAnalyticsSummary, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	var totalClicks int64
+	var clicks24h int64
+	var clicks7d int64
+	referrersMap := make(map[string]int64)
+
+	now := time.Now()
+	since24h := now.Add(-24 * time.Hour)
+	since7d := now.Add(-7 * 24 * time.Hour)
+
+	for _, c := range r.clicks {
+		if c.Code == code {
+			totalClicks++
+			if c.Timestamp.After(since24h) {
+				clicks24h++
+			}
+			if c.Timestamp.After(since7d) {
+				clicks7d++
+			}
+
+			ref := c.Referrer
+			if ref == "" {
+				ref = "Direct / Unknown"
+			}
+			referrersMap[ref]++
+		}
+	}
+
+	return &domain.LinkAnalyticsSummary{
+		Code:        code,
+		TotalClicks: totalClicks,
+		Clicks24h:   clicks24h,
+		Clicks7d:    clicks7d,
+		Referrers:   referrersMap,
+	}, nil
+}
+
+func (r *inMemoryAnalyticsRepository) GetGuestUsage(identifier string, date string) (int, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	key := identifier + ":" + date
+	return r.guestUsage[key], nil
+}
+
+func (r *inMemoryAnalyticsRepository) IncrementGuestUsage(identifier string, date string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	key := identifier + ":" + date
+	r.guestUsage[key]++
 	return nil
 }

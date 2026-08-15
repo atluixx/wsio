@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { createShortLink, LinkItem } from "@/lib/api";
@@ -8,6 +8,10 @@ import {
   saveGuestLink,
   normalizeUrl,
   generateGuestHash,
+  getGuestDailyUsage,
+  incrementGuestDailyUsage,
+  isGuestLimitReached,
+  GUEST_DAILY_LIMIT,
 } from "@/lib/guestLinks";
 import {
   Link2,
@@ -19,6 +23,7 @@ import {
   Sparkles,
   Plus,
   Minus,
+  Lock,
 } from "lucide-react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
@@ -30,10 +35,22 @@ export default function Home() {
   const [createdLink, setCreatedLink] = useState<LinkItem | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [guestUsage, setGuestUsage] = useState({ count: 0, date: "" });
+
+  useEffect(() => {
+    setGuestUsage(getGuestDailyUsage());
+  }, []);
+
+  const limitReached = !isAuthenticated && guestUsage.count >= GUEST_DAILY_LIMIT;
 
   const handleShorten = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputUrl.trim()) return;
+
+    if (limitReached) {
+      setErrorMessage("Guest daily limit of 3 links reached. Please register or upgrade your plan.");
+      return;
+    }
 
     setLoading(true);
     setErrorMessage("");
@@ -48,6 +65,11 @@ export default function Home() {
     // Call backend API with fallback
     const res = await createShortLink(formattedUrl);
     setLoading(false);
+
+    if (res.error && res.error.includes("limit reached")) {
+      setErrorMessage(res.error);
+      return;
+    }
 
     if (!res.error && res.code) {
       code = res.code;
@@ -72,6 +94,12 @@ export default function Home() {
 
     setCreatedLink(newLink);
     saveGuestLink(newLink);
+    
+    if (!isAuthenticated) {
+      const newCount = incrementGuestDailyUsage();
+      setGuestUsage(getGuestDailyUsage());
+    }
+
     setInputUrl("");
   };
 
@@ -96,7 +124,7 @@ export default function Home() {
     },
     {
       q: "What is the difference between Guest Session and Registered Account?",
-      a: "Guest links are stored locally in your browser. Registering a free account allows you to sync links across devices.",
+      a: "Guest links are restricted to 3 links per day and stored locally in your browser. Registering or upgrading to Starter allows unlimited link creation and device sync.",
     },
     {
       q: "Are short links permanent?",
@@ -116,7 +144,21 @@ export default function Home() {
         </div>
 
         {/* URL Shortener Form */}
-        <div className="mt-8 rounded-xl border border-white/10 bg-zinc-950/80 p-4 sm:p-6 backdrop-blur-xl">
+        <div className="mt-8 rounded-xl border border-white/10 bg-zinc-950/80 p-4 sm:p-6 backdrop-blur-xl space-y-4">
+          {!isAuthenticated && (
+            <div className="flex items-center justify-between font-mono text-xs text-zinc-400 border-b border-white/10 pb-3">
+              <span>Guest Creation Limit: {guestUsage.count} / {GUEST_DAILY_LIMIT} used today</span>
+              {limitReached ? (
+                <Link href="/pricing" className="text-emerald-400 hover:underline font-semibold flex items-center gap-1">
+                  <span>Upgrade to Starter for Unlimited</span>
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              ) : (
+                <span className="text-zinc-500">{GUEST_DAILY_LIMIT - guestUsage.count} remaining today</span>
+              )}
+            </div>
+          )}
+
           <form onSubmit={handleShorten} className="flex flex-col gap-3 sm:flex-row">
             <div className="relative flex-1">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-zinc-500">
@@ -124,21 +166,27 @@ export default function Home() {
               </div>
               <input
                 type="text"
-                placeholder="https://your-long-destination-url.com/path"
+                placeholder={limitReached ? "Guest limit reached (3/3). Upgrade to create more links." : "https://your-long-destination-url.com/path"}
                 value={inputUrl}
+                disabled={limitReached}
                 onChange={(e) => setInputUrl(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-zinc-900/90 py-3 pl-10 pr-4 font-mono text-xs text-white placeholder-zinc-600 transition-colors focus:border-white/30 focus:outline-none sm:text-sm"
+                className="w-full rounded-lg border border-white/10 bg-zinc-900/90 py-3 pl-10 pr-4 font-mono text-xs text-white placeholder-zinc-600 transition-colors focus:border-white/30 focus:outline-none sm:text-sm disabled:opacity-50"
                 required
               />
             </div>
 
             <button
               type="submit"
-              disabled={loading}
-              className="btn-minimal-primary whitespace-nowrap cursor-pointer"
+              disabled={loading || limitReached}
+              className="btn-minimal-primary whitespace-nowrap cursor-pointer disabled:opacity-50"
             >
               {loading ? (
                 <span className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+              ) : limitReached ? (
+                <span className="flex items-center gap-1.5 text-zinc-400">
+                  <Lock className="h-4 w-4" />
+                  <span>Limit Reached</span>
+                </span>
               ) : (
                 <>
                   <span>Shorten URL</span>
@@ -148,9 +196,23 @@ export default function Home() {
             </button>
           </form>
 
+          {/* Limit Warning Banner */}
+          {limitReached && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-950/40 p-4 font-mono text-xs text-amber-200">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="h-4 w-4 text-amber-400 shrink-0" />
+                <span>You have reached the guest daily limit of 3 links.</span>
+              </div>
+              <Link href="/pricing" className="btn-minimal-primary text-xs whitespace-nowrap">
+                <span>View Plans &amp; Upgrade</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          )}
+
           {/* Error Banner */}
-          {errorMessage && (
-            <div className="mt-4 flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-950/30 p-3.5 font-mono text-xs text-red-300">
+          {errorMessage && !limitReached && (
+            <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-950/30 p-3.5 font-mono text-xs text-red-300">
               <ShieldAlert className="h-4 w-4 text-red-400 shrink-0" />
               <span>{errorMessage}</span>
             </div>
