@@ -249,18 +249,18 @@ export default function DashboardPage() {
 
       {/* Header */}
       <ScrollReveal>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-purple-500/15 pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/10 pb-6">
           <div className="space-y-1">
             <h1 className="font-heading text-3xl sm:text-4xl text-white font-bold">
               User Dashboard
             </h1>
-            <p className="text-xs sm:text-sm text-purple-200/70">
+            <p className="text-xs sm:text-sm text-zinc-400">
               Manage short links, monitor click telemetry, and oversee active API tokens.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <Button asChild size="default" className="text-xs font-medium bg-purple-600 hover:bg-purple-500 text-white px-5">
+            <Button asChild size="default" className="text-xs font-semibold bg-white text-zinc-950 hover:bg-zinc-200 px-5">
               <Link href="/">
                 <Plus className="h-4 w-4 mr-1.5" />
                 <span>Shorten Link</span>
@@ -273,42 +273,42 @@ export default function DashboardPage() {
       {/* Subscription Dashboard Card */}
       <ScrollReveal delayMs={50}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="glass-panel p-6 rounded-2xl md:col-span-2 space-y-4 border-purple-500/25">
-            <div className="flex items-center justify-between border-b border-purple-500/15 pb-3">
+          <Card className="glass-panel p-6 rounded-2xl md:col-span-2 space-y-4 border-white/10">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2">
-                <CreditCard className="h-4.5 w-4.5 text-purple-400" />
+                <CreditCard className="h-4.5 w-4.5 text-zinc-300" />
                 <h3 className="text-sm font-semibold text-white">Subscription &amp; Billing</h3>
               </div>
-              <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full border border-purple-500/30 bg-purple-500/15 text-purple-300">
+              <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full border border-white/10 bg-white/5 text-zinc-300">
                 {currentPlan !== "free" ? "Active Subscription" : "Free Plan"}
               </span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-1">
               <div className="space-y-0.5">
-                <span className="text-[10px] font-medium text-purple-300/70 uppercase tracking-wider block">Plan Name</span>
+                <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider block">Plan Name</span>
                 <span className="text-sm font-bold text-white uppercase">{currentPlan === "free" ? "Free Tier" : `${currentPlan} Plan`}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-medium text-purple-300/70 uppercase tracking-wider block">Billing Price</span>
-                <span className="text-sm font-bold text-purple-300">
-                  {currentPlan === "diamond" ? "$12 / month" : currentPlan === "starter" ? "$4 / month" : "$0 / month"}
+                <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider block">Billing Price</span>
+                <span className="text-sm font-bold text-white">
+                  {currentPlan === "diamond" ? "€9 / month" : currentPlan === "starter" ? "€3 / month" : "€0 / month"}
                 </span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-medium text-purple-300/70 uppercase tracking-wider block">Billing Cycle</span>
-                <span className="text-xs text-purple-200">{currentPlan === "free" ? "Unlimited Free" : "Monthly Renewal"}</span>
+                <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider block">Billing Cycle</span>
+                <span className="text-xs text-zinc-300">{currentPlan === "free" ? "Unlimited Free" : "Monthly Renewal"}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-medium text-purple-300/70 uppercase tracking-wider block">Renewal Date</span>
-                <span className="text-xs text-purple-200 flex items-center gap-1">
-                  <Calendar className="h-3 w-3 text-purple-400" />
+                <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider block">Renewal Date</span>
+                <span className="text-xs text-zinc-300 flex items-center gap-1">
+                  <Calendar className="h-3 w-3 text-zinc-400" />
                   {currentPlan === "free" ? "N/A" : "Auto-renews next month"}
                 </span>
               </div>
             </div>
 
-            <div className="pt-3 border-t border-purple-500/15 flex flex-wrap items-center justify-between gap-3">
+            <div className="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
                 {currentPlan !== "starter" && (
                   <Button
@@ -316,9 +316,9 @@ export default function DashboardPage() {
                     size="sm"
                     onClick={() => handleSubscribePlan("starter")}
                     disabled={upgradingPlan === "starter"}
-                    className="text-xs h-8 font-medium bg-purple-600 hover:bg-purple-500 text-white"
+                    className="text-xs h-8 font-semibold bg-white text-zinc-950 hover:bg-zinc-200"
                   >
-                    {upgradingPlan === "starter" ? "Redirecting..." : "Upgrade to Starter ($4/mo)"}
+                    {upgradingPlan === "starter" ? "Redirecting..." : "Upgrade to Starter (€3/mo)"}
                   </Button>
                 )}
 
@@ -328,24 +328,24 @@ export default function DashboardPage() {
                     size="sm"
                     onClick={() => handleSubscribePlan("diamond")}
                     disabled={upgradingPlan === "diamond"}
-                    className="text-xs h-8 font-medium bg-purple-900/50 hover:bg-purple-800 text-purple-200 border border-purple-500/30"
+                    className="text-xs h-8 font-medium bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10"
                   >
-                    {upgradingPlan === "diamond" ? "Redirecting..." : "Upgrade to Diamond ($12/mo)"}
+                    {upgradingPlan === "diamond" ? "Redirecting..." : "Upgrade to Diamond (€9/mo)"}
                   </Button>
                 )}
               </div>
             </div>
           </Card>
 
-          <Card className="glass-card p-6 rounded-2xl space-y-2 border-purple-500/20">
-            <div className="flex items-center justify-between border-b border-purple-500/15 pb-3">
-              <span className="text-xs text-purple-300/80 font-semibold uppercase tracking-wider">Total Links</span>
-              <Link2 className="h-4 w-4 text-purple-400" />
+          <Card className="glass-card p-6 rounded-2xl space-y-2 border-white/10">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <span className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">Total Links</span>
+              <Link2 className="h-4 w-4 text-zinc-400" />
             </div>
             <div className="text-3xl font-bold text-white pt-1">
               {links.length}
             </div>
-            <p className="text-xs text-purple-200/60">
+            <p className="text-xs text-zinc-500">
               Active links stored in cloud database
             </p>
           </Card>
@@ -357,32 +357,32 @@ export default function DashboardPage() {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="relative flex-1 max-w-md">
-              <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-purple-400/60" />
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
               <Input
                 type="text"
                 placeholder="Search links or target URLs..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 text-xs h-10 bg-purple-950/30 border-purple-500/25 text-purple-50"
+                className="pl-10 text-xs h-10 bg-zinc-900/60 border-white/10 text-white"
               />
             </div>
 
-            <div className="text-xs text-purple-300/70">
+            <div className="text-xs text-zinc-400">
               Showing <strong>{filteredLinks.length}</strong> links
             </div>
           </div>
 
           {filteredLinks.length === 0 ? (
-            <Card className="glass-card p-10 text-center space-y-3 rounded-2xl border-purple-500/20">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-purple-500/25 bg-purple-950/40 text-purple-400">
+            <Card className="glass-card p-10 text-center space-y-3 rounded-2xl border-white/10">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-zinc-900 text-zinc-400">
                 <Link2 className="h-6 w-6" />
               </div>
               <h3 className="text-sm font-semibold text-white">No short links found</h3>
-              <p className="text-xs text-purple-200/70 max-w-sm mx-auto">
+              <p className="text-xs text-zinc-400 max-w-sm mx-auto">
                 {searchQuery ? "No links match your search." : "Create your first short link from the homepage."}
               </p>
               <div className="pt-2">
-                <Button asChild size="sm" className="text-xs font-medium bg-purple-600 hover:bg-purple-500 text-white">
+                <Button asChild size="sm" className="text-xs font-semibold bg-white text-zinc-950 hover:bg-zinc-200">
                   <Link href="/">
                     <Plus className="h-4 w-4 mr-1" />
                     <span>Create Short Link</span>
@@ -399,12 +399,12 @@ export default function DashboardPage() {
                 return (
                   <Card
                     key={link.code}
-                    className="glass-card p-5 space-y-3 rounded-2xl border-purple-500/20"
+                    className="glass-card p-5 space-y-3 rounded-2xl border-white/10"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="min-w-0 flex-1 space-y-1">
-                        <div className="flex items-center gap-2 text-xs text-purple-300/70">
-                          <span className="font-mono text-xs font-semibold text-purple-300 px-2 py-0.5 rounded border border-purple-500/25 bg-purple-950/40">
+                        <div className="flex items-center gap-2 text-xs text-zinc-400">
+                          <span className="font-mono text-xs font-semibold text-zinc-200 px-2 py-0.5 rounded border border-white/10 bg-zinc-900">
                             {link.code}
                           </span>
                           {link.createdAt && (
@@ -416,18 +416,18 @@ export default function DashboardPage() {
                           {getShortUrl(link.code, link.subdomain)}
                         </div>
 
-                        <div className="text-xs text-purple-300/70 truncate max-w-xl">
-                          Target: <span className="text-purple-100">{link.url}</span>
+                        <div className="text-xs text-zinc-400 truncate max-w-xl">
+                          Target: <span className="text-zinc-200">{link.url}</span>
                         </div>
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-purple-500/15">
+                      <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10">
                         <Button
                           variant={isAnalyticsOpen ? "default" : "outline"}
                           size="sm"
                           onClick={() => fetchAnalytics(link.code)}
-                          className={`text-xs h-9 gap-1.5 ${isAnalyticsOpen ? "bg-purple-600 text-white" : "border-purple-500/25 bg-purple-950/30 text-purple-200"}`}
+                          className={`text-xs h-9 gap-1.5 ${isAnalyticsOpen ? "bg-white text-zinc-950 font-semibold" : "border-white/10 bg-zinc-900/60 text-zinc-300"}`}
                         >
                           <BarChart2 className="h-3.5 w-3.5" />
                           <span>Analytics</span>
@@ -438,7 +438,7 @@ export default function DashboardPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => copyToClipboard(getShortUrl(link.code, link.subdomain), link.code)}
-                          className="text-xs h-9 gap-1.5 border-purple-500/25 bg-purple-950/30 text-purple-200"
+                          className="text-xs h-9 gap-1.5 border-white/10 bg-zinc-900/60 text-zinc-300 hover:bg-zinc-800"
                         >
                           {copiedCode === link.code ? (
                             <>
@@ -457,9 +457,9 @@ export default function DashboardPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => setQrModalLink({ url: getShortUrl(link.code, link.subdomain), code: link.code })}
-                          className="text-xs h-9 border-purple-500/25 bg-purple-950/30 text-purple-200"
+                          className="text-xs h-9 border-white/10 bg-zinc-900/60 text-zinc-300 hover:bg-zinc-800"
                         >
-                          <QrCode className="h-3.5 w-3.5 text-purple-400" />
+                          <QrCode className="h-3.5 w-3.5 text-zinc-300" />
                           <span>QR</span>
                         </Button>
 
@@ -467,7 +467,7 @@ export default function DashboardPage() {
                           asChild
                           variant="secondary"
                           size="sm"
-                          className="text-xs h-9 bg-purple-900/40 hover:bg-purple-800 text-purple-200 border border-purple-500/25"
+                          className="text-xs h-9 bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10"
                         >
                           <a
                             href={getShortUrl(link.code, link.subdomain)}
@@ -492,7 +492,7 @@ export default function DashboardPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => setDeleteConfirm(null)}
-                              className="text-xs h-9"
+                              className="text-xs h-9 text-zinc-400"
                             >
                               Cancel
                             </Button>
@@ -502,7 +502,7 @@ export default function DashboardPage() {
                             variant="ghost"
                             size="icon"
                             onClick={() => setDeleteConfirm(link.code)}
-                            className="h-9 w-9 text-purple-400 hover:text-red-400"
+                            className="h-9 w-9 text-zinc-400 hover:text-red-400"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -512,10 +512,10 @@ export default function DashboardPage() {
 
                     {/* Analytics Drawer */}
                     {isAnalyticsOpen && (
-                      <div className="border-t border-purple-500/15 pt-4 mt-3 space-y-4 animate-in fade-in-50 duration-200">
+                      <div className="border-t border-white/10 pt-4 mt-3 space-y-4 animate-in fade-in-50 duration-200">
                         <div className="flex items-center justify-between pb-1">
-                          <span className="text-xs font-semibold text-purple-200 flex items-center gap-1.5">
-                            <BarChart2 className="h-3.5 w-3.5 text-purple-400" />
+                          <span className="text-xs font-semibold text-zinc-200 flex items-center gap-1.5">
+                            <BarChart2 className="h-3.5 w-3.5 text-zinc-400" />
                             Click Telemetry Summary
                           </span>
                           <Button
@@ -523,44 +523,44 @@ export default function DashboardPage() {
                             size="sm"
                             onClick={() => fetchAnalytics(link.code, true)}
                             disabled={loadingAnalytics === link.code}
-                            className="h-7 text-[11px] gap-1 px-2.5 text-purple-300 border border-purple-500/20 hover:bg-purple-900/40"
+                            className="h-7 text-[11px] gap-1 px-2.5 text-zinc-300 border border-white/10 hover:bg-zinc-800"
                           >
-                            <RefreshCw className={`h-3 w-3 ${loadingAnalytics === link.code ? "animate-spin text-purple-400" : ""}`} />
+                            <RefreshCw className={`h-3 w-3 ${loadingAnalytics === link.code ? "animate-spin text-zinc-400" : ""}`} />
                             <span>Refresh</span>
                           </Button>
                         </div>
 
                         {loadingAnalytics === link.code ? (
-                          <div className="flex items-center gap-2 text-xs text-purple-300 py-2">
-                            <span className="h-3.5 w-3.5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                          <div className="flex items-center gap-2 text-xs text-zinc-400 py-2">
+                            <span className="h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                             <span>Fetching telemetry...</span>
                           </div>
                         ) : stats ? (
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                            <div className="rounded-xl border border-purple-500/20 bg-purple-950/40 p-4">
-                              <div className="flex items-center justify-between text-purple-300/80 text-[11px]">
+                            <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-4">
+                              <div className="flex items-center justify-between text-zinc-400 text-[11px]">
                                 <span>Total Visits</span>
-                                <TrendingUp className="h-4 w-4 text-purple-400" />
+                                <TrendingUp className="h-4 w-4 text-zinc-300" />
                               </div>
                               <div className="text-2xl font-bold text-white mt-1">
                                 {stats.totalClicks}
                               </div>
-                              <div className="text-[10px] text-purple-300/70 mt-1">
+                              <div className="text-[10px] text-zinc-400 mt-1">
                                 24h: <strong>{stats.clicks24h}</strong> &bull; 7d: <strong>{stats.clicks7d}</strong>
                               </div>
                             </div>
 
-                            <div className="rounded-xl border border-purple-500/20 bg-purple-950/40 p-4 sm:col-span-2 space-y-2">
-                              <div className="flex items-center justify-between text-purple-300/80 text-[11px]">
+                            <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-4 sm:col-span-2 space-y-2">
+                              <div className="flex items-center justify-between text-zinc-400 text-[11px]">
                                 <span>Referrer Origins</span>
-                                <Globe className="h-4 w-4 text-purple-400" />
+                                <Globe className="h-4 w-4 text-zinc-300" />
                               </div>
 
                               <div className="space-y-1">
                                 {Object.entries(stats.referrers || {}).map(([ref, count], rIdx) => (
                                   <div key={rIdx} className="flex items-center justify-between text-[11px]">
-                                    <span className="text-purple-200 truncate">{ref}</span>
-                                    <span className="font-mono text-[10px] text-purple-300 px-2 py-0.5 rounded border border-purple-500/25 bg-purple-950/60">
+                                    <span className="text-zinc-300 truncate">{ref}</span>
+                                    <span className="font-mono text-[10px] text-zinc-300 px-2 py-0.5 rounded border border-white/10 bg-zinc-800">
                                       {count} {count === 1 ? "visit" : "visits"}
                                     </span>
                                   </div>
@@ -582,23 +582,23 @@ export default function DashboardPage() {
       {/* API Key Management */}
       {isAuthenticated && (
         <ScrollReveal delayMs={150}>
-          <Card className="glass-panel p-6 space-y-5 rounded-2xl border-purple-500/25">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-purple-500/15 pb-4">
+          <Card className="glass-panel p-6 space-y-5 rounded-2xl border-white/10">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
               <div className="space-y-1">
-                <div className="inline-flex items-center gap-1.5 text-xs text-purple-400 font-semibold">
-                  <Key className="h-4 w-4" />
+                <div className="inline-flex items-center gap-1.5 text-xs text-zinc-400 font-semibold">
+                  <Key className="h-4 w-4 text-white" />
                   <span>Programmatic REST API</span>
                 </div>
                 <h3 className="font-heading text-2xl text-white font-semibold">API Key Tokens</h3>
-                <p className="text-xs text-purple-200/70">
+                <p className="text-xs text-zinc-400">
                   Generate API tokens to shorten links programmatically via HTTP requests.
                 </p>
               </div>
 
               {user?.role === "admin" && (
-                <Button asChild variant="outline" size="sm" className="text-xs h-9 border-purple-500/30 bg-purple-950/30 text-purple-200">
+                <Button asChild variant="outline" size="sm" className="text-xs h-9 border-white/10 bg-zinc-900/60 text-zinc-300">
                   <Link href="/admin">
-                    <ShieldCheck className="h-4 w-4 text-purple-400 mr-1.5" />
+                    <ShieldCheck className="h-4 w-4 text-white mr-1.5" />
                     <span>Admin Panel</span>
                   </Link>
                 </Button>
@@ -612,16 +612,16 @@ export default function DashboardPage() {
                 placeholder="Key Label (e.g. Production Service)"
                 value={newKeyName}
                 onChange={(e) => setNewKeyName(e.target.value)}
-                className="flex-1 text-xs h-10 bg-purple-950/30 border-purple-500/25 text-purple-50"
+                className="flex-1 text-xs h-10 bg-zinc-900/60 border-white/10 text-white"
                 required
               />
               <Button
                 type="submit"
                 disabled={creatingKey}
-                className="text-xs h-10 font-medium bg-purple-600 hover:bg-purple-500 text-white whitespace-nowrap px-5"
+                className="text-xs h-10 font-semibold bg-white text-zinc-950 hover:bg-zinc-200 whitespace-nowrap px-5"
               >
                 {creatingKey ? (
-                  <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span className="h-4 w-4 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
                     <Plus className="h-4 w-4 mr-1" />
@@ -637,17 +637,17 @@ export default function DashboardPage() {
                 {apiKeys.map((k) => (
                   <div
                     key={k.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-purple-500/20 bg-purple-950/40 p-3.5"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-white/10 bg-zinc-900/60 p-3.5"
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 text-xs">
                         <span className="font-semibold text-white">{k.name}</span>
-                        <span className="font-mono text-[10px] text-purple-300 px-2 py-0.5 rounded border border-purple-500/25 bg-purple-900/40 uppercase">
+                        <span className="font-mono text-[10px] text-zinc-300 px-2 py-0.5 rounded border border-white/10 bg-zinc-800 uppercase">
                           {k.planType}
                         </span>
                       </div>
-                      <div className="font-mono text-xs text-purple-300 font-semibold">{k.keyMasked}</div>
-                      <div className="text-[10px] text-purple-400/60">
+                      <div className="font-mono text-xs text-emerald-400 font-semibold">{k.keyMasked}</div>
+                      <div className="text-[10px] text-zinc-500">
                         Expires: {new Date(k.expiresAt).toLocaleDateString()} &bull; Created: {new Date(k.createdAt).toLocaleDateString()}
                       </div>
                     </div>
@@ -656,7 +656,7 @@ export default function DashboardPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleRevokeApiKey(k.id)}
-                      className="text-xs h-8 text-red-400 hover:text-red-300 border-red-500/25 bg-red-950/20 w-fit"
+                      className="text-xs h-8 text-zinc-400 hover:text-red-400 border-white/10 bg-zinc-800 w-fit"
                     >
                       <Trash2 className="h-3.5 w-3.5 mr-1" />
                       <span>Revoke</span>

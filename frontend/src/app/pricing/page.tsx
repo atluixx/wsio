@@ -18,8 +18,8 @@ export default function PricingPage() {
     {
       name: "Free Tier",
       description: "Essential link shortening for occasional sharing.",
-      priceMonthly: "$0",
-      priceAnnual: "$0",
+      priceMonthly: "€0",
+      priceAnnual: "€0",
       billingPeriod: "Forever free",
       tag: "Free",
       highlight: false,
@@ -36,9 +36,9 @@ export default function PricingPage() {
     {
       name: "Starter Plan",
       description: "For creators, freelancers, and indie builders.",
-      priceMonthly: "$4",
-      priceAnnual: "$3",
-      billingPeriod: annualBilling ? "$36 / year ($3/mo)" : "Billed monthly ($4/mo)",
+      priceMonthly: "€3",
+      priceAnnual: "€2.40",
+      billingPeriod: annualBilling ? "€28.80 / year (€2.40/mo)" : "Billed monthly (€3/mo)",
       tag: "Popular",
       highlight: true,
       ctaText: "Get Starter",
@@ -56,9 +56,9 @@ export default function PricingPage() {
     {
       name: "Diamond Plan",
       description: "For growing teams, brands, and heavy API applications.",
-      priceMonthly: "$12",
-      priceAnnual: "$9",
-      billingPeriod: annualBilling ? "$108 / year ($9/mo)" : "Billed monthly ($12/mo)",
+      priceMonthly: "€9",
+      priceAnnual: "€7.20",
+      billingPeriod: annualBilling ? "€86.40 / year (€7.20/mo)" : "Billed monthly (€9/mo)",
       tag: "Enterprise",
       highlight: false,
       ctaText: "Get Diamond",
@@ -112,16 +112,16 @@ export default function PricingPage() {
             Simple, predictable plans.
           </h1>
 
-          <p className="text-sm sm:text-base text-purple-200/70 leading-relaxed">
+          <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
             Start for free, or upgrade to unlock custom slugs, branded subdomains, and high-rate-limit API access.
           </p>
 
           {/* Billing Toggle */}
-          <div className="pt-2 inline-flex items-center gap-2 rounded-full border border-purple-500/20 bg-[#0c081a] p-1.5 text-xs">
+          <div className="pt-2 inline-flex items-center gap-2 rounded-full border border-white/10 bg-zinc-900/80 p-1.5 text-xs">
             <button
               onClick={() => setAnnualBilling(false)}
               className={`rounded-full px-4 py-2 transition-colors cursor-pointer min-h-[38px] ${
-                !annualBilling ? "bg-purple-600 text-white font-semibold shadow-md" : "text-purple-300 hover:text-white"
+                !annualBilling ? "bg-white text-zinc-950 font-semibold shadow-sm" : "text-zinc-400 hover:text-white"
               }`}
             >
               Monthly Billing
@@ -129,11 +129,11 @@ export default function PricingPage() {
             <button
               onClick={() => setAnnualBilling(true)}
               className={`flex items-center gap-1.5 rounded-full px-4 py-2 transition-colors cursor-pointer min-h-[38px] ${
-                annualBilling ? "bg-purple-600 text-white font-semibold shadow-md" : "text-purple-300 hover:text-white"
+                annualBilling ? "bg-white text-zinc-950 font-semibold shadow-sm" : "text-zinc-400 hover:text-white"
               }`}
             >
               <span>Annual Billing</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/25 text-purple-200 border border-purple-400/30">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                 Save 20%
               </span>
             </button>
@@ -156,17 +156,17 @@ export default function PricingPage() {
                 key={idx}
                 className={`flex flex-col justify-between relative p-6 sm:p-7 rounded-2xl transition-all duration-300 ${
                   plan.highlight
-                    ? "glass-panel border-purple-500/40 shadow-2xl ring-1 ring-purple-500/30"
-                    : "glass-card border-purple-500/20"
+                    ? "glass-panel border-white/20 shadow-2xl ring-1 ring-white/20"
+                    : "glass-card border-white/10"
                 }`}
               >
                 <div className="space-y-6">
-                  <div className="border-b border-purple-500/15 pb-4 space-y-2">
+                  <div className="border-b border-white/10 pb-4 space-y-2">
                     <div className="flex items-center justify-between">
                       <h3 className="font-heading text-xl font-bold text-white">{plan.name}</h3>
-                      <span className="text-[10px] font-semibold text-purple-300 uppercase tracking-wider px-2 py-0.5 rounded bg-purple-950/50 border border-purple-500/20">{plan.tag}</span>
+                      <span className="text-[10px] font-semibold text-zinc-300 uppercase tracking-wider px-2 py-0.5 rounded bg-zinc-800 border border-white/10">{plan.tag}</span>
                     </div>
-                    <p className="text-xs text-purple-200/70 leading-relaxed min-h-[36px]">{plan.description}</p>
+                    <p className="text-xs text-zinc-400 leading-relaxed min-h-[36px]">{plan.description}</p>
                   </div>
 
                   <div className="space-y-1">
@@ -174,20 +174,20 @@ export default function PricingPage() {
                       <span className="font-heading text-4xl font-bold text-white">
                         {annualBilling ? plan.priceAnnual : plan.priceMonthly}
                       </span>
-                      <span className="text-xs text-purple-300/70">/ month</span>
+                      <span className="text-xs text-zinc-400">/ month</span>
                     </div>
-                    <div className="text-[11px] text-purple-300/70">{plan.billingPeriod}</div>
+                    <div className="text-[11px] text-zinc-500">{plan.billingPeriod}</div>
                   </div>
 
                   {/* Features List */}
                   <div className="space-y-2.5 pt-2">
-                    <span className="text-[10px] uppercase tracking-wider text-purple-300/80 font-semibold block">
+                    <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold block">
                       Features:
                     </span>
-                    <ul className="space-y-2 text-xs text-purple-200/80">
+                    <ul className="space-y-2 text-xs text-zinc-300">
                       {plan.features.map((feat, fIdx) => (
                         <li key={fIdx} className="flex items-start gap-2">
-                          <Check className="h-4 w-4 text-purple-400 shrink-0 mt-0.5" />
+                          <Check className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
                           <span>{feat}</span>
                         </li>
                       ))}
@@ -202,12 +202,12 @@ export default function PricingPage() {
                     disabled={submittingPlan === planKey}
                     className={`w-full h-11 text-xs font-semibold ${
                       plan.highlight
-                        ? "bg-purple-600 hover:bg-purple-500 text-white"
-                        : "bg-purple-950/40 hover:bg-purple-900/50 text-purple-200 border border-purple-500/30"
+                        ? "bg-white hover:bg-zinc-200 text-zinc-950"
+                        : "bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10"
                     }`}
                   >
                     {submittingPlan === planKey ? (
-                      <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <span className="flex items-center justify-center gap-2">
                         <span>{plan.ctaText}</span>
@@ -225,28 +225,28 @@ export default function PricingPage() {
       {/* Feature Comparison Matrix */}
       <ScrollReveal delayMs={150}>
         <div className="space-y-6">
-          <div className="border-b border-purple-500/15 pb-4">
+          <div className="border-b border-white/10 pb-4">
             <h2 className="font-heading text-2xl sm:text-3xl text-white font-semibold">Feature Matrix</h2>
-            <p className="text-xs text-purple-300/70 mt-1">Compare features across plan tiers.</p>
+            <p className="text-xs text-zinc-400 mt-1">Compare features across plan tiers.</p>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl glass-card border-purple-500/20">
+          <div className="overflow-x-auto rounded-2xl glass-card border-white/10">
             <table className="w-full text-left text-xs min-w-[540px]">
               <thead>
-                <tr className="border-b border-purple-500/20 bg-purple-950/40 text-purple-300 uppercase tracking-wider">
+                <tr className="border-b border-white/10 bg-zinc-900/60 text-zinc-400 uppercase tracking-wider">
                   <th className="p-4 font-semibold">Feature</th>
                   <th className="p-4 font-semibold text-center">Free Tier</th>
                   <th className="p-4 font-semibold text-center text-white">Starter Plan</th>
-                  <th className="p-4 font-semibold text-center text-purple-300">Diamond Plan</th>
+                  <th className="p-4 font-semibold text-center text-zinc-200">Diamond Plan</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-purple-500/10 text-purple-200/80">
+              <tbody className="divide-y divide-white/5 text-zinc-300">
                 {comparisonFeatures.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-purple-950/30 transition-colors">
+                  <tr key={idx} className="hover:bg-zinc-900/40 transition-colors">
                     <td className="p-4 font-medium text-white">{row.name}</td>
-                    <td className="p-4 text-center text-purple-300/60">{row.free}</td>
+                    <td className="p-4 text-center text-zinc-500">{row.free}</td>
                     <td className="p-4 text-center font-medium text-white">{row.starter}</td>
-                    <td className="p-4 text-center font-semibold text-purple-300">{row.diamond}</td>
+                    <td className="p-4 text-center font-semibold text-zinc-200">{row.diamond}</td>
                   </tr>
                 ))}
               </tbody>
@@ -257,13 +257,13 @@ export default function PricingPage() {
 
       {/* FAQ Section */}
       <ScrollReveal delayMs={200}>
-        <Card className="glass-panel p-6 sm:p-8 space-y-4 rounded-2xl border-purple-500/25">
+        <Card className="glass-panel p-6 sm:p-8 space-y-4 rounded-2xl border-white/10">
           <div className="flex items-center gap-2 text-white font-semibold">
-            <HelpCircle className="h-5 w-5 text-purple-400" />
+            <HelpCircle className="h-5 w-5 text-zinc-300" />
             <h2 className="font-heading text-2xl">Pricing FAQ</h2>
           </div>
 
-          <div className="space-y-4 text-xs sm:text-sm text-purple-200/70 leading-relaxed">
+          <div className="space-y-4 text-xs sm:text-sm text-zinc-400 leading-relaxed">
             <div>
               <h3 className="font-semibold text-white">What happens when I reach the guest daily limit?</h3>
               <p className="mt-1">

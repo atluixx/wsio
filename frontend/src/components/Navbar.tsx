@@ -15,7 +15,7 @@ export function Navbar() {
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-purple-500/15 bg-[#080612]/80 backdrop-blur-xl transition-all">
+    <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-[#050507]/80 backdrop-blur-xl transition-all">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         {/* Brand Logo */}
         <Link
@@ -24,7 +24,7 @@ export function Navbar() {
           className="group flex items-center gap-2 transition-opacity hover:opacity-90 min-h-[44px]"
         >
           <span className="font-heading text-2xl font-bold tracking-tight text-white">
-            wsio<span className="text-purple-400">.</span>
+            wsio<span className="text-zinc-500">.</span>
           </span>
         </Link>
 
@@ -34,8 +34,8 @@ export function Navbar() {
             href="/dashboard"
             className={`nav-link-hover text-sm transition-colors py-1 ${
               pathname === "/dashboard"
-                ? "text-purple-300 nav-link-hover-active font-semibold"
-                : "text-purple-200/70 hover:text-white"
+                ? "text-white nav-link-hover-active font-semibold"
+                : "text-zinc-400 hover:text-white"
             }`}
           >
             Dashboard
@@ -45,8 +45,8 @@ export function Navbar() {
             href="/pricing"
             className={`nav-link-hover text-sm transition-colors py-1 ${
               pathname === "/pricing"
-                ? "text-purple-300 nav-link-hover-active font-semibold"
-                : "text-purple-200/70 hover:text-white"
+                ? "text-white nav-link-hover-active font-semibold"
+                : "text-zinc-400 hover:text-white"
             }`}
           >
             Pricing
@@ -57,27 +57,27 @@ export function Navbar() {
               href="/admin"
               className={`nav-link-hover flex items-center gap-1.5 text-sm transition-colors py-1 ${
                 pathname.startsWith("/admin")
-                  ? "text-purple-300 nav-link-hover-active font-semibold"
-                  : "text-purple-200/70 hover:text-white"
+                  ? "text-white nav-link-hover-active font-semibold"
+                  : "text-zinc-400 hover:text-white"
               }`}
             >
-              <ShieldCheck className="h-4 w-4 text-purple-400" />
+              <ShieldCheck className="h-4 w-4 text-zinc-300" />
               <span>Admin Panel</span>
             </Link>
           )}
 
-          <div className="mx-1 h-4 w-[1px] bg-purple-500/20" />
+          <div className="mx-1 h-4 w-[1px] bg-white/10" />
 
           {isAuthenticated ? (
             <div className="flex items-center gap-4">
-              <span className="text-xs text-purple-300/70 max-w-[160px] truncate" title={user?.email}>
+              <span className="text-xs text-zinc-400 max-w-[160px] truncate" title={user?.email}>
                 {user?.email}
               </span>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={logout}
-                className="text-xs h-8 gap-2 border-purple-500/30 bg-purple-950/30 text-purple-200 hover:bg-purple-900/40 hover:text-white"
+                className="text-xs h-8 gap-2 border-white/10 bg-zinc-900/60 text-zinc-300 hover:bg-zinc-800 hover:text-white"
               >
                 <LogOut className="h-3.5 w-3.5" />
                 <span>Log out</span>
@@ -89,13 +89,13 @@ export function Navbar() {
                 href="/login"
                 className={`nav-link-hover text-sm transition-colors py-1 ${
                   pathname === "/login"
-                    ? "text-purple-300 nav-link-hover-active font-semibold"
-                    : "text-purple-200/70 hover:text-white"
+                    ? "text-white nav-link-hover-active font-semibold"
+                    : "text-zinc-400 hover:text-white"
                 }`}
               >
                 Sign In
               </Link>
-              <Button asChild size="sm" className="bg-purple-600 hover:bg-purple-500 text-white font-medium text-xs px-4 h-9 shadow-lg shadow-purple-900/30">
+              <Button asChild size="sm" className="bg-white hover:bg-zinc-200 text-zinc-950 font-semibold text-xs px-4 h-9 shadow-sm">
                 <Link href="/register">Get Started</Link>
               </Button>
             </div>
@@ -106,7 +106,7 @@ export function Navbar() {
         <div className="flex items-center gap-2 md:hidden">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-purple-500/20 bg-purple-950/40 text-purple-200 transition-colors hover:bg-purple-900/50 hover:text-white"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-zinc-900/80 text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
             aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -116,15 +116,15 @@ export function Navbar() {
 
       {/* Mobile Navigation Drawer */}
       {mobileMenuOpen && (
-        <div className="border-b border-purple-500/20 bg-[#080612]/95 backdrop-blur-2xl p-5 md:hidden space-y-4 animate-in slide-in-from-top-2 duration-200">
+        <div className="border-b border-white/10 bg-[#050507]/95 backdrop-blur-2xl p-5 md:hidden space-y-4 animate-in slide-in-from-top-2 duration-200">
           <nav className="flex flex-col space-y-3 font-medium">
             <Link
               href="/dashboard"
               onClick={closeMobileMenu}
               className={`rounded-xl p-3 text-sm transition-all ${
                 pathname === "/dashboard"
-                  ? "bg-purple-900/40 text-purple-200 border border-purple-500/30 font-semibold"
-                  : "text-purple-200/80 hover:bg-purple-950/40 hover:text-white"
+                  ? "bg-zinc-800/80 text-white border border-white/10 font-semibold"
+                  : "text-zinc-400 hover:bg-zinc-900/60 hover:text-white"
               }`}
             >
               Dashboard
@@ -135,8 +135,8 @@ export function Navbar() {
               onClick={closeMobileMenu}
               className={`rounded-xl p-3 text-sm transition-all ${
                 pathname === "/pricing"
-                  ? "bg-purple-900/40 text-purple-200 border border-purple-500/30 font-semibold"
-                  : "text-purple-200/80 hover:bg-purple-950/40 hover:text-white"
+                  ? "bg-zinc-800/80 text-white border border-white/10 font-semibold"
+                  : "text-zinc-400 hover:bg-zinc-900/60 hover:text-white"
               }`}
             >
               Pricing
@@ -148,21 +148,21 @@ export function Navbar() {
                 onClick={closeMobileMenu}
                 className={`flex items-center gap-2 rounded-xl p-3 text-sm transition-all ${
                   pathname.startsWith("/admin")
-                    ? "bg-purple-900/40 text-purple-200 border border-purple-500/30 font-semibold"
-                    : "text-purple-200/80 hover:bg-purple-950/40 hover:text-white"
+                    ? "bg-zinc-800/80 text-white border border-white/10 font-semibold"
+                    : "text-zinc-400 hover:bg-zinc-900/60 hover:text-white"
                 }`}
               >
-                <ShieldCheck className="h-4 w-4 text-purple-400" />
+                <ShieldCheck className="h-4 w-4 text-zinc-300" />
                 <span>Admin Panel</span>
               </Link>
             )}
           </nav>
 
-          <div className="border-t border-purple-500/20 pt-4">
+          <div className="border-t border-white/10 pt-4">
             {isAuthenticated ? (
               <div className="space-y-3">
-                <div className="rounded-xl bg-purple-950/40 border border-purple-500/15 p-3 text-xs text-purple-300/80">
-                  <span className="text-[10px] uppercase tracking-wider text-purple-400/70 block font-semibold mb-1">Signed in as</span>
+                <div className="rounded-xl bg-zinc-900/60 border border-white/10 p-3 text-xs text-zinc-400">
+                  <span className="text-[10px] uppercase tracking-wider text-zinc-500 block font-semibold mb-1">Signed in as</span>
                   <span className="text-white font-medium truncate block">{user?.email}</span>
                 </div>
                 <Button
@@ -171,7 +171,7 @@ export function Navbar() {
                     logout();
                     closeMobileMenu();
                   }}
-                  className="w-full text-xs gap-2 border-purple-500/30 bg-purple-950/30 text-purple-200 hover:bg-purple-900/40 hover:text-white"
+                  className="w-full text-xs gap-2 border-white/10 bg-zinc-900/60 text-zinc-300 hover:bg-zinc-800 hover:text-white"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>Log out</span>
@@ -179,12 +179,12 @@ export function Navbar() {
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3">
-                <Button asChild variant="outline" size="sm" className="w-full text-xs border-purple-500/30 bg-purple-950/30 text-purple-200 hover:bg-purple-900/40 hover:text-white">
+                <Button asChild variant="outline" size="sm" className="w-full text-xs border-white/10 bg-zinc-900/60 text-zinc-300 hover:bg-zinc-800 hover:text-white">
                   <Link href="/login" onClick={closeMobileMenu}>
                     Sign In
                   </Link>
                 </Button>
-                <Button asChild size="sm" className="w-full text-xs bg-purple-600 hover:bg-purple-500 text-white font-medium">
+                <Button asChild size="sm" className="w-full text-xs bg-white text-zinc-950 font-semibold hover:bg-zinc-200">
                   <Link href="/register" onClick={closeMobileMenu}>
                     Get Started
                   </Link>
