@@ -18,6 +18,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://wsio.lol"),
   title: "wsio. — Clean, Modern URL Shortener & Analytics",
   description: "Fast, reliable, and human-centric URL redirection engine for creators, teams, and developers.",
 };
