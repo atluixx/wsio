@@ -18,6 +18,7 @@ export async function POST(req: Request) {
         cancel_url: cancelUrl,
         "line_items[0][price_data][currency]": "usd",
         "line_items[0][price_data][product_data][name]": `wsio ${planType.toUpperCase()} Plan`,
+        "line_items[0][price_data][product_data][tax_code]": "txcd_10103100",
         "line_items[0][price_data][unit_amount]": priceAmount,
         "line_items[0][price_data][recurring][interval]": "month",
         "line_items[0][quantity]": "1",

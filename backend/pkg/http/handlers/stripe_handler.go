@@ -61,6 +61,7 @@ func (h *StripeHandler) CreateCheckoutSession(c *gin.Context) {
 				"&cancel_url="+cancelURL+
 				"&line_items[0][price_data][currency]=usd"+
 				"&line_items[0][price_data][product_data][name]=wsio+"+plan+"+Plan"+
+				"&line_items[0][price_data][product_data][tax_code]=txcd_10103100"+
 				"&line_items[0][price_data][unit_amount]="+getPriceAmount(plan)+
 				"&line_items[0][price_data][recurring][interval]=month"+
 				"&line_items[0][quantity]=1",
