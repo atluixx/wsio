@@ -1,11 +1,9 @@
 function getApiBaseUrl(): string {
-  if (process.env.NEXT_PUBLIC_API_URL && process.env.NEXT_PUBLIC_API_URL !== "https://api.wsio.lol") {
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
   return "";
 }
 
 const API_BASE_URL = getApiBaseUrl();
+
 
 
 export interface User {
