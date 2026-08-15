@@ -10,6 +10,13 @@ import (
 
 func Normalize(raw string) (string, error) {
 	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return "", errors.New("invalid URL")
+	}
+
+	if !strings.HasPrefix(raw, "http://") && !strings.HasPrefix(raw, "https://") {
+		raw = "https://" + raw
+	}
 
 	u, err := url.Parse(raw)
 	if err != nil {
@@ -23,13 +30,15 @@ func Normalize(raw string) (string, error) {
 	u.Scheme = strings.ToLower(u.Scheme)
 	u.Host = strings.ToLower(u.Host)
 	u.Fragment = ""
-	u.RawQuery = u.Query().Encode()
 
 	return u.String(), nil
 }
 
 func Hash(normalizedURL string) string {
 	hash := sha256.Sum256([]byte(normalizedURL))
-
-	return base64.RawURLEncoding.EncodeToString(hash[:])[:12]
+	encoded := base64.RawURLEncoding.EncodeToString(hash[:])
+	if len(encoded) > 12 {
+		return encoded[:12]
+	}
+	return encoded
 }

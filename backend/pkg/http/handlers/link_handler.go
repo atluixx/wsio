@@ -47,6 +47,9 @@ func (h *LinkHandler) NewLink(c *gin.Context) {
 	}
 
 	code := urlutil.Hash(normalized)
+	if existing, err := h.repository.FindByCode(code); err == nil && existing != nil && existing.URL != normalized {
+		code = urlutil.Hash(normalized + uuid.New().String())
+	}
 
 	link := &domain.Link{
 		ID:     uuid.New(),
