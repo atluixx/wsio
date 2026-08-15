@@ -68,7 +68,22 @@ export function Navbar() {
             <span>Pricing</span>
           </Link>
 
+          {isAuthenticated && user?.role === "admin" && (
+            <Link
+              href="/admin/keys"
+              className={`flex items-center gap-2 rounded-lg px-3.5 py-2 font-mono text-xs transition-colors ${
+                pathname === "/admin/keys"
+                  ? "bg-emerald-950/60 text-emerald-400 border border-emerald-500/40"
+                  : "text-emerald-400 hover:bg-emerald-950/30"
+              }`}
+            >
+              <ShieldAlert className="h-3.5 w-3.5 text-emerald-400" />
+              <span>Admin Keys</span>
+            </Link>
+          )}
+
           <div className="mx-2 h-4 w-[1px] bg-zinc-800" />
+
 
           {isAuthenticated ? (
             <div className="flex items-center gap-3">

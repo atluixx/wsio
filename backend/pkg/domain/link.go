@@ -11,6 +11,7 @@ type Link struct {
 	UserID    *uuid.UUID `gorm:"type:uuid;index;nullable" json:"userId,omitempty"`
 	Code      string     `gorm:"type:varchar(32);not null;index" json:"code"`
 	URL       string     `gorm:"type:text;not null" json:"url"`
+	Subdomain string     `gorm:"type:varchar(64)" json:"subdomain,omitempty"`
 	CreatedAt time.Time  `json:"createdAt"`
 	UpdatedAt time.Time  `json:"updatedAt"`
 
@@ -18,5 +19,8 @@ type Link struct {
 }
 
 type CreateLinkRequest struct {
-	URL string `json:"url" binding:"required,url"`
+	URL         string `json:"url" binding:"required,url"`
+	CustomAlias string `json:"customAlias,omitempty"`
+	Subdomain   string `json:"subdomain,omitempty"`
 }
+

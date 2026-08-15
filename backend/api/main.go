@@ -18,6 +18,7 @@ var (
 	userRepo      repositories.UserRepository
 	linkRepo      repositories.LinkRepository
 	analyticsRepo repositories.AnalyticsRepository
+	apiKeyRepo    repositories.ApiKeyRepository
 )
 
 func init() {
@@ -29,10 +30,11 @@ func init() {
 	if dsn != "" {
 		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err == nil {
-			_ = db.AutoMigrate(&domain.User{}, &domain.Link{}, &domain.LinkClick{}, &domain.UserSubscription{}, &domain.GuestUsageTrack{})
+			_ = db.AutoMigrate(&domain.User{}, &domain.Link{}, &domain.LinkClick{}, &domain.UserSubscription{}, &domain.GuestUsageTrack{}, &domain.ApiKey{})
 			userRepo = repositories.NewUserRepository(db)
 			linkRepo = repositories.NewLinkRepository(db)
 			analyticsRepo = repositories.NewAnalyticsRepository(db)
+			apiKeyRepo = repositories.NewPostgresApiKeyRepository(db)
 			log.Println("Initialized PostgreSQL database repositories")
 			return
 		}
@@ -42,6 +44,7 @@ func init() {
 	userRepo = repositories.NewInMemoryUserRepository()
 	linkRepo = repositories.NewInMemoryLinkRepository()
 	analyticsRepo = repositories.NewInMemoryAnalyticsRepository()
+	apiKeyRepo = repositories.NewInMemoryApiKeyRepository()
 	log.Println("Initialized In-Memory repositories fallback")
 }
 
@@ -55,7 +58,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie, X-Requested-With, Accept, Origin, X-User-ID")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie, X-Requested-With, Accept, Origin, X-User-ID, X-API-Key")
 	w.Header().Set("Access-Control-Expose-Headers", "Content-Length, Set-Cookie")
 	w.Header().Set("Vary", "Origin")
 
@@ -71,8 +74,12 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	userHandler := handlers.NewUserHandler(userRepo)
 	linkHandler := handlers.NewLinkHandler(linkRepo, analyticsRepo)
 	analyticsHandler := handlers.NewAnalyticsHandler(analyticsRepo, linkRepo)
+	stripeHandler := handlers.NewStripeHandler()
+	apiKeyHandler := handlers.NewApiKeyHandler(apiKeyRepo)
+	adminHandler := handlers.NewAdminHandler(apiKeyRepo, userRepo)
 
-	app.SetupRoutes(router, linkHandler, userHandler, analyticsHandler, analyticsRepo)
+	app.SetupRoutes(router, linkHandler, userHandler, analyticsHandler, analyticsRepo, apiKeyRepo, stripeHandler, apiKeyHandler, adminHandler)
 
 	router.ServeHTTP(w, r)
 }
+

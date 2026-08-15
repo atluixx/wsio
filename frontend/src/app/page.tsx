@@ -12,6 +12,7 @@ import {
   incrementGuestDailyUsage,
   GUEST_DAILY_LIMIT,
 } from "@/lib/guestLinks";
+import { QrCodeModal } from "@/components/QrCodeModal";
 import {
   Link2,
   Copy,
@@ -27,6 +28,7 @@ import {
   BarChart3,
   ShieldCheck,
   MousePointerClick,
+  QrCode,
 } from "lucide-react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
@@ -38,6 +40,9 @@ export default function Home() {
   const [createdLink, setCreatedLink] = useState<LinkItem | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [customAlias, setCustomAlias] = useState("");
+  const [subdomain, setSubdomain] = useState("");
+  const [qrModalLink, setQrModalLink] = useState<{ url: string; code: string } | null>(null);
   const [guestUsage, setGuestUsage] = useState({ count: 0, date: "" });
 
   useEffect(() => {
@@ -45,6 +50,7 @@ export default function Home() {
   }, []);
 
   const limitReached = !isAuthenticated && guestUsage.count >= GUEST_DAILY_LIMIT;
+
 
   const handleShorten = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,20 +71,20 @@ export default function Home() {
     let id = "";
     let userId: string | undefined = undefined;
 
-    const res = await createShortLink(formattedUrl);
+    const res = await createShortLink(formattedUrl, customAlias, subdomain);
     setLoading(false);
 
-    if (res.error && res.error.includes("limit reached")) {
+    if (res.error) {
       setErrorMessage(res.error);
       return;
     }
 
-    if (!res.error && res.code) {
+    if (res.code) {
       code = res.code;
       id = res.id || Math.random().toString();
       userId = res.userId || (isAuthenticated ? user?.id : undefined);
     } else {
-      code = generateGuestHash(formattedUrl);
+      code = customAlias.trim() ? customAlias.trim() : generateGuestHash(formattedUrl);
       id = Math.random().toString();
       userId = isAuthenticated ? user?.id : undefined;
     }
@@ -87,6 +93,7 @@ export default function Home() {
       id: id,
       code: code,
       url: formattedUrl,
+      subdomain: subdomain.trim(),
       userId: userId,
       createdAt: new Date().toLocaleTimeString([], {
         hour: "2-digit",
@@ -103,6 +110,8 @@ export default function Home() {
     }
 
     setInputUrl("");
+    setCustomAlias("");
+    setSubdomain("");
   };
 
   const copyToClipboard = (text: string, code: string) => {
@@ -111,7 +120,10 @@ export default function Home() {
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
-  const getShortUrl = (code: string) => {
+  const getShortUrl = (code: string, sub?: string) => {
+    if (sub && sub.trim()) {
+      return `https://${sub.trim()}.wsio.lol/l/${code}`;
+    }
     return `https://wsio.lol/l/${code}`;
   };
 
@@ -135,7 +147,16 @@ export default function Home() {
   ];
 
   return (
+
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-16 space-y-12 sm:space-y-16">
+      {qrModalLink && (
+        <QrCodeModal
+          url={qrModalLink.url}
+          code={qrModalLink.code}
+          onClose={() => setQrModalLink(null)}
+        />
+      )}
+
       {/* Hero & Central Input Engine */}
       <ScrollReveal>
         <div className="text-center space-y-4">
@@ -177,47 +198,73 @@ export default function Home() {
             )}
           </div>
 
-          <form onSubmit={handleShorten} className="flex flex-col gap-3 sm:flex-row">
-            <div className="relative flex-1">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-zinc-500">
-                <Link2 className="h-4.5 w-4.5" />
+          <form onSubmit={handleShorten} className="space-y-3">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-zinc-500">
+                  <Link2 className="h-4.5 w-4.5" />
+                </div>
+                <input
+                  type="text"
+                  placeholder={limitReached ? "Guest limit reached (3/3). Register to shorten more links." : "Paste long URL (e.g. https://github.com/user/project/releases/...)"}
+                  value={inputUrl}
+                  disabled={limitReached}
+                  onChange={(e) => setInputUrl(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-zinc-900/90 py-3.5 pl-11 pr-4 font-mono text-xs text-white placeholder-zinc-500 transition-colors focus:border-emerald-500/50 focus:outline-none sm:text-sm disabled:opacity-50 min-h-[48px]"
+                  required
+                />
               </div>
-              <input
-                type="text"
-                placeholder={limitReached ? "Guest limit reached (3/3). Register to shorten more links." : "Paste long URL (e.g. https://github.com/user/project/releases/...)"}
-                value={inputUrl}
-                disabled={limitReached}
-                onChange={(e) => setInputUrl(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-zinc-900/90 py-3.5 pl-11 pr-4 font-mono text-xs text-white placeholder-zinc-500 transition-colors focus:border-emerald-500/50 focus:outline-none sm:text-sm disabled:opacity-50 min-h-[48px]"
-                required
-              />
+
+              <button
+                type="submit"
+                disabled={loading || limitReached}
+                className="btn-minimal-primary min-h-[48px] px-6 text-xs sm:text-sm whitespace-nowrap cursor-pointer disabled:opacity-50 w-full sm:w-auto"
+                title="Click here to convert your input URL into a short hash"
+              >
+                {loading ? (
+                  <span className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                ) : limitReached ? (
+                  <span className="flex items-center gap-1.5 text-zinc-400">
+                    <Lock className="h-4 w-4" />
+                    <span>Limit Reached</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <span>Shorten URL</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
+                )}
+              </button>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading || limitReached}
-              className="btn-minimal-primary min-h-[48px] px-6 text-xs sm:text-sm whitespace-nowrap cursor-pointer disabled:opacity-50 w-full sm:w-auto"
-              title="Click here to convert your input URL into a 6-character short hash"
-            >
-              {loading ? (
-                <span className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-              ) : limitReached ? (
-                <span className="flex items-center gap-1.5 text-zinc-400">
-                  <Lock className="h-4 w-4" />
-                  <span>Limit Reached</span>
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <span>Shorten URL</span>
-                  <ArrowRight className="h-4 w-4" />
-                </span>
-              )}
-            </button>
+            {/* Custom Options Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div>
+                <input
+                  type="text"
+                  placeholder="Custom Alias / Slug (Optional, e.g. my-promo)"
+                  value={customAlias}
+                  disabled={limitReached}
+                  onChange={(e) => setCustomAlias(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-zinc-900/60 py-2.5 px-3 font-mono text-xs text-white placeholder-zinc-500 focus:border-emerald-500/50 focus:outline-none min-h-[40px]"
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  placeholder="Company Subdomain (Optional, e.g. acme)"
+                  value={subdomain}
+                  disabled={limitReached}
+                  onChange={(e) => setSubdomain(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-zinc-900/60 py-2.5 px-3 font-mono text-xs text-white placeholder-zinc-500 focus:border-emerald-500/50 focus:outline-none min-h-[40px]"
+                />
+              </div>
+            </div>
           </form>
 
           {/* Direct callout on where to click */}
           <div className="flex flex-wrap items-center justify-between text-[11px] text-zinc-500 font-mono pt-1">
-            <span>✨ Generates a instant redirection hash: <code className="text-zinc-300">https://wsio.lol/l/xxxxxx</code></span>
+            <span>✨ Live Preview: <code className="text-zinc-300">{getShortUrl(customAlias.trim() || "xxxxxx", subdomain)}</code></span>
             <span>Click &quot;Shorten URL&quot; to execute</span>
           </div>
 
@@ -256,12 +303,12 @@ export default function Home() {
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-white/10 bg-zinc-950 p-3.5">
                 <div className="truncate font-mono text-sm font-bold text-emerald-300">
-                  {getShortUrl(createdLink.code)}
+                  {getShortUrl(createdLink.code, createdLink.subdomain)}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
                   <button
-                    onClick={() => copyToClipboard(getShortUrl(createdLink.code), createdLink.code)}
+                    onClick={() => copyToClipboard(getShortUrl(createdLink.code, createdLink.subdomain), createdLink.code)}
                     className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-800 px-3.5 py-2 font-mono text-xs text-white transition-colors hover:bg-zinc-700 cursor-pointer min-h-[40px]"
                     title="Copy short link URL to system clipboard"
                   >
@@ -278,36 +325,32 @@ export default function Home() {
                     )}
                   </button>
 
+                  <button
+                    onClick={() => setQrModalLink({ url: getShortUrl(createdLink.code, createdLink.subdomain), code: createdLink.code })}
+                    className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-800 px-3.5 py-2 font-mono text-xs text-white transition-colors hover:bg-zinc-700 min-h-[40px] cursor-pointer"
+                    title="Generate & download vector QR code"
+                  >
+                    <QrCode className="h-4 w-4 text-emerald-400" />
+                    <span>QR Code</span>
+                  </button>
+
                   <a
-                    href={getShortUrl(createdLink.code)}
+                    href={getShortUrl(createdLink.code, createdLink.subdomain)}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-800 px-3.5 py-2 font-mono text-xs text-white transition-colors hover:bg-zinc-700 min-h-[40px]"
                     title="Open and test edge redirection live in a new tab"
                   >
                     <ExternalLink className="h-4 w-4" />
-                    <span>Test Redirection</span>
+                    <span>Test Link</span>
                   </a>
-
-                  <Link
-                    href="/dashboard"
-                    className="flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-2 font-mono text-xs font-semibold text-black transition-colors hover:bg-zinc-200 min-h-[40px]"
-                    title="Go to Dashboard to view analytics & manage links"
-                  >
-                    <span>Manage in Dashboard</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
                 </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between font-mono text-xs text-zinc-400 gap-1 pt-1">
-                <span className="truncate">Destination Target: <span className="text-white">{createdLink.url}</span></span>
-                <span className="text-emerald-400 text-[11px]">Saved automatically to your session</span>
               </div>
             </div>
           )}
         </div>
       </ScrollReveal>
+
 
       {/* Feature Highlights Grid — "Why click & use wsio" */}
       <ScrollReveal delayMs={50}>

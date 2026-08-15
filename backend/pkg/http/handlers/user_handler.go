@@ -74,10 +74,20 @@ func (h *UserHandler) Register(c *gin.Context) {
 		return
 	}
 
+	role := "user"
+	adminEmail := os.Getenv("ADMIN_INITIAL_EMAIL")
+	if adminEmail == "" {
+		adminEmail = "admin@wsio.lol"
+	}
+	if strings.EqualFold(email, adminEmail) {
+		role = "admin"
+	}
+
 	user := &domain.User{
 		ID:           uuid.New(),
 		Email:        email,
 		PasswordHash: string(passwordHash),
+		Role:         role,
 	}
 
 	if err := h.repository.Create(user); err != nil {
@@ -87,7 +97,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 		return
 	}
 
-	token, err := auth.NewToken(user.ID)
+	token, err := auth.NewToken(user.ID, user.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "failed to create session",
@@ -100,6 +110,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"id":    user.ID,
 		"email": user.Email,
+		"role":  user.Role,
 	})
 }
 
@@ -141,7 +152,16 @@ func (h *UserHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := auth.NewToken(user.ID)
+	// Auto promote to admin if matches ADMIN_INITIAL_EMAIL
+	adminEmail := os.Getenv("ADMIN_INITIAL_EMAIL")
+	if adminEmail == "" {
+		adminEmail = "admin@wsio.lol"
+	}
+	if strings.EqualFold(user.Email, adminEmail) && user.Role != "admin" {
+		user.Role = "admin"
+	}
+
+	token, err := auth.NewToken(user.ID, user.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "failed to create session",
@@ -154,8 +174,10 @@ func (h *UserHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"id":    user.ID,
 		"email": user.Email,
+		"role":  user.Role,
 	})
 }
+
 
 func setSessionCookie(c *gin.Context, token string) {
 	domain := os.Getenv("COOKIE_DOMAIN")

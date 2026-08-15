@@ -53,16 +53,33 @@ func (h *LinkHandler) NewLink(c *gin.Context) {
 		return
 	}
 
-	code := urlutil.Hash(normalized)
-	if existing, err := h.repository.FindByCode(code); err == nil && existing != nil && existing.URL != normalized {
-		code = urlutil.Hash(normalized + uuid.New().String())
+	var code string
+	customAlias := strings.TrimSpace(request.CustomAlias)
+	if customAlias != "" {
+		// Clean and validate custom alias
+		customAlias = strings.ToLower(customAlias)
+		if existing, err := h.repository.FindByCode(customAlias); err == nil && existing != nil {
+			c.JSON(http.StatusConflict, gin.H{
+				"error": "custom alias already in use",
+			})
+			return
+		}
+		code = customAlias
+	} else {
+		code = urlutil.Hash(normalized)
+		if existing, err := h.repository.FindByCode(code); err == nil && existing != nil && existing.URL != normalized {
+			code = urlutil.Hash(normalized + uuid.New().String())
+		}
 	}
 
+	subdomain := strings.ToLower(strings.TrimSpace(request.Subdomain))
+
 	link := &domain.Link{
-		ID:     uuid.New(),
-		UserID: userPtr,
-		Code:   code,
-		URL:    normalized,
+		ID:        uuid.New(),
+		UserID:    userPtr,
+		Code:      code,
+		URL:       normalized,
+		Subdomain: subdomain,
 	}
 
 	if err := h.repository.Create(link); err != nil {
@@ -73,9 +90,10 @@ func (h *LinkHandler) NewLink(c *gin.Context) {
 	}
 
 	resp := gin.H{
-		"id":   link.ID,
-		"code": link.Code,
-		"url":  link.URL,
+		"id":        link.ID,
+		"code":      link.Code,
+		"url":       link.URL,
+		"subdomain": link.Subdomain,
 	}
 	if link.UserID != nil {
 		resp["userId"] = link.UserID.String()
@@ -83,6 +101,7 @@ func (h *LinkHandler) NewLink(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, resp)
 }
+
 
 func (h *LinkHandler) RedirectLink(c *gin.Context) {
 	code := strings.TrimSpace(c.Param("code"))

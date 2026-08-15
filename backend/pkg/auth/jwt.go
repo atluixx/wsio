@@ -11,6 +11,7 @@ import (
 
 type Claims struct {
 	UserID uuid.UUID `json:"userId"`
+	Role   string    `json:"role"`
 	jwt.RegisteredClaims
 }
 
@@ -22,11 +23,17 @@ func getSecret() []byte {
 	return []byte(secret)
 }
 
-func NewToken(userID uuid.UUID) (string, error) {
+func NewToken(userID uuid.UUID, role ...string) (string, error) {
 	now := time.Now()
+
+	userRole := "user"
+	if len(role) > 0 && role[0] != "" {
+		userRole = role[0]
+	}
 
 	claims := Claims{
 		UserID: userID,
+		Role:   userRole,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   userID.String(),
 			ExpiresAt: jwt.NewNumericDate(now.Add(24 * time.Hour)),
@@ -38,6 +45,7 @@ func NewToken(userID uuid.UUID) (string, error) {
 
 	return token.SignedString(getSecret())
 }
+
 
 func ParseToken(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(

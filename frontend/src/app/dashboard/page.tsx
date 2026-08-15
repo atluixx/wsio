@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { deleteShortLink, LinkItem } from "@/lib/api";
+import { deleteShortLink, LinkItem, fetchApiKeys, createApiKey, deleteApiKey, ApiKeyItem } from "@/lib/api";
 import {
   getGuestLinks,
   removeGuestLink,
 } from "@/lib/guestLinks";
+import { QrCodeModal } from "@/components/QrCodeModal";
 import {
   Link2,
   Copy,
@@ -25,6 +26,10 @@ import {
   ChevronUp,
   Sparkles,
   ArrowRight,
+  Key,
+  QrCode,
+  ShieldCheck,
+  Lock,
 } from "lucide-react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
@@ -46,13 +51,29 @@ export default function DashboardPage() {
   const [analyticsData, setAnalyticsData] = useState<Record<string, AnalyticsData>>({});
   const [loadingAnalytics, setLoadingAnalytics] = useState<string | null>(null);
 
+  const [apiKeys, setApiKeys] = useState<ApiKeyItem[]>([]);
+  const [newKeyName, setNewKeyName] = useState("");
+  const [newKeyPlan, setNewKeyPlan] = useState("starter");
+  const [creatingKey, setCreatingKey] = useState(false);
+  const [generatedKey, setGeneratedKey] = useState<string | null>(null);
+  const [copiedKey, setCopiedKey] = useState(false);
+  const [qrModalLink, setQrModalLink] = useState<{ url: string; code: string } | null>(null);
+
   const loadLinks = () => {
     const stored = getGuestLinks();
     setLinks(stored);
   };
 
+  const loadApiKeys = async () => {
+    if (isAuthenticated) {
+      const keys = await fetchApiKeys();
+      setApiKeys(keys);
+    }
+  };
+
   useEffect(() => {
     loadLinks();
+    loadApiKeys();
     window.addEventListener("focus", loadLinks);
     window.addEventListener("storage", loadLinks);
     return () => {
@@ -60,6 +81,30 @@ export default function DashboardPage() {
       window.removeEventListener("storage", loadLinks);
     };
   }, [isAuthenticated]);
+
+  const handleCreateApiKey = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newKeyName.trim()) return;
+
+    setCreatingKey(true);
+    const res = await createApiKey(newKeyName, newKeyPlan);
+    setCreatingKey(false);
+
+    if (res.key) {
+      setGeneratedKey(res.key);
+      setNewKeyName("");
+      loadApiKeys();
+    } else {
+      alert(res.error || "Failed to generate API Key");
+    }
+  };
+
+  const handleRevokeApiKey = async (id: string) => {
+    const res = await deleteApiKey(id);
+    if (res.success) {
+      setApiKeys((prev) => prev.filter((k) => k.id !== id));
+    }
+  };
 
   const fetchAnalytics = async (code: string) => {
     if (activeAnalytics === code) {
@@ -122,9 +167,13 @@ export default function DashboardPage() {
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
-  const getShortUrl = (code: string) => {
+  const getShortUrl = (code: string, sub?: string) => {
+    if (sub && sub.trim()) {
+      return `https://${sub.trim()}.wsio.lol/l/${code}`;
+    }
     return `https://wsio.lol/l/${code}`;
   };
+
 
   const filteredLinks = links.filter(
     (l) =>
@@ -308,8 +357,17 @@ export default function DashboardPage() {
                           )}
                         </button>
 
+                        <button
+                          onClick={() => setQrModalLink({ url: getShortUrl(link.code, link.subdomain), code: link.code })}
+                          className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white min-h-[40px] cursor-pointer"
+                          title="View vector QR code"
+                        >
+                          <QrCode className="h-4 w-4 text-emerald-400" />
+                          <span>QR</span>
+                        </button>
+
                         <a
-                          href={getShortUrl(link.code)}
+                          href={getShortUrl(link.code, link.subdomain)}
                           target="_blank"
                           rel="noreferrer"
                           className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white min-h-[40px]"
@@ -398,7 +456,123 @@ export default function DashboardPage() {
           )}
         </div>
       </ScrollReveal>
+
+      {/* User API Keys Management Section */}
+      {isAuthenticated && (
+        <ScrollReveal delayMs={150}>
+          <div className="rounded-2xl border border-white/10 bg-zinc-950 p-6 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
+                  <Key className="h-4 w-4" />
+                  <span>Programmatic REST API</span>
+                </div>
+                <h3 className="font-serif text-2xl text-white">Your API Keys</h3>
+                <p className="text-xs text-zinc-400">
+                  Use your API keys to shorten links headlessly using <code className="text-emerald-300">X-API-Key</code> or <code className="text-emerald-300">Bearer wsio_live_...</code> headers.
+                </p>
+              </div>
+
+              {user?.role === "admin" && (
+                <Link
+                  href="/admin/keys"
+                  className="btn-minimal-secondary text-xs min-h-[40px] px-4 justify-center"
+                >
+                  <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                  <span>Admin Keys Console</span>
+                </Link>
+              )}
+            </div>
+
+            {/* Key creation modal/result */}
+            {generatedKey && (
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/30 p-4 space-y-2 font-mono">
+                <div className="text-xs text-emerald-400 font-bold flex items-center gap-1.5">
+                  <Sparkles className="h-4 w-4" />
+                  <span>API Key Generated (Shown ONCE only)</span>
+                </div>
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-lg border border-white/10 bg-zinc-950 p-3">
+                  <code className="text-xs font-bold text-emerald-300 break-all select-all">{generatedKey}</code>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(generatedKey);
+                      setCopiedKey(true);
+                      setTimeout(() => setCopiedKey(false), 2000);
+                    }}
+                    className="btn-minimal-primary text-xs min-h-[38px] px-4 whitespace-nowrap"
+                  >
+                    {copiedKey ? "Copied Key!" : "Copy Key"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Create API Key Form */}
+            <form onSubmit={handleCreateApiKey} className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="text"
+                placeholder="API Key Name (e.g. My Backend App)"
+                value={newKeyName}
+                onChange={(e) => setNewKeyName(e.target.value)}
+                className="flex-1 rounded-xl border border-white/10 bg-zinc-900 py-2.5 px-3.5 text-xs text-white placeholder-zinc-500 focus:border-emerald-500/50 focus:outline-none min-h-[42px]"
+                required
+              />
+              <button
+                type="submit"
+                disabled={creatingKey}
+                className="btn-minimal-primary text-xs min-h-[42px] px-5 justify-center"
+              >
+                {creatingKey ? (
+                  <span className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    <span>Generate Key</span>
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Active Keys List */}
+            {apiKeys.length > 0 && (
+              <div className="space-y-2 pt-2">
+                {apiKeys.map((k) => (
+                  <div
+                    key={k.id}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-white/5 bg-zinc-900/60 p-3.5"
+                  >
+                    <div>
+                      <div className="font-bold text-xs text-white">{k.name}</div>
+                      <div className="font-mono text-xs text-zinc-300">{k.keyMasked}</div>
+                      <div className="text-[10px] text-zinc-500 mt-0.5">
+                        Expires: {new Date(k.expiresAt).toLocaleDateString()} &bull; Created: {new Date(k.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleRevokeApiKey(k.id)}
+                      className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 border border-red-500/20 bg-red-950/20 px-3 py-1.5 rounded-lg w-fit cursor-pointer"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span>Revoke</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </ScrollReveal>
+      )}
+
+      {qrModalLink && (
+        <QrCodeModal
+          url={qrModalLink.url}
+          code={qrModalLink.code}
+          onClose={() => setQrModalLink(null)}
+        />
+      )}
     </div>
   );
 }
+
 
