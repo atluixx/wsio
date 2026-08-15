@@ -56,6 +56,13 @@ func (h *LinkHandler) NewLink(c *gin.Context) {
 	var code string
 	customAlias := strings.TrimSpace(request.CustomAlias)
 	if customAlias != "" {
+		if userPtr == nil {
+			c.JSON(http.StatusForbidden, gin.H{
+				"error": "custom URLs are only available for Starter+ users",
+			})
+			return
+		}
+
 		// Clean and validate custom alias
 		customAlias = strings.ToLower(customAlias)
 		if existing, err := h.repository.FindByCode(customAlias); err == nil && existing != nil {

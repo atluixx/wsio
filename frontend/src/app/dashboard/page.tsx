@@ -3,17 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/components/Toast";
 import { deleteShortLink, LinkItem, fetchApiKeys, createApiKey, deleteApiKey, ApiKeyItem, createCheckoutSession, fetchUserLinks, fetchUserSubscription } from "@/lib/api";
-import {
-  getGuestLinks,
-  removeGuestLink,
-} from "@/lib/guestLinks";
 import { QrCodeModal } from "@/components/QrCodeModal";
 import { ApiKeyModal } from "@/components/ApiKeyModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import {
   Link2,
   Copy,
@@ -51,6 +47,7 @@ interface AnalyticsData {
 
 export default function DashboardPage() {
   const { user, isAuthenticated } = useAuth();
+  const { showToast } = useToast();
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -82,22 +79,12 @@ export default function DashboardPage() {
       if (paymentParam === "success" && planParam) {
         const cleanPlan = planParam.toLowerCase();
         setCurrentPlan(cleanPlan);
-        localStorage.setItem("wsio_plan", cleanPlan);
-        setPlanStatusMessage(`Subscription active! Upgraded to ${cleanPlan === "diamond" ? "Diamond Plan ($12/mo)" : "Starter Plan ($4/mo)"}.`);
-      } else {
-        const storedPlan = localStorage.getItem("wsio_plan");
-        if (storedPlan) {
-          setCurrentPlan(storedPlan.toLowerCase());
-        } else if (user?.role === "admin") {
-          setCurrentPlan("diamond");
-        } else if (isAuthenticated) {
-          setCurrentPlan("starter");
-        } else {
-          setCurrentPlan("free");
-        }
+        showToast(`Subscription active! Upgraded to ${cleanPlan === "diamond" ? "Diamond Plan" : "Starter Plan"}.`, "success");
+      } else if (user?.role === "admin") {
+        setCurrentPlan("diamond");
       }
     }
-  }, [user, isAuthenticated]);
+  }, [user]);
 
   const handleSubscribePlan = async (planType: string) => {
     setUpgradingPlan(planType);
@@ -107,7 +94,7 @@ export default function DashboardPage() {
     if (res.url) {
       window.location.href = res.url;
     } else {
-      alert(res.error || "Failed to launch Checkout Session");
+      showToast(res.error || "Failed to launch Checkout Session", "error");
     }
   };
 
@@ -116,36 +103,15 @@ export default function DashboardPage() {
       setCancelingPlan(true);
       setTimeout(() => {
         setCurrentPlan("free");
-        if (typeof window !== "undefined") {
-          localStorage.setItem("wsio_plan", "free");
-        }
         setCancelingPlan(false);
-        setPlanStatusMessage("Subscription cancelled. Your account has been reverted to the Free tier.");
+        showToast("Subscription cancelled. Account reverted to Free tier.", "info");
       }, 400);
     }
   };
 
   const loadLinks = async () => {
-    if (isAuthenticated && user?.id) {
-      // Fetch persistent database links
-      const dbLinks = await fetchUserLinks(user.id);
-      // Fetch user-scoped local links
-      const localLinks = getGuestLinks(user.id);
-
-      // Deduplicate by code
-      const codes = new Set(dbLinks.map((l) => l.code));
-      const combined = [...dbLinks];
-      for (const item of localLinks) {
-        if (!codes.has(item.code)) {
-          combined.push(item);
-          codes.add(item.code);
-        }
-      }
-      setLinks(combined);
-    } else {
-      const guestStored = getGuestLinks();
-      setLinks(guestStored);
-    }
+    const dbLinks = await fetchUserLinks(user?.id);
+    setLinks(dbLinks);
   };
 
   const loadSubscription = async () => {
@@ -173,12 +139,6 @@ export default function DashboardPage() {
     loadLinks();
     loadApiKeys();
     loadSubscription();
-    window.addEventListener("focus", loadLinks);
-    window.addEventListener("storage", loadLinks);
-    return () => {
-      window.removeEventListener("focus", loadLinks);
-      window.removeEventListener("storage", loadLinks);
-    };
   }, [isAuthenticated, user?.id, user?.role]);
 
   const handleCreateApiKey = async (e: React.FormEvent) => {
@@ -190,12 +150,12 @@ export default function DashboardPage() {
     setCreatingKey(false);
 
     if (res.key) {
-      // Trigger shadcn Dialog (Requirement #3)
       setModalKeyInfo({ key: res.key, name: newKeyName });
       setNewKeyName("");
+      showToast("API key generated successfully!", "success");
       loadApiKeys();
     } else {
-      alert(res.error || "Failed to generate API Key");
+      showToast(res.error || "Failed to generate API Key", "error");
     }
   };
 
@@ -203,6 +163,9 @@ export default function DashboardPage() {
     const res = await deleteApiKey(id);
     if (res.success) {
       setApiKeys((prev) => prev.filter((k) => k.id !== id));
+      showToast("API key revoked successfully", "info");
+    } else {
+      showToast(res.error || "Failed to revoke API key", "error");
     }
   };
 
@@ -225,6 +188,7 @@ export default function DashboardPage() {
       if (res && res.ok) {
         const data = await res.json();
         setAnalyticsData((prev) => ({ ...prev, [code]: data }));
+        if (forceRefresh) showToast("Analytics refreshed!", "success");
       } else {
         setAnalyticsData((prev) => ({
           ...prev,
@@ -254,19 +218,17 @@ export default function DashboardPage() {
   };
 
   const handleDelete = async (code: string) => {
-    const updated = removeGuestLink(code, user?.id);
-    setLinks(updated);
+    setLinks((prev) => prev.filter((l) => l.code !== code));
     setDeleteConfirm(null);
-
-    if (isAuthenticated) {
-      deleteShortLink(code).catch(() => {});
-      setTimeout(() => loadLinks(), 300);
-    }
+    deleteShortLink(code).catch(() => {});
+    showToast("Link deleted from database", "info");
+    setTimeout(() => loadLinks(), 400);
   };
 
   const copyToClipboard = (text: string, code: string) => {
     navigator.clipboard.writeText(text);
     setCopiedCode(code);
+    showToast("Short link copied to clipboard!", "success");
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
@@ -329,15 +291,15 @@ export default function DashboardPage() {
       {/* Interactive Subscription & Plan Management Section */}
       <ScrollReveal delayMs={50}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="p-5 border-white/15 space-y-3 md:col-span-2">
+          <Card className="p-5 backdrop-blur-2xl bg-zinc-950/40 border border-white/10 shadow-2xl rounded-2xl space-y-3 md:col-span-2">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2">
                 <CreditCard className="h-4 w-4 text-emerald-400" />
                 <h3 className="text-sm font-semibold text-white">Subscription &amp; Plan Management</h3>
               </div>
-              <Badge variant={currentPlan !== "free" ? "success" : "secondary"} className="text-[10px]">
+              <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-300">
                 {currentPlan !== "free" ? "Active Subscription" : "Free Tier"}
-              </Badge>
+              </span>
             </div>
 
             {planStatusMessage && (
@@ -412,7 +374,7 @@ export default function DashboardPage() {
             </div>
           </Card>
 
-          <Card className="p-5 border-white/15 space-y-2">
+          <Card className="p-5 backdrop-blur-2xl bg-zinc-950/40 border border-white/10 shadow-2xl rounded-2xl space-y-2">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <span className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">Links Created</span>
               <Link2 className="h-4 w-4 text-emerald-400" />
@@ -421,7 +383,7 @@ export default function DashboardPage() {
               {links.length}
             </div>
             <p className="text-xs text-zinc-400">
-              {isAuthenticated ? "Stored in secure cloud account" : "Saved in current browser session"}
+              {isAuthenticated ? "Stored in central database" : "Saved in database"}
             </p>
           </Card>
         </div>
@@ -438,7 +400,7 @@ export default function DashboardPage() {
                 placeholder="Search by link alias or target URL..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 text-xs h-10"
+                className="pl-10 text-xs h-10 bg-zinc-900/60 border-white/10"
               />
             </div>
 
@@ -448,7 +410,7 @@ export default function DashboardPage() {
           </div>
 
           {filteredLinks.length === 0 ? (
-            <Card className="p-10 text-center space-y-3 border-dashed">
+            <Card className="p-10 text-center space-y-3 border-dashed backdrop-blur-2xl bg-zinc-950/40 border-white/10 rounded-2xl">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-zinc-900 text-zinc-500">
                 <Link2 className="h-6 w-6" />
               </div>
@@ -476,14 +438,14 @@ export default function DashboardPage() {
                 return (
                   <Card
                     key={link.code}
-                    className="p-5 space-y-3"
+                    className="p-5 backdrop-blur-2xl bg-zinc-950/40 border border-white/10 shadow-xl hover:border-white/20 transition-all rounded-2xl space-y-3"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="min-w-0 flex-1 space-y-1">
                         <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-400">
-                          <Badge variant="outline" className="text-xs font-semibold text-white bg-zinc-900 border-white/15">
+                          <span className="font-mono text-xs font-semibold text-emerald-300 px-2.5 py-0.5 rounded border border-white/10 bg-white/5">
                             {link.code}
-                          </Badge>
+                          </span>
                           {link.createdAt && (
                             <span className="text-[11px] text-zinc-400">
                               Created {link.createdAt}
@@ -639,9 +601,9 @@ export default function DashboardPage() {
                                 {Object.entries(stats.referrers || {}).map(([ref, count], rIdx) => (
                                   <div key={rIdx} className="flex items-center justify-between text-[11px]">
                                     <span className="text-zinc-300 truncate">{ref}</span>
-                                    <Badge variant="outline" className="text-[10px] text-white bg-zinc-950 border-white/10">
+                                    <span className="font-mono text-[10px] text-zinc-300 px-2 py-0.5 rounded border border-white/10 bg-white/5">
                                       {count} {count === 1 ? "visit" : "visits"}
-                                    </Badge>
+                                    </span>
                                   </div>
                                 ))}
                               </div>
@@ -721,9 +683,9 @@ export default function DashboardPage() {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 text-xs">
                         <span className="font-semibold text-white">{k.name}</span>
-                        <Badge variant="outline" className="text-[10px]">
+                        <span className="font-mono text-[10px] text-zinc-300 px-2 py-0.5 rounded border border-white/10 bg-white/5">
                           {k.planType}
-                        </Badge>
+                        </span>
                       </div>
                       <div className="font-mono text-xs text-zinc-300 font-semibold">{k.keyMasked}</div>
                       <div className="text-[10px] text-zinc-400">

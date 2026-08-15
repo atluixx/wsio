@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { fetchAdminApiKeys, deleteAdminApiKey, createApiKey, ApiKeyItem } from "@/lib/api";
+import { useToast } from "@/components/Toast";
 import { ApiKeyModal } from "@/components/ApiKeyModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   ShieldAlert,
   Key,
@@ -17,17 +17,16 @@ import {
   ArrowRight,
   ShieldCheck,
   Clock,
-  Lock,
 } from "lucide-react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
 export default function AdminKeysPage() {
   const { user, isAuthenticated } = useAuth();
+  const { showToast } = useToast();
   const [keys, setKeys] = useState<ApiKeyItem[]>([]);
   const [keyName, setKeyName] = useState("");
   const [selectedPlan, setSelectedPlan] = useState("diamond");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [modalKeyInfo, setModalKeyInfo] = useState<{ key: string; name: string } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
@@ -48,19 +47,18 @@ export default function AdminKeysPage() {
     if (!keyName.trim()) return;
 
     setLoading(true);
-    setError("");
-
     const res = await createApiKey(keyName, selectedPlan);
     setLoading(false);
 
     if (res.error) {
-      setError(res.error);
+      showToast(res.error, "error");
       return;
     }
 
     if (res.key) {
       setModalKeyInfo({ key: res.key, name: keyName });
       setKeyName("");
+      showToast("System API Key generated successfully!", "success");
       loadKeys();
     }
   };
@@ -70,6 +68,9 @@ export default function AdminKeysPage() {
     if (res.success) {
       setKeys((prev) => prev.filter((k) => k.id !== id));
       setDeleteConfirm(null);
+      showToast("API key revoked", "info");
+    } else {
+      showToast(res.error || "Failed to revoke API key", "error");
     }
   };
 
@@ -110,10 +111,10 @@ export default function AdminKeysPage() {
       <ScrollReveal>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
           <div className="space-y-1">
-            <Badge variant="success" className="gap-1.5 py-0.5 px-2.5">
+            <div className="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-xs font-medium">
               <ShieldCheck className="h-3.5 w-3.5" />
               <span>Admin Role Verified</span>
-            </Badge>
+            </div>
             <h1 className="font-heading text-3xl sm:text-4xl text-white font-bold">
               Admin API Key Management
             </h1>
@@ -122,7 +123,7 @@ export default function AdminKeysPage() {
             </p>
           </div>
 
-          <Card className="p-3 bg-zinc-900/80 border-white/10">
+          <Card className="p-3.5 backdrop-blur-2xl bg-zinc-950/40 border border-white/10 rounded-xl">
             <span className="text-zinc-500 block text-[10px] uppercase font-semibold">Administrator</span>
             <span className="text-white text-xs font-bold">{user?.email}</span>
           </Card>
@@ -131,15 +132,8 @@ export default function AdminKeysPage() {
 
       {/* Key Generation Form */}
       <ScrollReveal delayMs={50}>
-        <Card className="p-6 space-y-4">
+        <Card className="p-6 backdrop-blur-2xl bg-zinc-950/40 border border-white/10 shadow-2xl rounded-2xl space-y-4">
           <h2 className="font-heading text-xl text-white font-semibold">Generate System API Key</h2>
-
-          {error && (
-            <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-950/30 p-3.5 text-xs text-red-300">
-              <ShieldAlert className="h-4 w-4 text-red-400 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
 
           <form onSubmit={handleGenerateKey} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="sm:col-span-1 space-y-1">
@@ -151,7 +145,7 @@ export default function AdminKeysPage() {
                 placeholder="e.g. Production Backend Key"
                 value={keyName}
                 onChange={(e) => setKeyName(e.target.value)}
-                className="text-xs h-10"
+                className="text-xs h-10 bg-zinc-900/60 border-white/10"
                 required
               />
             </div>
@@ -202,7 +196,7 @@ export default function AdminKeysPage() {
           </div>
 
           {keys.length === 0 ? (
-            <Card className="p-8 text-center space-y-2 border-dashed">
+            <Card className="p-8 text-center space-y-2 border-dashed backdrop-blur-2xl bg-zinc-950/40 border-white/10 rounded-2xl">
               <Key className="mx-auto h-8 w-8 text-zinc-600" />
               <h3 className="text-sm font-semibold text-white">No system API keys found</h3>
               <p className="text-xs text-zinc-400">Use the form above to generate a new key.</p>
@@ -212,17 +206,17 @@ export default function AdminKeysPage() {
               {keys.map((k) => (
                 <Card
                   key={k.id}
-                  className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                  className="p-4 sm:p-5 backdrop-blur-2xl bg-zinc-950/40 border border-white/10 shadow-xl rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs">
                       <span className="font-semibold text-white">{k.name}</span>
-                      <Badge variant="outline" className="text-[10px]">
+                      <span className="font-mono text-[10px] text-zinc-300 px-2 py-0.5 rounded border border-white/10 bg-white/5">
                         {k.planType}
-                      </Badge>
+                      </span>
                     </div>
 
-                    <div className="text-xs font-mono font-bold text-zinc-300">
+                    <div className="text-xs font-mono font-bold text-emerald-300">
                       {k.keyMasked}
                     </div>
 

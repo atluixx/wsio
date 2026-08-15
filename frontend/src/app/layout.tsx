@@ -5,6 +5,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { CookieBanner } from "@/components/CookieBanner";
+import { ToastProvider } from "@/components/Toast";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -33,10 +34,12 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col bg-[#090a0f] text-slate-100 selection:bg-white/20 selection:text-white saas-bg-glow font-sans">
         <AuthProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <CookieBanner />
+          <ToastProvider>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <CookieBanner />
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

@@ -5,11 +5,12 @@ import Link from "next/link";
 import { Check, ArrowRight, Sparkles, HelpCircle, Building2 } from "lucide-react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { createCheckoutSession } from "@/lib/api";
+import { useToast } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 
 export default function PricingPage() {
+  const { showToast } = useToast();
   const [annualBilling, setAnnualBilling] = useState(true);
   const [submittingPlan, setSubmittingPlan] = useState<string | null>(null);
 
@@ -20,7 +21,7 @@ export default function PricingPage() {
       priceMonthly: "$0",
       priceAnnual: "$0",
       billingPeriod: "Forever free",
-      badge: "Casual Use",
+      tag: "Casual Use",
       highlight: false,
       ctaText: "Start Shortening Free",
       ctaHref: "/",
@@ -28,7 +29,6 @@ export default function PricingPage() {
       features: [
         "3 link creations per 24 hours",
         "Fast global edge redirection",
-        "Local browser history storage",
         "Zero third-party tracking",
         "Standard short link hashes",
       ],
@@ -39,20 +39,18 @@ export default function PricingPage() {
       priceMonthly: "$4",
       priceAnnual: "$3",
       billingPeriod: annualBilling ? "$36 / year ($3/mo)" : "Billed monthly ($4/mo)",
-      badge: "Most Popular",
+      tag: "Most Popular",
       highlight: true,
       ctaText: "Upgrade to Starter",
       ctaHref: "/register?plan=starter",
       ctaVariant: "default" as const,
       features: [
         "Unlimited link creation (No daily caps)",
-        "Cloud dashboard sync across devices",
+        "Cloud database sync across devices",
         "Custom back-half slug aliases",
         "Click analytics & referrer origins",
-        "Dynamic target URL editing",
         "Vector QR code generator",
         "90-Day API Keys access",
-        "Standard email support",
       ],
     },
     {
@@ -61,7 +59,7 @@ export default function PricingPage() {
       priceMonthly: "$12",
       priceAnnual: "$9",
       billingPeriod: annualBilling ? "$108 / year ($9/mo)" : "Billed monthly ($12/mo)",
-      badge: "Power & Scale",
+      tag: "Power & Scale",
       highlight: false,
       ctaText: "Go Diamond",
       ctaHref: "/register?plan=diamond",
@@ -69,12 +67,10 @@ export default function PricingPage() {
       features: [
         "Company custom subdomains (brand.wsio.lol)",
         "Real-time click telemetry stream",
-        "Geographic & referrer traffic breakdown",
         "REST API access & 365-day API Keys",
         "Password-protected & expiring links",
         "Priority edge SLA (99.99% Uptime)",
         "Team collaboration & shared workspaces",
-        "Dedicated priority support",
       ],
     },
   ];
@@ -104,7 +100,7 @@ export default function PricingPage() {
     if (res.url) {
       window.location.href = res.url;
     } else {
-      alert(res.error || "Failed to launch Checkout");
+      showToast(res.error || "Failed to launch Checkout Session", "error");
     }
   };
 
@@ -113,10 +109,10 @@ export default function PricingPage() {
       {/* Header */}
       <ScrollReveal>
         <div className="text-center space-y-4 max-w-2xl mx-auto">
-          <Badge variant="outline" className="gap-1.5 py-1 px-3 border-white/15 text-zinc-300">
+          <div className="inline-flex items-center gap-1.5 py-1 px-3.5 rounded-full border border-white/10 bg-white/5 text-xs text-zinc-300">
             <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
             <span>Transparent Pricing for All Scales</span>
-          </Badge>
+          </div>
 
           <h1 className="font-heading text-4xl sm:text-6xl text-white font-bold leading-[1.12]">
             Simple plans built to scale.
@@ -143,15 +139,15 @@ export default function PricingPage() {
               }`}
             >
               <span>Annual Billing</span>
-              <Badge variant="success" className="text-[10px] font-bold px-2 py-0.5">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                 Save 20%
-              </Badge>
+              </span>
             </button>
           </div>
         </div>
       </ScrollReveal>
 
-      {/* Plan Cards Grid */}
+      {/* Plan Cards Grid - Glassmorphism */}
       <ScrollReveal delayMs={100}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {plans.map((plan, idx) => {
@@ -164,25 +160,17 @@ export default function PricingPage() {
             return (
               <Card
                 key={idx}
-                className={`flex flex-col justify-between relative p-6 sm:p-7 ${
-                  plan.highlight ? "border-emerald-500/40 bg-zinc-900/90 shadow-2xl" : ""
+                className={`flex flex-col justify-between relative p-6 sm:p-7 backdrop-blur-2xl rounded-2xl transition-all duration-300 ${
+                  plan.highlight
+                    ? "border-emerald-500/40 bg-zinc-950/60 shadow-2xl ring-1 ring-emerald-500/20"
+                    : "border-white/10 bg-zinc-950/40 hover:border-white/20 shadow-xl"
                 }`}
               >
-                {plan.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border border-emerald-500/30 bg-emerald-400 px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-950">
-                    {plan.badge}
-                  </div>
-                )}
-
                 <div className="space-y-6">
                   <div className="border-b border-white/10 pb-4 space-y-2">
                     <div className="flex items-center justify-between">
                       <h3 className="font-heading text-xl font-bold text-white">{plan.name}</h3>
-                      {!plan.highlight && (
-                        <Badge variant="outline" className="text-[10px]">
-                          {plan.badge}
-                        </Badge>
-                      )}
+                      <span className="text-[11px] font-mono text-zinc-400">{plan.tag}</span>
                     </div>
                     <p className="text-xs text-zinc-400 leading-relaxed min-h-[36px]">{plan.description}</p>
                   </div>

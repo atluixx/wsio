@@ -3,20 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { createShortLink, LinkItem } from "@/lib/api";
-import {
-  getGuestLinks,
-  saveGuestLink,
-  normalizeUrl,
-  generateGuestHash,
-  getGuestDailyUsage,
-  incrementGuestDailyUsage,
-  GUEST_DAILY_LIMIT,
-} from "@/lib/guestLinks";
+import { createShortLink, fetchUserLinks, LinkItem } from "@/lib/api";
+import { normalizeUrl, getGuestDailyUsage, incrementGuestDailyUsage, GUEST_DAILY_LIMIT } from "@/lib/guestLinks";
+import { useToast } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Link2,
   Copy,
@@ -33,17 +25,25 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 
 export default function CreateLinkPage() {
   const { isAuthenticated, user } = useAuth();
+  const { showToast } = useToast();
   const [url, setUrl] = useState("");
+  const [customAlias, setCustomAlias] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [createdLinks, setCreatedLinks] = useState<LinkItem[]>([]);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [guestUsage, setGuestUsage] = useState({ count: 0, date: "" });
 
+  const loadRecentLinks = async () => {
+    if (isAuthenticated && user?.id) {
+      const links = await fetchUserLinks(user.id);
+      setCreatedLinks(links);
+    }
+  };
+
   useEffect(() => {
-    setCreatedLinks(getGuestLinks());
+    loadRecentLinks();
     setGuestUsage(getGuestDailyUsage());
-  }, []);
+  }, [isAuthenticated, user?.id]);
 
   const limitReached = !isAuthenticated && guestUsage.count >= GUEST_DAILY_LIMIT;
 
@@ -51,58 +51,47 @@ export default function CreateLinkPage() {
     e.preventDefault();
     if (!url.trim()) return;
 
+    if (customAlias.trim() && !isAuthenticated) {
+      showToast("Custom URLs are only available for Starter+ users.", "error");
+      return;
+    }
+
     if (limitReached) {
-      setError("Guest daily limit reached (3/3). Register free or upgrade to Starter for unlimited link creation.");
+      showToast("Guest daily limit reached (3/3). Register free to create unlimited links.", "error");
       return;
     }
 
     setLoading(true);
-    setError("");
-
     const formattedUrl = normalizeUrl(url);
 
-    let code = "";
-    let id = "";
-    let userId: string | undefined = undefined;
-
-    const res = await createShortLink(formattedUrl);
+    const res = await createShortLink(formattedUrl, customAlias.trim() || undefined);
     setLoading(false);
 
-    if (res.error && res.error.includes("limit reached")) {
-      setError(res.error);
+    if (res.error) {
+      showToast(res.error, "error");
       return;
     }
 
-    if (!res.error && res.code) {
-      code = res.code;
-      id = res.id || Math.random().toString();
-      userId = res.userId || (isAuthenticated ? user?.id : undefined);
-    } else {
-      code = generateGuestHash(formattedUrl);
-      id = Math.random().toString();
-      userId = isAuthenticated ? user?.id : undefined;
+    if (res.code) {
+      const newLink: LinkItem = {
+        id: res.id || Math.random().toString(),
+        code: res.code,
+        url: formattedUrl,
+        userId: res.userId || (isAuthenticated ? user?.id : undefined),
+        createdAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
+
+      setCreatedLinks((prev) => [newLink, ...prev]);
+      showToast("Short link created successfully!", "success");
+
+      if (!isAuthenticated) {
+        incrementGuestDailyUsage();
+        setGuestUsage(getGuestDailyUsage());
+      }
+
+      setUrl("");
+      setCustomAlias("");
     }
-
-    const newLink: LinkItem = {
-      id: id,
-      code: code,
-      url: formattedUrl,
-      userId: userId,
-      createdAt: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
-    const updated = saveGuestLink(newLink);
-    setCreatedLinks(updated);
-
-    if (!isAuthenticated) {
-      incrementGuestDailyUsage();
-      setGuestUsage(getGuestDailyUsage());
-    }
-
-    setUrl("");
   };
 
   const getShortUrl = (code: string) => {
@@ -112,6 +101,7 @@ export default function CreateLinkPage() {
   const copyToClipboard = (text: string, code: string) => {
     navigator.clipboard.writeText(text);
     setCopiedCode(code);
+    showToast("Link copied to clipboard!", "success");
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
@@ -129,9 +119,9 @@ export default function CreateLinkPage() {
         </div>
       </ScrollReveal>
 
-      {/* Main Creation Card */}
+      {/* Main Creation Card - Glassmorphism style */}
       <ScrollReveal delayMs={50}>
-        <Card className="p-5 sm:p-7 shadow-2xl backdrop-blur-xl space-y-6">
+        <Card className="p-5 sm:p-7 backdrop-blur-2xl bg-zinc-950/40 border border-white/10 shadow-2xl rounded-2xl space-y-6">
           {!isAuthenticated && (
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-400 border-b border-white/10 pb-3">
               <span>Guest Daily Limit: <strong className="text-white">{guestUsage.count} / {GUEST_DAILY_LIMIT}</strong> created today</span>
@@ -158,13 +148,6 @@ export default function CreateLinkPage() {
             </div>
           )}
 
-          {error && !limitReached && (
-            <div className="flex items-center gap-2.5 rounded-xl border border-red-500/20 bg-red-950/30 p-4 text-xs text-red-300">
-              <ShieldAlert className="h-4 w-4 text-red-400 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-wider text-zinc-300">
@@ -180,15 +163,34 @@ export default function CreateLinkPage() {
                   value={url}
                   disabled={limitReached}
                   onChange={(e) => setUrl(e.target.value)}
-                  className="pl-10 h-12 text-sm"
+                  className="pl-10 h-12 text-sm bg-zinc-900/60 border-white/10"
                   required
                 />
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+            {/* Custom Alias Input */}
+            <div className="space-y-1 pt-1">
+              <label className="text-xs font-semibold uppercase tracking-wider text-zinc-300 flex items-center justify-between">
+                <span>Custom Alias / Slug (Optional)</span>
+                {!isAuthenticated && (
+                  <span className="text-[10px] text-amber-400 font-normal flex items-center gap-1">
+                    <Lock className="h-3 w-3" /> Starter+ Required
+                  </span>
+                )}
+              </label>
+              <Input
+                placeholder={isAuthenticated ? "e.g. launch-2026" : "Custom alias (Starter+ users only)"}
+                value={customAlias}
+                disabled={limitReached || !isAuthenticated}
+                onChange={(e) => setCustomAlias(e.target.value)}
+                className="text-xs h-10 bg-zinc-900/60 border-white/10"
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-white/10">
               <span className="text-xs text-zinc-400">
-                {isAuthenticated ? `Signed in as ${user?.email}` : "Guest Session (Saved locally)"}
+                {isAuthenticated ? `Signed in as ${user?.email}` : "Guest Session"}
               </span>
 
               <Button
@@ -218,7 +220,7 @@ export default function CreateLinkPage() {
       {/* Generated Links History */}
       {createdLinks.length > 0 && (
         <ScrollReveal delayMs={100}>
-          <Card className="p-5 sm:p-6 space-y-4">
+          <Card className="p-5 sm:p-6 backdrop-blur-2xl bg-zinc-950/40 border border-white/10 shadow-2xl rounded-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2">
                 <History className="h-4 w-4 text-emerald-400" />
@@ -238,17 +240,17 @@ export default function CreateLinkPage() {
               {createdLinks.slice(0, 5).map((item) => (
                 <div
                   key={item.code}
-                  className="rounded-xl border border-white/10 bg-zinc-900/60 p-4 space-y-2"
+                  className="rounded-xl border border-white/10 bg-zinc-900/40 p-4 space-y-2"
                 >
                   <div className="flex items-center justify-between text-xs text-zinc-400">
                     <span className="flex items-center gap-1.5 text-white font-medium">
                       <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-                      Code: <Badge variant="outline" className="font-mono text-xs">{item.code}</Badge>
+                      Code: <span className="font-mono text-xs text-emerald-300 font-semibold px-2 py-0.5 rounded border border-white/10 bg-white/5">{item.code}</span>
                     </span>
                     <span>{item.createdAt}</span>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-white/10 bg-zinc-950 p-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-white/10 bg-zinc-950/80 p-3">
                     <div className="truncate text-sm text-emerald-300 font-mono font-semibold">
                       {getShortUrl(item.code)}
                     </div>

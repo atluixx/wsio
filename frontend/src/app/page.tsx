@@ -12,12 +12,12 @@ import {
   incrementGuestDailyUsage,
   GUEST_DAILY_LIMIT,
 } from "@/lib/guestLinks";
+import { useToast } from "@/components/Toast";
 import { QrCodeModal } from "@/components/QrCodeModal";
 import { SubdomainRequestDialog } from "@/components/SubdomainRequestDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Link2,
   Copy,
@@ -40,6 +40,7 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
+  const { showToast } = useToast();
   const [inputUrl, setInputUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -62,8 +63,13 @@ export default function Home() {
     e.preventDefault();
     if (!inputUrl.trim()) return;
 
+    if (customAlias.trim() && !isAuthenticated) {
+      showToast("Custom URLs are only available for Starter+ users.", "error");
+      return;
+    }
+
     if (limitReached) {
-      setErrorMessage("Guest limit reached (3/3 links today). Create a free account to unlock unlimited link shortening.");
+      showToast("Guest limit reached (3/3 links today). Create a free account to unlock unlimited link shortening.", "error");
       return;
     }
 
@@ -73,55 +79,45 @@ export default function Home() {
 
     const formattedUrl = normalizeUrl(inputUrl);
 
-    let code = "";
-    let id = "";
-    let userId: string | undefined = undefined;
-
     const res = await createShortLink(formattedUrl, customAlias, appliedSubdomain);
     setLoading(false);
 
     if (res.error) {
+      showToast(res.error, "error");
       setErrorMessage(res.error);
       return;
     }
 
     if (res.code) {
-      code = res.code;
-      id = res.id || Math.random().toString();
-      userId = res.userId || (isAuthenticated ? user?.id : undefined);
-    } else {
-      code = customAlias.trim() ? customAlias.trim() : generateGuestHash(formattedUrl);
-      id = Math.random().toString();
-      userId = isAuthenticated ? user?.id : undefined;
+      const newLink: LinkItem = {
+        id: res.id || Math.random().toString(),
+        code: res.code,
+        url: formattedUrl,
+        subdomain: appliedSubdomain.trim(),
+        userId: res.userId || (isAuthenticated ? user?.id : undefined),
+        createdAt: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+
+      setCreatedLink(newLink);
+      showToast("Short URL created successfully!", "success");
+
+      if (!isAuthenticated) {
+        incrementGuestDailyUsage();
+        setGuestUsage(getGuestDailyUsage());
+      }
+
+      setInputUrl("");
+      setCustomAlias("");
     }
-
-    const newLink: LinkItem = {
-      id: id,
-      code: code,
-      url: formattedUrl,
-      subdomain: appliedSubdomain.trim(),
-      userId: userId,
-      createdAt: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
-    setCreatedLink(newLink);
-    saveGuestLink(newLink);
-    
-    if (!isAuthenticated) {
-      incrementGuestDailyUsage();
-      setGuestUsage(getGuestDailyUsage());
-    }
-
-    setInputUrl("");
-    setCustomAlias("");
   };
 
   const copyToClipboard = (text: string, code: string) => {
     navigator.clipboard.writeText(text);
     setCopiedCode(code);
+    showToast("Short link copied to clipboard!", "success");
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
@@ -170,10 +166,10 @@ export default function Home() {
       {/* Hero & Central Input Engine */}
       <ScrollReveal>
         <div className="text-center space-y-4 max-w-2xl mx-auto">
-          <Badge variant="outline" className="gap-1.5 py-1 px-3 border-white/15 text-zinc-300">
+          <div className="inline-flex items-center gap-1.5 py-1 px-3.5 rounded-full border border-white/10 bg-white/5 text-xs text-zinc-300">
             <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
             <span>Simple, Fast &amp; Reliable Link Shortening</span>
-          </Badge>
+          </div>
 
           <h1 className="font-heading text-4xl sm:text-6xl font-bold tracking-tight text-white leading-[1.12]">
             Shorten long URLs into clean, memorable links.
@@ -184,8 +180,8 @@ export default function Home() {
           </p>
         </div>
 
-        {/* URL Shortener Form Container */}
-        <Card className="mt-8 border-white/15 bg-zinc-950/90 shadow-2xl p-5 sm:p-7 backdrop-blur-xl">
+        {/* URL Shortener Form Container - Glassy style */}
+        <Card className="mt-8 backdrop-blur-2xl bg-zinc-950/40 border border-white/10 shadow-2xl p-5 sm:p-7 rounded-2xl">
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs border-b border-white/10 pb-4 mb-5">
             <span className="text-zinc-400 font-medium">
               {isAuthenticated ? (
@@ -221,7 +217,7 @@ export default function Home() {
                   value={inputUrl}
                   disabled={limitReached}
                   onChange={(e) => setInputUrl(e.target.value)}
-                  className="pl-11 h-12 text-sm"
+                  className="pl-11 h-12 text-sm bg-zinc-900/60 border-white/10"
                   required
                 />
               </div>
@@ -251,11 +247,15 @@ export default function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div>
                 <Input
-                  placeholder="Custom Alias / Slug (Optional, e.g. promo-2026)"
+                  placeholder={
+                    isAuthenticated
+                      ? "Custom Alias / Slug (Starter+ Users)"
+                      : "Custom Alias (Starter+ Only)"
+                  }
                   value={customAlias}
-                  disabled={limitReached}
+                  disabled={limitReached || !isAuthenticated}
                   onChange={(e) => setCustomAlias(e.target.value)}
-                  className="text-xs h-10"
+                  className="text-xs h-10 bg-zinc-900/60 border-white/10"
                 />
               </div>
 
@@ -282,164 +282,153 @@ export default function Home() {
                       <Building2 className="h-3.5 w-3.5 text-emerald-400" />
                       <span>Company Subdomain</span>
                     </span>
-                    <Badge variant="secondary" className="text-[10px] font-normal">Apply</Badge>
+                    <span className="text-[10px] text-zinc-400 font-medium">Apply</span>
                   </Button>
                 )}
               </div>
             </div>
           </form>
 
-          {/* Live Preview */}
-          <div className="flex flex-wrap items-center justify-between text-xs text-zinc-400 pt-4 border-t border-white/10 mt-4">
-            <span>✨ Live Preview: <code className="text-zinc-200 font-mono font-medium">{getShortUrl(customAlias.trim() || "xxxxxx", appliedSubdomain)}</code></span>
-            <span>Click &quot;Shorten URL&quot; to generate</span>
-          </div>
-
           {/* Limit Warning Banner */}
           {limitReached && (
             <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-950/40 p-4 text-xs text-amber-200">
               <div className="flex items-center gap-2">
                 <ShieldAlert className="h-4 w-4 text-amber-400 shrink-0" />
-                <span>You have reached the guest daily limit of 3 short links.</span>
+                <span>You have reached the guest limit of 3 links today.</span>
               </div>
               <Button asChild size="sm" className="whitespace-nowrap text-xs">
                 <Link href="/pricing">View Plans &amp; Upgrade</Link>
               </Button>
             </div>
           )}
-
-          {/* Error Banner */}
-          {errorMessage && !limitReached && (
-            <div className="mt-4 flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-950/30 p-3.5 text-xs text-red-300">
-              <ShieldAlert className="h-4 w-4 text-red-400 shrink-0" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
-
-          {/* Success Output Card */}
-          {createdLink && (
-            <div className="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-4 space-y-3 animate-in fade-in-50 duration-300">
-              <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 font-semibold text-emerald-400">
-                  <Sparkles className="h-4 w-4" />
-                  Short Link Created!
-                </span>
-                <span className="text-zinc-400">{createdLink.createdAt}</span>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-white/10 bg-zinc-950 p-3.5">
-                <div className="truncate font-mono text-sm font-bold text-emerald-300">
-                  {getShortUrl(createdLink.code, createdLink.subdomain)}
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => copyToClipboard(getShortUrl(createdLink.code, createdLink.subdomain), createdLink.code)}
-                    className="text-xs"
-                  >
-                    {copiedCode === createdLink.code ? (
-                      <>
-                        <Check className="h-3.5 w-3.5 text-zinc-950" />
-                        <span>Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-3.5 w-3.5" />
-                        <span>Copy Link</span>
-                      </>
-                    )}
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setQrModalLink({ url: getShortUrl(createdLink.code, createdLink.subdomain), code: createdLink.code })}
-                    className="text-xs border-white/10"
-                  >
-                    <QrCode className="h-3.5 w-3.5 text-emerald-400" />
-                    <span>QR Code</span>
-                  </Button>
-
-                  <Button
-                    asChild
-                    variant="secondary"
-                    size="sm"
-                    className="text-xs"
-                  >
-                    <a
-                      href={getShortUrl(createdLink.code, createdLink.subdomain)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      <span>Test Redirection</span>
-                    </a>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
         </Card>
       </ScrollReveal>
 
-      {/* Feature Highlights Grid */}
-      <ScrollReveal delayMs={50}>
-        <div className="space-y-6">
-          <div className="text-center space-y-1.5">
-            <h2 className="font-heading text-2xl sm:text-3xl text-white font-semibold">Designed for clarity &amp; performance</h2>
-            <p className="text-xs sm:text-sm text-zinc-400">Everything you need to share, manage, and measure your links.</p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <Card className="p-6 space-y-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-zinc-900 text-emerald-400">
-                <Zap className="h-5 w-5" />
+      {/* Generated Link Card */}
+      {createdLink && (
+        <ScrollReveal delayMs={100}>
+          <Card className="backdrop-blur-2xl bg-zinc-950/40 border border-emerald-500/30 shadow-2xl p-6 rounded-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2 text-emerald-400 font-semibold text-xs">
+                <Sparkles className="h-4 w-4" />
+                <span>Short Link Generated Successfully</span>
               </div>
-              <CardTitle className="text-base">Sub-millisecond Speed</CardTitle>
-              <CardDescription>
-                High-performance redirection engine built for fast edge execution and reliability under high load.
-              </CardDescription>
-            </Card>
+              <span className="text-xs text-zinc-400">{createdLink.createdAt}</span>
+            </div>
 
-            <Card className="p-6 space-y-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-zinc-900 text-emerald-400">
-                <BarChart3 className="h-5 w-5" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-white/10 bg-zinc-900/60 p-4">
+              <div className="truncate text-base text-white font-mono font-bold">
+                {getShortUrl(createdLink.code, createdLink.subdomain)}
               </div>
-              <CardTitle className="text-base">Real-time Telemetry</CardTitle>
-              <CardDescription>
-                Monitor total clicks, 24-hour velocity, and referrer source breakdown from your unified dashboard.
-              </CardDescription>
-            </Card>
 
-            <Card className="p-6 space-y-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-zinc-900 text-emerald-400">
-                <ShieldCheck className="h-5 w-5" />
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => copyToClipboard(getShortUrl(createdLink.code, createdLink.subdomain), createdLink.code)}
+                  className="text-xs h-9 font-semibold"
+                >
+                  {copiedCode === createdLink.code ? (
+                    <>
+                      <Check className="h-4 w-4 text-zinc-950" />
+                      <span>Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4" />
+                      <span>Copy Short Link</span>
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setQrModalLink({ url: getShortUrl(createdLink.code, createdLink.subdomain), code: createdLink.code })}
+                  className="text-xs h-9 border-white/10"
+                >
+                  <QrCode className="h-4 w-4 text-emerald-400" />
+                  <span>QR Code</span>
+                </Button>
+
+                <Button
+                  asChild
+                  variant="secondary"
+                  size="sm"
+                  className="text-xs h-9"
+                >
+                  <a
+                    href={getShortUrl(createdLink.code, createdLink.subdomain)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </Button>
               </div>
-              <CardTitle className="text-base">Privacy First</CardTitle>
-              <CardDescription>
-                Zero third-party tracking scripts or invasive data collection. Your link metrics remain strictly yours.
-              </CardDescription>
-            </Card>
-          </div>
+            </div>
+
+            <div className="flex items-center justify-between text-xs text-zinc-400">
+              <span className="truncate">Destination: <span className="text-zinc-200">{createdLink.url}</span></span>
+              <Link href="/dashboard" className="text-emerald-400 hover:underline shrink-0 font-medium ml-2">
+                View in Dashboard &rarr;
+              </Link>
+            </div>
+          </Card>
+        </ScrollReveal>
+      )}
+
+      {/* Feature Cards Grid - Glassy style */}
+      <ScrollReveal delayMs={100}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="p-6 backdrop-blur-2xl bg-zinc-950/40 border border-white/10 shadow-xl hover:border-white/20 transition-all rounded-2xl space-y-3">
+            <div className="h-10 w-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-emerald-400">
+              <Zap className="h-5 w-5" />
+            </div>
+            <h3 className="font-heading text-lg text-white font-semibold">Sub-millisecond Edge Engine</h3>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              Global routing delivers fast 301/302 redirects with near-zero latency worldwide.
+            </p>
+          </Card>
+
+          <Card className="p-6 backdrop-blur-2xl bg-zinc-950/40 border border-white/10 shadow-xl hover:border-white/20 transition-all rounded-2xl space-y-3">
+            <div className="h-10 w-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-emerald-400">
+              <BarChart3 className="h-5 w-5" />
+            </div>
+            <h3 className="font-heading text-lg text-white font-semibold">Click Telemetry Stream</h3>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              Track link activity, 24h &amp; 7d velocity, and top referrer origins in real-time.
+            </p>
+          </Card>
+
+          <Card className="p-6 backdrop-blur-2xl bg-zinc-950/40 border border-white/10 shadow-xl hover:border-white/20 transition-all rounded-2xl space-y-3">
+            <div className="h-10 w-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-emerald-400">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <h3 className="font-heading text-lg text-white font-semibold">Database Centralization</h3>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              All short links and access keys are stored centrally in PostgreSQL with 99.99% edge uptime.
+            </p>
+          </Card>
         </div>
       </ScrollReveal>
 
-      {/* Accordion FAQ */}
-      <ScrollReveal delayMs={100}>
+      {/* FAQ Section */}
+      <ScrollReveal delayMs={120}>
         <div className="space-y-6">
-          <div className="border-b border-white/10 pb-4">
-            <h2 className="font-heading text-2xl text-white font-semibold">Frequently Asked Questions</h2>
-            <p className="text-xs text-zinc-400 mt-1">Everything you need to know about our link platform and features.</p>
+          <div className="text-center space-y-2">
+            <h2 className="font-heading text-2xl sm:text-3xl text-white font-semibold">Frequently Asked Questions</h2>
+            <p className="text-xs text-zinc-400">Everything you need to know about wsio.</p>
           </div>
 
-          <div className="divide-y divide-white/10">
+          <div className="space-y-3">
             {faqItems.map((item, idx) => (
-              <div key={idx} className="py-4">
+              <div
+                key={idx}
+                className="rounded-2xl border border-white/10 bg-zinc-950/40 backdrop-blur-2xl p-5 transition-colors"
+              >
                 <button
                   onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className="flex w-full items-center justify-between text-sm sm:text-base font-medium text-white text-left focus:outline-none cursor-pointer min-h-[44px]"
-                  aria-expanded={openFaq === idx}
+                  className="flex w-full items-center justify-between text-left font-semibold text-white text-sm"
                 >
                   <span>{item.q}</span>
                   <span className="ml-4 shrink-0 rounded-lg border border-white/10 p-1.5 text-zinc-400 hover:text-white">
@@ -459,10 +448,10 @@ export default function Home() {
 
       {/* Primary Call-to-Action Card */}
       <ScrollReveal delayMs={150}>
-        <Card className="border-white/15 bg-gradient-to-br from-zinc-900 to-zinc-950 p-8 text-center space-y-4">
-          <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 bg-emerald-950/30">
+        <Card className="backdrop-blur-2xl bg-zinc-950/40 border border-white/10 p-8 text-center space-y-4 rounded-2xl shadow-2xl">
+          <span className="inline-block text-xs font-medium px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-300">
             Ready to get started?
-          </Badge>
+          </span>
           <h2 className="font-heading text-3xl sm:text-4xl text-white font-semibold">
             Create an account or upgrade today.
           </h2>
