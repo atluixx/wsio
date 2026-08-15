@@ -15,8 +15,10 @@ import (
 )
 
 var (
-	userRepo repositories.UserRepository
-	linkRepo repositories.LinkRepository
+	userRepo      repositories.UserRepository
+	linkRepo      repositories.LinkRepository
+	analyticsRepo repositories.AnalyticsRepository
+	apiKeyRepo    repositories.ApiKeyRepository
 )
 
 func init() {
@@ -28,9 +30,11 @@ func init() {
 	if dsn != "" {
 		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err == nil {
-			_ = db.AutoMigrate(&domain.User{}, &domain.Link{})
+			_ = db.AutoMigrate(&domain.User{}, &domain.Link{}, &domain.LinkClick{}, &domain.UserSubscription{}, &domain.GuestUsageTrack{}, &domain.ApiKey{})
 			userRepo = repositories.NewUserRepository(db)
 			linkRepo = repositories.NewLinkRepository(db)
+			analyticsRepo = repositories.NewAnalyticsRepository(db)
+			apiKeyRepo = repositories.NewPostgresApiKeyRepository(db)
 			log.Println("Initialized PostgreSQL database repositories")
 			return
 		}
@@ -39,19 +43,42 @@ func init() {
 
 	userRepo = repositories.NewInMemoryUserRepository()
 	linkRepo = repositories.NewInMemoryLinkRepository()
+	analyticsRepo = repositories.NewInMemoryAnalyticsRepository()
+	apiKeyRepo = repositories.NewInMemoryApiKeyRepository()
 	log.Println("Initialized In-Memory repositories fallback")
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	gin.SetMode(gin.ReleaseMode)
+	origin := r.Header.Get("Origin")
+	if origin != "" {
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+	} else {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+	}
 
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie, X-Requested-With, Accept, Origin, X-User-ID, X-API-Key")
+	w.Header().Set("Access-Control-Expose-Headers", "Content-Length, Set-Cookie")
+	w.Header().Set("Vary", "Origin")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Recovery())
 
 	userHandler := handlers.NewUserHandler(userRepo)
-	linkHandler := handlers.NewLinkHandler(linkRepo)
+	linkHandler := handlers.NewLinkHandler(linkRepo, analyticsRepo)
+	analyticsHandler := handlers.NewAnalyticsHandler(analyticsRepo, linkRepo)
+	stripeHandler := handlers.NewStripeHandler()
+	apiKeyHandler := handlers.NewApiKeyHandler(apiKeyRepo)
+	adminHandler := handlers.NewAdminHandler(apiKeyRepo, userRepo)
 
-	app.SetupRoutes(router, linkHandler, userHandler)
+	app.SetupRoutes(router, linkHandler, userHandler, analyticsHandler, analyticsRepo, apiKeyRepo, stripeHandler, apiKeyHandler, adminHandler)
 
 	router.ServeHTTP(w, r)
 }
