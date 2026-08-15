@@ -46,12 +46,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-4 py-12">
+    <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-4 py-8 sm:py-12">
       <ScrollReveal className="w-full max-w-md">
         {/* Card Header */}
         <div className="mb-6 text-center space-y-2">
           <Link href="/" className="inline-block font-mono text-2xl font-bold text-white tracking-tight">
-            wsio<span className="text-zinc-500">.</span>
+            wsio<span className="text-emerald-400">.</span>
           </Link>
           <h1 className="font-serif text-2xl sm:text-3xl text-white font-normal">
             Account Authentication
@@ -62,16 +62,16 @@ export default function LoginPage() {
         </div>
 
         {/* Card Body */}
-        <div className="rounded-xl border border-white/10 bg-zinc-950 p-6 shadow-2xl backdrop-blur-xl">
+        <div className="rounded-2xl border border-white/10 bg-zinc-950 p-6 sm:p-7 shadow-2xl backdrop-blur-xl space-y-4">
           {error && (
-            <div className="mb-5 flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-950/30 p-3 font-mono text-xs text-red-300">
+            <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-950/30 p-3.5 font-mono text-xs text-red-300">
               <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
               <span>{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="mb-5 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-950/40 p-3 font-mono text-xs text-emerald-300">
+            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-950/40 p-3.5 font-mono text-xs text-emerald-300">
               <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
               <span>Authenticated successfully. Redirecting to dashboard...</span>
             </div>
@@ -83,7 +83,7 @@ export default function LoginPage() {
                 Email Address
               </label>
               <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-500">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-zinc-500">
                   <Mail className="h-4 w-4" />
                 </div>
                 <input
@@ -91,7 +91,7 @@ export default function LoginPage() {
                   placeholder="user@domain.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-zinc-900/90 py-2.5 pl-9 pr-3.5 font-mono text-xs text-white placeholder-zinc-600 transition-colors focus:border-white/30 focus:outline-none"
+                  className="w-full rounded-xl border border-white/10 bg-zinc-900/90 py-3 pl-10 pr-3.5 font-mono text-xs text-white placeholder-zinc-600 transition-colors focus:border-emerald-500/50 focus:outline-none min-h-[44px]"
                   required
                 />
               </div>
@@ -102,7 +102,7 @@ export default function LoginPage() {
                 Password
               </label>
               <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-500">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-zinc-500">
                   <Lock className="h-4 w-4" />
                 </div>
                 <input
@@ -110,7 +110,7 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-zinc-900/90 py-2.5 pl-9 pr-3.5 font-mono text-xs text-white placeholder-zinc-600 transition-colors focus:border-white/30 focus:outline-none"
+                  className="w-full rounded-xl border border-white/10 bg-zinc-900/90 py-3 pl-10 pr-3.5 font-mono text-xs text-white placeholder-zinc-600 transition-colors focus:border-emerald-500/50 focus:outline-none min-h-[44px]"
                   required
                 />
               </div>
@@ -119,7 +119,8 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || success}
-              className="btn-minimal-primary w-full mt-2"
+              className="btn-minimal-primary w-full mt-2 min-h-[44px] text-xs justify-center"
+              title="Click to sign in to your account"
             >
               {loading ? (
                 <span className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
@@ -132,9 +133,9 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 border-t border-white/10 pt-4 text-center font-mono text-xs text-zinc-500">
+          <div className="border-t border-white/10 pt-4 text-center font-mono text-xs text-zinc-500">
             Don&apos;t have an account?{" "}
-            <Link href="/register" className="text-white hover:underline">
+            <Link href="/register" className="text-white hover:underline font-semibold">
               Create one now
             </Link>
           </div>
@@ -143,3 +144,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

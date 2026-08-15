@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, ArrowRight, Sparkles, Zap, ShieldCheck, HelpCircle } from "lucide-react";
+import { Check, ArrowRight, Sparkles, HelpCircle } from "lucide-react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
 export default function PricingPage() {
@@ -17,7 +17,7 @@ export default function PricingPage() {
       billingPeriod: "Forever free",
       badge: "Casual Use",
       highlight: false,
-      ctaText: "Start Shortening",
+      ctaText: "Start Shortening Free",
       ctaHref: "/",
       ctaVariant: "btn-minimal-secondary",
       features: [
@@ -87,7 +87,7 @@ export default function PricingPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-24 space-y-16 font-mono">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-20 space-y-12 sm:space-y-16 font-mono">
       {/* Header & Title */}
       <ScrollReveal>
         <div className="text-center space-y-4 max-w-2xl mx-auto">
@@ -96,7 +96,7 @@ export default function PricingPage() {
             <span>Simple, Transparent Pricing</span>
           </div>
 
-          <h1 className="font-serif text-4xl sm:text-6xl text-white font-normal leading-[1.1]">
+          <h1 className="font-serif text-3xl sm:text-6xl text-white font-normal leading-[1.15]">
             Plans for every <span className="italic text-zinc-400">scale.</span>
           </h1>
 
@@ -105,10 +105,10 @@ export default function PricingPage() {
           </p>
 
           {/* Billing Toggle */}
-          <div className="pt-4 inline-flex items-center gap-3 rounded-full border border-white/10 bg-zinc-950 p-1.5 text-xs">
+          <div className="pt-2 inline-flex items-center gap-2 rounded-full border border-white/10 bg-zinc-950 p-1.5 text-xs">
             <button
               onClick={() => setAnnualBilling(false)}
-              className={`rounded-full px-4 py-1.5 transition-colors cursor-pointer ${
+              className={`rounded-full px-4 py-2 transition-colors cursor-pointer min-h-[38px] ${
                 !annualBilling ? "bg-white text-black font-semibold" : "text-zinc-400 hover:text-white"
               }`}
             >
@@ -116,7 +116,7 @@ export default function PricingPage() {
             </button>
             <button
               onClick={() => setAnnualBilling(true)}
-              className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 rounded-full px-4 py-2 transition-colors cursor-pointer min-h-[38px] ${
                 annualBilling ? "bg-white text-black font-semibold" : "text-zinc-400 hover:text-white"
               }`}
             >
@@ -135,12 +135,12 @@ export default function PricingPage() {
           {plans.map((plan, idx) => (
             <div
               key={idx}
-              className={`bento-card flex flex-col justify-between relative ${
-                plan.highlight ? "border-white/30 bg-zinc-900/90 shadow-2xl" : ""
+              className={`bento-card flex flex-col justify-between relative p-6 sm:p-7 ${
+                plan.highlight ? "border-emerald-500/40 bg-zinc-900/90 shadow-2xl" : ""
               }`}
             >
               {plan.highlight && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border border-white/30 bg-white px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-black">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border border-emerald-500/30 bg-emerald-400 px-3.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-black">
                   {plan.badge}
                 </div>
               )}
@@ -187,7 +187,8 @@ export default function PricingPage() {
               <div className="pt-8">
                 <Link
                   href={plan.ctaHref}
-                  className={`${plan.ctaVariant} w-full`}
+                  className={`${plan.ctaVariant} w-full min-h-[44px] justify-center text-xs`}
+                  title={`Select ${plan.name} plan`}
                 >
                   <span>{plan.ctaText}</span>
                   <ArrowRight className="h-4 w-4" />
@@ -202,12 +203,12 @@ export default function PricingPage() {
       <ScrollReveal delayMs={150}>
         <div className="space-y-6">
           <div className="border-b border-white/10 pb-4">
-            <h2 className="font-serif text-3xl text-white font-normal">Detailed Feature Matrix</h2>
+            <h2 className="font-serif text-2xl sm:text-3xl text-white font-normal">Detailed Feature Matrix</h2>
             <p className="text-xs text-zinc-400 mt-1">Compare features across Free, Starter, and Diamond tiers.</p>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-white/10 bg-zinc-950">
-            <table className="w-full text-left text-xs">
+          <div className="overflow-x-auto rounded-2xl border border-white/10 bg-zinc-950">
+            <table className="w-full text-left text-xs min-w-[540px]">
               <thead>
                 <tr className="border-b border-white/10 bg-zinc-900/60 text-zinc-400 uppercase tracking-wider">
                   <th className="p-4 font-semibold">Feature</th>
@@ -233,9 +234,9 @@ export default function PricingPage() {
 
       {/* FAQ Section */}
       <ScrollReveal delayMs={200}>
-        <div className="rounded-xl border border-white/10 bg-zinc-950 p-6 sm:p-8 space-y-4">
+        <div className="rounded-2xl border border-white/10 bg-zinc-950 p-6 sm:p-8 space-y-4">
           <div className="flex items-center gap-2 text-white font-bold">
-            <HelpCircle className="h-5 w-5 text-sky-400" />
+            <HelpCircle className="h-5 w-5 text-emerald-400" />
             <h2 className="font-serif text-2xl">Pricing FAQ</h2>
           </div>
 
@@ -258,3 +259,4 @@ export default function PricingPage() {
     </div>
   );
 }
+

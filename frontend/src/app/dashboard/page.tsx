@@ -23,6 +23,8 @@ import {
   TrendingUp,
   ChevronDown,
   ChevronUp,
+  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
@@ -88,7 +90,7 @@ export default function DashboardPage() {
           },
         }));
       }
-    } catch (e) {
+    } catch {
       setAnalyticsData((prev) => ({
         ...prev,
         [code]: {
@@ -132,7 +134,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 space-y-10 font-mono">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-16 space-y-8 sm:space-y-10 font-mono">
       {/* Header & Section Title */}
       <ScrollReveal>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/10 pb-6">
@@ -141,14 +143,15 @@ export default function DashboardPage() {
               Dashboard &amp; Link Analytics
             </h1>
             <p className="text-xs text-zinc-400 mt-1">
-              Manage your short URLs, inspect real-time click telemetry, and copy links.
+              Manage your active short URLs, view real-time click telemetry, and copy links.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <Link
               href="/create"
-              className="btn-minimal-primary"
+              className="btn-minimal-primary min-h-[44px] px-5 w-full sm:w-auto text-center"
+              title="Click here to open the URL shortener form"
             >
               <Plus className="h-4 w-4" />
               <span>Create New Link</span>
@@ -157,22 +160,25 @@ export default function DashboardPage() {
         </div>
       </ScrollReveal>
 
-      {/* Overview Cards */}
+      {/* Overview Metric Cards */}
       <ScrollReveal delayMs={50}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bento-card">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-zinc-500 uppercase tracking-wider">Total Active Hashes</span>
-              <Link2 className="h-4 w-4 text-zinc-400" />
+              <span className="text-xs text-zinc-500 uppercase tracking-wider">Active Links Generated</span>
+              <Link2 className="h-4 w-4 text-emerald-400" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-white">
+            <div className="mt-2 text-3xl font-bold text-white">
               {links.length}
+            </div>
+            <div className="mt-1 text-[11px] text-zinc-400">
+              Saved in current session memory
             </div>
           </div>
 
           <div className="bento-card">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-zinc-500 uppercase tracking-wider">Session Context</span>
+              <span className="text-xs text-zinc-500 uppercase tracking-wider">Account Plan Status</span>
               {isAuthenticated ? (
                 <UserCheck className="h-4 w-4 text-emerald-400" />
               ) : (
@@ -180,14 +186,15 @@ export default function DashboardPage() {
               )}
             </div>
             <div className="mt-2 text-xs font-semibold text-white truncate">
-              {isAuthenticated ? user?.email : "Guest Session (3 Links / Day Limit)"}
+              {isAuthenticated ? user?.email : "Guest Session (3 Links Daily Limit)"}
             </div>
-            <div className="mt-1 text-[11px] text-zinc-500">
+            <div className="mt-1.5 text-[11px] text-zinc-500">
               {isAuthenticated ? (
-                <span>User ID: {user?.id}</span>
+                <span className="text-emerald-400 font-medium">✓ Unlimited Creation Plan Active</span>
               ) : (
-                <Link href="/pricing" className="text-emerald-400 underline hover:text-white">
-                  Upgrade to Starter for unlimited links &amp; cloud sync
+                <Link href="/pricing" className="text-emerald-400 hover:underline flex items-center gap-1 font-semibold">
+                  <span>Upgrade to Starter for Unlimited Links &amp; Cloud Sync</span>
+                  <ArrowRight className="h-3 w-3" />
                 </Link>
               )}
             </div>
@@ -203,31 +210,33 @@ export default function DashboardPage() {
               <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
               <input
                 type="text"
-                placeholder="Search by code or destination URL..."
+                placeholder="Filter by hash code or target URL..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-zinc-950 py-2.5 pl-10 pr-4 text-xs text-white placeholder-zinc-600 transition-colors focus:border-white/30 focus:outline-none"
+                className="w-full rounded-xl border border-white/10 bg-zinc-950 py-3 pl-10 pr-4 text-xs text-white placeholder-zinc-600 transition-colors focus:border-emerald-500/50 focus:outline-none min-h-[44px]"
               />
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-zinc-400">
-              <span>Showing {filteredLinks.length} of {links.length} links</span>
+            <div className="flex items-center justify-between sm:justify-end gap-2 text-xs text-zinc-400">
+              <span>Showing <strong>{filteredLinks.length}</strong> of <strong>{links.length}</strong> links</span>
             </div>
           </div>
 
           {filteredLinks.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 bg-zinc-950/50 p-12 text-center">
-              <Link2 className="mx-auto mb-3 h-8 w-8 text-zinc-600" />
-              <h3 className="text-sm font-semibold text-white">No links found</h3>
-              <p className="mt-1 text-xs text-zinc-500 max-w-sm mx-auto">
+            <div className="rounded-2xl border border-dashed border-white/10 bg-zinc-950/50 p-8 sm:p-12 text-center space-y-3">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-zinc-900 text-zinc-500">
+                <Link2 className="h-6 w-6" />
+              </div>
+              <h3 className="text-sm font-semibold text-white">No short links found</h3>
+              <p className="text-xs text-zinc-500 max-w-sm mx-auto">
                 {searchQuery
-                  ? "No short links match your search query."
-                  : "You haven't generated any short links yet."}
+                  ? "No active links match your search filter."
+                  : "You haven't generated any short links yet. Paste a URL to create your first link."}
               </p>
-              <div className="mt-6">
-                <Link href="/create" className="btn-minimal-primary">
+              <div className="pt-2">
+                <Link href="/create" className="btn-minimal-primary text-xs px-5 py-2.5">
                   <Plus className="h-4 w-4" />
-                  <span>Create First Link</span>
+                  <span>Create Your First Short Link</span>
                 </Link>
               </div>
             </div>
@@ -240,65 +249,60 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={link.code}
-                    className="rounded-xl border border-white/10 bg-zinc-950 p-4 transition-all hover:border-white/20 space-y-3"
+                    className="rounded-2xl border border-white/10 bg-zinc-950 p-4 sm:p-5 transition-all hover:border-white/20 space-y-3"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <div className="flex items-center gap-2 text-xs text-zinc-400">
-                          <span>Code:</span>
-                          <span className="font-bold text-white bg-zinc-900 border border-white/10 px-2 py-0.5 rounded">
+                      <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-400">
+                          <span className="flex items-center gap-1 font-bold text-white bg-zinc-900 border border-white/10 px-2 py-0.5 rounded-md">
+                            <Sparkles className="h-3 w-3 text-emerald-400" />
                             {link.code}
                           </span>
-                          {(link.userId || (isAuthenticated && user?.id)) && (
-                            <span className="text-[11px] text-zinc-400 border border-white/10 px-1.5 py-0.5 rounded">
-                              User ID: {(link.userId || user?.id || "").substring(0, 8)}...
-                            </span>
-                          )}
                           {link.createdAt && (
-                            <span className="text-[11px] text-zinc-600 ml-auto sm:ml-0">
-                              {link.createdAt}
+                            <span className="text-[11px] text-zinc-500">
+                              Created {link.createdAt}
                             </span>
                           )}
                         </div>
 
-                        <div className="text-sm font-semibold text-white truncate">
+                        <div className="text-sm font-bold text-emerald-300 truncate">
                           {getShortUrl(link.code)}
                         </div>
 
-                        <div className="text-xs text-zinc-500 truncate">
-                          Target: {link.url}
+                        <div className="text-xs text-zinc-400 truncate max-w-xl">
+                          Target: <span className="text-zinc-300">{link.url}</span>
                         </div>
                       </div>
 
-                      {/* Actions */}
-                      <div className="flex items-center gap-2 shrink-0">
+                      {/* Action Buttons with clear touch targets */}
+                      <div className="flex flex-wrap items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
                         <button
                           onClick={() => fetchAnalytics(link.code)}
-                          className={`flex items-center gap-1.5 rounded border px-3 py-2 text-xs transition-colors cursor-pointer ${
+                          className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs transition-colors cursor-pointer min-h-[40px] ${
                             isAnalyticsOpen
                               ? "border-emerald-500/40 bg-emerald-950/40 text-emerald-300"
                               : "border-white/10 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-white"
                           }`}
-                          title="View Link Analytics"
+                          title="Click to expand real-time click analytics for this link"
                         >
-                          <BarChart2 className="h-3.5 w-3.5" />
+                          <BarChart2 className="h-4 w-4" />
                           <span>Analytics</span>
-                          {isAnalyticsOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                          {isAnalyticsOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                         </button>
 
                         <button
                           onClick={() => copyToClipboard(getShortUrl(link.code), link.code)}
-                          className="flex items-center gap-1.5 rounded border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white cursor-pointer"
-                          title="Copy link to clipboard"
+                          className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white cursor-pointer min-h-[40px]"
+                          title="Copy shortened wsio.lol URL to clipboard"
                         >
                           {copiedCode === link.code ? (
                             <>
-                              <Check className="h-3.5 w-3.5 text-emerald-400" />
-                              <span>Copied</span>
+                              <Check className="h-4 w-4 text-emerald-400" />
+                              <span className="text-emerald-400 font-semibold">Copied</span>
                             </>
                           ) : (
                             <>
-                              <Copy className="h-3.5 w-3.5" />
+                              <Copy className="h-4 w-4" />
                               <span>Copy</span>
                             </>
                           )}
@@ -308,10 +312,10 @@ export default function DashboardPage() {
                           href={getShortUrl(link.code)}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex items-center gap-1.5 rounded border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
-                          title="Test redirect link"
+                          className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white min-h-[40px]"
+                          title="Test edge redirection in a new tab"
                         >
-                          <ExternalLink className="h-3.5 w-3.5" />
+                          <ExternalLink className="h-4 w-4" />
                           <span>Test</span>
                         </a>
 
@@ -319,13 +323,14 @@ export default function DashboardPage() {
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => handleDelete(link.code)}
-                              className="rounded border border-red-500/30 bg-red-950/80 px-2.5 py-2 text-xs text-red-300 hover:bg-red-900 cursor-pointer"
+                              className="rounded-lg border border-red-500/30 bg-red-950/80 px-3 py-2 text-xs text-red-300 hover:bg-red-900 cursor-pointer min-h-[40px]"
+                              title="Confirm deletion"
                             >
                               Confirm
                             </button>
                             <button
                               onClick={() => setDeleteConfirm(null)}
-                              className="rounded border border-white/10 bg-zinc-900 px-2 py-2 text-xs text-zinc-400 hover:text-white cursor-pointer"
+                              className="rounded-lg border border-white/10 bg-zinc-900 px-2.5 py-2 text-xs text-zinc-400 hover:text-white cursor-pointer min-h-[40px]"
                             >
                               Cancel
                             </button>
@@ -333,10 +338,10 @@ export default function DashboardPage() {
                         ) : (
                           <button
                             onClick={() => setDeleteConfirm(link.code)}
-                            className="flex items-center gap-1.5 rounded border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-zinc-400 transition-colors hover:border-red-500/30 hover:bg-red-950/40 hover:text-red-300 cursor-pointer"
-                            title="Delete link"
+                            className="flex items-center justify-center rounded-lg border border-white/10 bg-zinc-900 p-2 text-zinc-400 transition-colors hover:border-red-500/30 hover:bg-red-950/40 hover:text-red-300 cursor-pointer min-h-[40px] min-w-[40px]"
+                            title="Delete this short link hash"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         )}
                       </div>
@@ -344,39 +349,39 @@ export default function DashboardPage() {
 
                     {/* Expandable Link Analytics Drawer */}
                     {isAnalyticsOpen && (
-                      <div className="border-t border-white/10 pt-4 mt-3 space-y-4">
+                      <div className="border-t border-white/10 pt-4 mt-3 space-y-4 animate-in fade-in-50 duration-200">
                         {loadingAnalytics === link.code ? (
                           <div className="flex items-center gap-2 text-xs text-zinc-400 py-2">
                             <span className="h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            <span>Loading link click analytics...</span>
+                            <span>Fetching link click analytics...</span>
                           </div>
                         ) : stats ? (
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                            <div className="rounded border border-white/5 bg-zinc-900/60 p-3">
+                            <div className="rounded-xl border border-white/5 bg-zinc-900/60 p-4">
                               <div className="flex items-center justify-between text-zinc-400 text-[11px]">
-                                <span>Total Clicks</span>
-                                <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
+                                <span>Total Link Visits</span>
+                                <TrendingUp className="h-4 w-4 text-emerald-400" />
                               </div>
-                              <div className="text-xl font-bold text-white mt-1">
+                              <div className="text-2xl font-bold text-white mt-1">
                                 {stats.totalClicks}
                               </div>
-                              <div className="text-[10px] text-zinc-500 mt-0.5">
-                                24h: {stats.clicks24h} &bull; 7d: {stats.clicks7d}
+                              <div className="text-[10px] text-zinc-500 mt-1">
+                                24h: <strong className="text-zinc-300">{stats.clicks24h}</strong> &bull; 7d: <strong className="text-zinc-300">{stats.clicks7d}</strong>
                               </div>
                             </div>
 
-                            <div className="rounded border border-white/5 bg-zinc-900/60 p-3 sm:col-span-2 space-y-2">
+                            <div className="rounded-xl border border-white/5 bg-zinc-900/60 p-4 sm:col-span-2 space-y-2">
                               <div className="flex items-center justify-between text-zinc-400 text-[11px]">
-                                <span>Top Referrer Sources</span>
-                                <Globe className="h-3.5 w-3.5 text-sky-400" />
+                                <span>Referrer Traffic Breakdown</span>
+                                <Globe className="h-4 w-4 text-sky-400" />
                               </div>
 
-                              <div className="space-y-1">
+                              <div className="space-y-1.5">
                                 {Object.entries(stats.referrers || {}).map(([ref, count], rIdx) => (
                                   <div key={rIdx} className="flex items-center justify-between text-[11px]">
                                     <span className="text-zinc-300 truncate">{ref}</span>
-                                    <span className="font-bold text-white bg-zinc-950 px-1.5 py-0.5 rounded border border-white/5">
-                                      {count} {count === 1 ? "click" : "clicks"}
+                                    <span className="font-bold text-white bg-zinc-950 px-2 py-0.5 rounded border border-white/5">
+                                      {count} {count === 1 ? "visit" : "visits"}
                                     </span>
                                   </div>
                                 ))}
@@ -396,3 +401,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

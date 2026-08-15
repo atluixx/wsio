@@ -112,14 +112,14 @@ export default function CreateLinkPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16 space-y-8 font-mono">
+    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-16 space-y-8 font-mono">
       {/* Header */}
       <ScrollReveal>
         <div className="border-b border-white/10 pb-4">
           <h1 className="font-serif text-3xl sm:text-4xl text-white">
             Create Short Link
           </h1>
-          <p className="mt-1 text-xs text-zinc-400">
+          <p className="mt-1.5 text-xs text-zinc-400">
             Transform long destination URLs into clean monospaced hashes.
           </p>
         </div>
@@ -127,10 +127,10 @@ export default function CreateLinkPage() {
 
       {/* Main Creation Card */}
       <ScrollReveal delayMs={50}>
-        <div className="rounded-xl border border-white/10 bg-zinc-950 p-6 shadow-2xl backdrop-blur-xl space-y-6">
+        <div className="rounded-2xl border border-white/10 bg-zinc-950 p-5 sm:p-7 shadow-2xl backdrop-blur-xl space-y-6">
           {!isAuthenticated && (
-            <div className="flex items-center justify-between text-xs text-zinc-400 border-b border-white/10 pb-3">
-              <span>Guest Daily Limit: {guestUsage.count} / {GUEST_DAILY_LIMIT} created today</span>
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-400 border-b border-white/10 pb-3">
+              <span>Guest Daily Limit: <strong className="text-white">{guestUsage.count} / {GUEST_DAILY_LIMIT}</strong> created today</span>
               {limitReached ? (
                 <Link href="/pricing" className="text-emerald-400 hover:underline font-semibold flex items-center gap-1">
                   <span>Upgrade to Starter</span>
@@ -143,12 +143,12 @@ export default function CreateLinkPage() {
           )}
 
           {limitReached && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-950/40 p-4 text-xs text-amber-200">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-950/40 p-4 text-xs text-amber-200">
               <div className="flex items-center gap-2">
                 <ShieldAlert className="h-4 w-4 text-amber-400 shrink-0" />
                 <span>You have reached the guest daily limit of 3 links.</span>
               </div>
-              <Link href="/pricing" className="btn-minimal-primary text-xs whitespace-nowrap">
+              <Link href="/pricing" className="btn-minimal-primary text-xs whitespace-nowrap min-h-[40px]">
                 <span>View Plans &amp; Upgrade</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
@@ -156,7 +156,7 @@ export default function CreateLinkPage() {
           )}
 
           {error && !limitReached && (
-            <div className="flex items-center gap-2.5 rounded-lg border border-red-500/20 bg-red-950/30 p-4 text-xs text-red-300">
+            <div className="flex items-center gap-2.5 rounded-xl border border-red-500/20 bg-red-950/30 p-4 text-xs text-red-300">
               <ShieldAlert className="h-4 w-4 text-red-400 shrink-0" />
               <span>{error}</span>
             </div>
@@ -177,7 +177,7 @@ export default function CreateLinkPage() {
                   value={url}
                   disabled={limitReached}
                   onChange={(e) => setUrl(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-zinc-900/90 py-3 pl-10 pr-4 text-xs text-white placeholder-zinc-600 transition-colors focus:border-white/30 focus:outline-none sm:text-sm disabled:opacity-50"
+                  className="w-full rounded-xl border border-white/10 bg-zinc-900/90 py-3.5 pl-10 pr-4 text-xs text-white placeholder-zinc-600 transition-colors focus:border-emerald-500/50 focus:outline-none sm:text-sm disabled:opacity-50 min-h-[48px]"
                   required
                 />
               </div>
@@ -191,7 +191,8 @@ export default function CreateLinkPage() {
               <button
                 type="submit"
                 disabled={loading || limitReached}
-                className="btn-minimal-primary w-full sm:w-auto cursor-pointer disabled:opacity-50"
+                className="btn-minimal-primary w-full sm:w-auto cursor-pointer disabled:opacity-50 min-h-[44px] px-6 text-xs"
+                title="Click here to submit form and generate short link"
               >
                 {loading ? (
                   <span className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
@@ -202,7 +203,7 @@ export default function CreateLinkPage() {
                   </span>
                 ) : (
                   <>
-                    <span>Generate Link</span>
+                    <span>Generate Short Link</span>
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
@@ -215,10 +216,10 @@ export default function CreateLinkPage() {
       {/* Generated Links History */}
       {createdLinks.length > 0 && (
         <ScrollReveal delayMs={100}>
-          <div className="rounded-xl border border-white/10 bg-zinc-950 p-6 space-y-4">
+          <div className="rounded-2xl border border-white/10 bg-zinc-950 p-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2">
-                <History className="h-4 w-4 text-zinc-400" />
+                <History className="h-4 w-4 text-emerald-400" />
                 <h2 className="text-xs font-semibold uppercase tracking-wider text-white">
                   Recently Created Links ({createdLinks.length})
                 </h2>
@@ -236,30 +237,31 @@ export default function CreateLinkPage() {
               {createdLinks.slice(0, 5).map((item) => (
                 <div
                   key={item.code}
-                  className="rounded-lg border border-white/10 bg-zinc-900/60 p-4 transition-all"
+                  className="rounded-xl border border-white/10 bg-zinc-900/60 p-4 transition-all space-y-2"
                 >
-                  <div className="mb-2 flex items-center justify-between text-xs text-zinc-500">
+                  <div className="flex items-center justify-between text-xs text-zinc-500">
                     <span className="flex items-center gap-1.5 text-white font-medium">
                       <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-                      Code: <span className="rounded bg-zinc-950 border border-white/10 px-1.5 py-0.5 font-bold text-white">{item.code}</span>
+                      Code: <span className="rounded bg-zinc-950 border border-white/10 px-2 py-0.5 font-bold text-white">{item.code}</span>
                     </span>
                     <span>{item.createdAt}</span>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded border border-white/10 bg-zinc-950 p-3">
-                    <div className="truncate text-sm text-white font-semibold">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-white/10 bg-zinc-950 p-3">
+                    <div className="truncate text-sm text-white font-bold text-emerald-300">
                       {getShortUrl(item.code)}
                     </div>
 
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => copyToClipboard(getShortUrl(item.code), item.code)}
-                        className="flex items-center gap-1.5 rounded border border-white/10 bg-zinc-800 px-3 py-1.5 text-xs text-white transition-colors hover:bg-zinc-700 cursor-pointer"
+                        className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-800 px-3 py-2 text-xs text-white transition-colors hover:bg-zinc-700 cursor-pointer min-h-[38px]"
+                        title="Copy short link URL to clipboard"
                       >
                         {copiedCode === item.code ? (
                           <>
                             <Check className="h-3.5 w-3.5 text-emerald-400" />
-                            <span>Copied</span>
+                            <span className="text-emerald-400 font-semibold">Copied</span>
                           </>
                         ) : (
                           <>
@@ -273,21 +275,17 @@ export default function CreateLinkPage() {
                         href={getShortUrl(item.code)}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center gap-1.5 rounded border border-white/10 bg-zinc-800 px-3 py-1.5 text-xs text-white transition-colors hover:bg-zinc-700"
+                        className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-800 px-3 py-2 text-xs text-white transition-colors hover:bg-zinc-700 min-h-[38px]"
+                        title="Test edge redirection in new tab"
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
-                        <span>Open</span>
+                        <span>Test</span>
                       </a>
                     </div>
                   </div>
 
-                  <div className="mt-2 flex items-center justify-between text-xs text-zinc-500">
+                  <div className="flex items-center justify-between text-xs text-zinc-500">
                     <span className="truncate">Target: {item.url}</span>
-                    {item.userId && (
-                      <span className="shrink-0 text-zinc-400 border border-white/10 px-2 py-0.5 rounded text-[11px]">
-                        User ID: {item.userId.substring(0, 8)}...
-                      </span>
-                    )}
                   </div>
                 </div>
               ))}
