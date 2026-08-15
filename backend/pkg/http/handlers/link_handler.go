@@ -109,6 +109,18 @@ func (h *LinkHandler) RedirectLink(c *gin.Context) {
 		return
 	}
 
+	// Extract referrer from HTTP header or query parameters (?ref=..., ?utm_source=..., ?referrer=...)
+	referrer := c.GetHeader("Referer")
+	if referrer == "" {
+		if customRef := c.Query("ref"); customRef != "" {
+			referrer = customRef
+		} else if utmSource := c.Query("utm_source"); utmSource != "" {
+			referrer = utmSource
+		} else if queryRef := c.Query("referrer"); queryRef != "" {
+			referrer = queryRef
+		}
+	}
+
 	// Record click asynchronously if analytics repository is available
 	if h.analyticsRepo != nil {
 		go func(lID uuid.UUID, cCode, ref, ua, ip string) {
@@ -121,7 +133,7 @@ func (h *LinkHandler) RedirectLink(c *gin.Context) {
 				IP:        ip,
 				Timestamp: time.Now(),
 			})
-		}(link.ID, link.Code, c.GetHeader("Referer"), c.GetHeader("User-Agent"), c.ClientIP())
+		}(link.ID, link.Code, referrer, c.GetHeader("User-Agent"), c.ClientIP())
 	}
 
 	if c.Query("json") == "true" || strings.Contains(c.GetHeader("Accept"), "application/json") {
