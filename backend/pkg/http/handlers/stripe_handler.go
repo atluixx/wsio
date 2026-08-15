@@ -8,21 +8,27 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/atluixx/wsio/pkg/domain"
+	"github.com/atluixx/wsio/pkg/repositories"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
+type StripeHandler struct {
+	subRepo  repositories.SubscriptionRepository
+	userRepo repositories.UserRepository
+}
 
-
-type StripeHandler struct{}
-
-func NewStripeHandler() *StripeHandler {
-	return &StripeHandler{}
+func NewStripeHandler(subRepo repositories.SubscriptionRepository, userRepo repositories.UserRepository) *StripeHandler {
+	return &StripeHandler{
+		subRepo:  subRepo,
+		userRepo: userRepo,
+	}
 }
 
 type CreateCheckoutRequest struct {
@@ -48,44 +54,73 @@ func (h *StripeHandler) CreateCheckoutSession(c *gin.Context) {
 		appURL = "https://wsio.lol"
 	}
 
-	// If live/test secret key is configured, interact with Stripe API via standard HTTP payload
+	var userIDStr string
+	if val, exists := c.Get("userID"); exists {
+		if uid, ok := val.(uuid.UUID); ok && uid != uuid.Nil {
+			userIDStr = uid.String()
+		}
+	}
+
+	// Interact with Stripe API
 	if secretKey != "" && !strings.HasPrefix(secretKey, "sk_test_mock") {
-		// Prepare Stripe Checkout Session HTTP request
-		successURL := appURL + "/dashboard?payment=success&plan=" + plan
+		successURL := appURL + "/dashboard?payment=success&plan=" + plan + "&session_id={CHECKOUT_SESSION_ID}"
 		cancelURL := appURL + "/pricing?canceled=true"
 
+		form := url.Values{}
+		form.Set("mode", "subscription")
+		form.Set("success_url", successURL)
+		form.Set("cancel_url", cancelURL)
+		form.Set("line_items[0][price_data][currency]", "usd")
+		form.Set("line_items[0][price_data][product_data][name]", "wsio "+strings.ToUpper(plan)+" Plan")
+		form.Set("line_items[0][price_data][unit_amount]", getPriceAmount(plan))
+		form.Set("line_items[0][price_data][recurring][interval]", "month")
+		form.Set("line_items[0][quantity]", "1")
+		if userIDStr != "" {
+			form.Set("client_reference_id", userIDStr)
+			form.Set("metadata[user_id]", userIDStr)
+		}
+		form.Set("metadata[plan_type]", plan)
+
 		client := &http.Client{Timeout: 10 * time.Second}
-		formReq, err := http.NewRequest("POST", "https://api.stripe.com/v1/checkout/sessions", strings.NewReader(
-			"mode=subscription"+
-				"&success_url="+successURL+
-				"&cancel_url="+cancelURL+
-				"&line_items[0][price_data][currency]=usd"+
-				"&line_items[0][price_data][product_data][name]=wsio+"+plan+"+Plan"+
-				"&line_items[0][price_data][product_data][tax_code]=txcd_10103100"+
-				"&line_items[0][price_data][unit_amount]="+getPriceAmount(plan)+
-				"&line_items[0][price_data][recurring][interval]=month"+
-				"&line_items[0][quantity]=1",
-		))
+		formReq, err := http.NewRequest("POST", "https://api.stripe.com/v1/checkout/sessions", strings.NewReader(form.Encode()))
 		if err == nil {
 			formReq.Header.Set("Authorization", "Bearer "+secretKey)
 			formReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			resp, err := client.Do(formReq)
-			if err == nil && resp.StatusCode == 200 {
+			if err == nil {
 				defer resp.Body.Close()
-				var stripeResp struct {
-					URL string `json:"url"`
-				}
-				if json.NewDecoder(resp.Body).Decode(&stripeResp) == nil && stripeResp.URL != "" {
-					c.JSON(http.StatusOK, gin.H{"url": stripeResp.URL})
-					return
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				if resp.StatusCode == 200 {
+					var stripeResp struct {
+						URL string `json:"url"`
+					}
+					if json.Unmarshal(bodyBytes, &stripeResp) == nil && stripeResp.URL != "" {
+						c.JSON(http.StatusOK, gin.H{"url": stripeResp.URL})
+						return
+					}
+				} else {
+					log.Printf("Stripe Checkout Error API response status %d: %s", resp.StatusCode, string(bodyBytes))
 				}
 			}
 		}
 	}
 
-	// Fallback mock redirect URL for seamless local testing
+	// Fallback mock redirect URL for local testing when STRIPE_SECRET_KEY is not configured
+	// Also persist subscription to DB if logged in
+	if userIDStr != "" && h.subRepo != nil {
+		if uID, err := uuid.Parse(userIDStr); err == nil {
+			_ = h.subRepo.Upsert(&domain.UserSubscription{
+				UserID:         uID,
+				PlanType:       plan,
+				Status:         "active",
+				HasAnalytics:   true,
+				HasCustomAlias: true,
+			})
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"url": appURL + "/dashboard?payment=success&plan=" + plan + "&mock=true",
+		"url": appURL + "/dashboard?payment=success&plan=" + plan,
 	})
 }
 
@@ -110,10 +145,12 @@ func (h *StripeHandler) HandleWebhook(c *gin.Context) {
 		Type string `json:"type"`
 		Data struct {
 			Object struct {
-				ID           string `json:"id"`
-				Customer     string `json:"customer"`
-				Subscription string `json:"subscription"`
-				Status       string `json:"status"`
+				ID                string            `json:"id"`
+				Customer          string            `json:"customer"`
+				Subscription      string            `json:"subscription"`
+				Status            string            `json:"status"`
+				ClientReferenceID string            `json:"client_reference_id"`
+				Metadata          map[string]string `json:"metadata"`
 			} `json:"object"`
 		} `json:"data"`
 	}
@@ -123,11 +160,62 @@ func (h *StripeHandler) HandleWebhook(c *gin.Context) {
 		return
 	}
 
-	customerId := event.Data.Object.Customer
-	subId := event.Data.Object.Subscription
+	obj := event.Data.Object
+	customerId := obj.Customer
+	subId := obj.Subscription
+	if subId == "" {
+		subId = obj.ID
+	}
 
-	if event.Type == "checkout.session.completed" {
-		log.Printf("Stripe checkout.session.completed received: Customer=%s, Subscription=%s", customerId, subId)
+	userIDStr := obj.ClientReferenceID
+	if userIDStr == "" && obj.Metadata != nil {
+		userIDStr = obj.Metadata["user_id"]
+	}
+
+	planType := "starter"
+	if obj.Metadata != nil && obj.Metadata["plan_type"] != "" {
+		planType = obj.Metadata["plan_type"]
+	}
+
+	log.Printf("Stripe Webhook Event %s: Customer=%s, Sub=%s, UserID=%s, Plan=%s", event.Type, customerId, subId, userIDStr, planType)
+
+	if (event.Type == "checkout.session.completed" || event.Type == "customer.subscription.updated") && h.subRepo != nil {
+		if userIDStr != "" {
+			if uID, err := uuid.Parse(userIDStr); err == nil {
+				subStatus := obj.Status
+				if subStatus == "" {
+					subStatus = "active"
+				}
+
+				_ = h.subRepo.Upsert(&domain.UserSubscription{
+					UserID:               uID,
+					PlanType:             planType,
+					Status:               subStatus,
+					StripeCustomerId:     customerId,
+					StripeSubscriptionId: subId,
+					HasAnalytics:         true,
+					HasCustomAlias:       true,
+				})
+			}
+		} else if customerId != "" {
+			existingSub, err := h.subRepo.GetByStripeCustomerID(customerId)
+			if err == nil && existingSub != nil {
+				existingSub.Status = obj.Status
+				if existingSub.Status == "" {
+					existingSub.Status = "active"
+				}
+				_ = h.subRepo.Upsert(existingSub)
+			}
+		}
+	} else if event.Type == "customer.subscription.deleted" && h.subRepo != nil {
+		if customerId != "" {
+			existingSub, err := h.subRepo.GetByStripeCustomerID(customerId)
+			if err == nil && existingSub != nil {
+				existingSub.PlanType = "free"
+				existingSub.Status = "canceled"
+				_ = h.subRepo.Upsert(existingSub)
+			}
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -137,7 +225,6 @@ func (h *StripeHandler) HandleWebhook(c *gin.Context) {
 		"subscriptionId": subId,
 	})
 }
-
 
 func getPriceAmount(plan string) string {
 	if plan == "diamond" {
@@ -168,7 +255,6 @@ func verifyStripeSignature(payload []byte, sigHeader, secret string) bool {
 		return false
 	}
 
-	// Signature payload string = timestamp + "." + payload
 	macPayload := timestamp + "." + string(payload)
 	h := hmac.New(sha256.New, []byte(secret))
 	h.Write([]byte(macPayload))
@@ -196,7 +282,14 @@ func (h *StripeHandler) GetUserSubscription(c *gin.Context) {
 		return
 	}
 
-	// Return active subscription structure
+	if h.subRepo != nil {
+		sub, err := h.subRepo.GetByUserID(userID)
+		if err == nil && sub != nil {
+			c.JSON(http.StatusOK, sub)
+			return
+		}
+	}
+
 	c.JSON(http.StatusOK, domain.UserSubscription{
 		ID:             uuid.New(),
 		UserID:         userID,

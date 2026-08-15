@@ -21,6 +21,7 @@ var (
 	linkRepo      repositories.LinkRepository
 	analyticsRepo repositories.AnalyticsRepository
 	apiKeyRepo    repositories.ApiKeyRepository
+	subRepo       repositories.SubscriptionRepository
 )
 
 func init() {
@@ -37,6 +38,7 @@ func init() {
 			linkRepo = repositories.NewLinkRepository(db)
 			analyticsRepo = repositories.NewAnalyticsRepository(db)
 			apiKeyRepo = repositories.NewPostgresApiKeyRepository(db)
+			subRepo = repositories.NewPostgresSubscriptionRepository(db)
 			log.Println("Initialized PostgreSQL database repositories")
 			return
 		}
@@ -47,6 +49,7 @@ func init() {
 	linkRepo = repositories.NewInMemoryLinkRepository()
 	analyticsRepo = repositories.NewInMemoryAnalyticsRepository()
 	apiKeyRepo = repositories.NewInMemoryApiKeyRepository()
+	subRepo = repositories.NewInMemorySubscriptionRepository()
 	log.Println("Initialized In-Memory repositories fallback")
 }
 
@@ -63,13 +66,12 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	router := gin.New()
 	router.Use(gin.Recovery())
 
-
 	userHandler := handlers.NewUserHandler(userRepo)
 	linkHandler := handlers.NewLinkHandler(linkRepo, analyticsRepo)
 	analyticsHandler := handlers.NewAnalyticsHandler(analyticsRepo, linkRepo)
-	stripeHandler := handlers.NewStripeHandler()
+	stripeHandler := handlers.NewStripeHandler(subRepo, userRepo)
 	apiKeyHandler := handlers.NewApiKeyHandler(apiKeyRepo)
-	adminHandler := handlers.NewAdminHandler(apiKeyRepo, userRepo)
+	adminHandler := handlers.NewAdminHandler(apiKeyRepo, userRepo, linkRepo)
 
 	app.SetupRoutes(router, linkHandler, userHandler, analyticsHandler, analyticsRepo, apiKeyRepo, stripeHandler, apiKeyHandler, adminHandler)
 

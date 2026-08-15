@@ -32,7 +32,7 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${playfair.variable} h-full antialiased dark`}
     >
-      <body className="flex min-h-full flex-col bg-[#090a0f] text-slate-100 selection:bg-white/20 selection:text-white saas-bg-glow font-sans">
+      <body className="flex min-h-full flex-col bg-[#080612] text-purple-50 selection:bg-purple-500/30 selection:text-purple-100 saas-bg-glow font-sans">
         <AuthProvider>
           <ToastProvider>
             <Navbar />

@@ -5,9 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { createShortLink, LinkItem } from "@/lib/api";
 import {
-  saveGuestLink,
   normalizeUrl,
-  generateGuestHash,
   getGuestDailyUsage,
   incrementGuestDailyUsage,
   GUEST_DAILY_LIMIT,
@@ -17,7 +15,7 @@ import { QrCodeModal } from "@/components/QrCodeModal";
 import { SubdomainRequestDialog } from "@/components/SubdomainRequestDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
   Link2,
   Copy,
@@ -25,7 +23,6 @@ import {
   ExternalLink,
   ArrowRight,
   ShieldAlert,
-  Sparkles,
   Plus,
   Minus,
   Lock,
@@ -34,7 +31,6 @@ import {
   ShieldCheck,
   Building2,
   QrCode,
-  CheckCircle2,
 } from "lucide-react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
@@ -64,12 +60,12 @@ export default function Home() {
     if (!inputUrl.trim()) return;
 
     if (customAlias.trim() && !isAuthenticated) {
-      showToast("Custom URLs are only available for Starter+ users.", "error");
+      showToast("Custom URL slugs require a free account.", "error");
       return;
     }
 
     if (limitReached) {
-      showToast("Guest limit reached (3/3 links today). Create a free account to unlock unlimited link shortening.", "error");
+      showToast("Daily guest link limit reached. Sign up for free to unlock unlimited links.", "error");
       return;
     }
 
@@ -78,7 +74,6 @@ export default function Home() {
     setCreatedLink(null);
 
     const formattedUrl = normalizeUrl(inputUrl);
-
     const res = await createShortLink(formattedUrl, customAlias, appliedSubdomain);
     setLoading(false);
 
@@ -102,7 +97,7 @@ export default function Home() {
       };
 
       setCreatedLink(newLink);
-      showToast("Short URL created successfully!", "success");
+      showToast("Short link created!", "success");
 
       if (!isAuthenticated) {
         incrementGuestDailyUsage();
@@ -117,7 +112,7 @@ export default function Home() {
   const copyToClipboard = (text: string, code: string) => {
     navigator.clipboard.writeText(text);
     setCopiedCode(code);
-    showToast("Short link copied to clipboard!", "success");
+    showToast("Copied link to clipboard!", "success");
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
@@ -131,24 +126,24 @@ export default function Home() {
   const faqItems = [
     {
       q: "How fast is link redirection?",
-      a: "Our global edge network processes redirections in milliseconds, ensuring your visitors reach destination pages without delay.",
+      a: "Our global edge infrastructure redirects visitors in sub-milliseconds with optimized cache routing.",
     },
     {
-      q: "Where can I view my links and track click analytics?",
-      a: "All created links appear instantly in your personal Dashboard. Signed-in users can view total clicks, referrer origins, and link activity over time.",
+      q: "Where can I view link analytics?",
+      a: "Registered users can monitor click activity, top referrers, and link performance in real time on their personal dashboard.",
     },
     {
-      q: "What is the difference between a Guest session and a Signed-In account?",
-      a: "Guest users can create up to 3 links per day stored locally in browser memory. Registered accounts enjoy unlimited link creation, cross-device sync, and persistent click analytics.",
+      q: "What are the limits for guest users?",
+      a: "Guests can create up to 3 links per day. Creating a free account unlocks unlimited link shortening and persistent history.",
     },
     {
       q: "How do custom subdomains work?",
-      a: "Brands and enterprise accounts can request custom subdomains (e.g., yourbrand.wsio.lol) via our formal domain review workflow.",
+      a: "Businesses can request custom brand subdomains (e.g. brand.wsio.lol) through our formal application process.",
     },
   ];
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-20 space-y-14 sm:space-y-20">
+    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-24 space-y-16 sm:space-y-24">
       {qrModalLink && (
         <QrCodeModal
           url={qrModalLink.url}
@@ -163,44 +158,39 @@ export default function Home() {
         onSubdomainApplied={(sub) => setAppliedSubdomain(sub)}
       />
 
-      {/* Hero & Central Input Engine */}
+      {/* Hero Section */}
       <ScrollReveal>
-        <div className="text-center space-y-4 max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 py-1 px-3.5 rounded-full border border-white/10 bg-white/5 text-xs text-zinc-300">
-            <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-            <span>Simple, Fast &amp; Reliable Link Shortening</span>
-          </div>
-
-          <h1 className="font-heading text-4xl sm:text-6xl font-bold tracking-tight text-white leading-[1.12]">
-            Shorten long URLs into clean, memorable links.
+        <div className="text-center space-y-5 max-w-2xl mx-auto">
+          <h1 className="font-heading text-4xl sm:text-6xl font-bold tracking-tight text-white leading-[1.15]">
+            Transform long links into powerful, concise URLs.
           </h1>
 
-          <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-            Create sleek short links ready to share anywhere. Built for creators, teams, and modern software products.
+          <p className="text-sm sm:text-base text-purple-200/70 leading-relaxed">
+            Fast, reliable link management designed for creators, teams, and modern products.
           </p>
         </div>
 
-        {/* URL Shortener Form Container - Glassy style */}
-        <Card className="mt-8 backdrop-blur-2xl bg-zinc-950/40 border border-white/10 shadow-2xl p-5 sm:p-7 rounded-2xl">
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs border-b border-white/10 pb-4 mb-5">
-            <span className="text-zinc-400 font-medium">
+        {/* Shortener Container */}
+        <Card className="mt-10 glass-card p-6 sm:p-8 rounded-2xl border-purple-500/20">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs border-b border-purple-500/15 pb-4 mb-6">
+            <span className="text-purple-300/80 font-medium">
               {isAuthenticated ? (
-                <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4" /> Signed In — Unlimited Link Generation Active
+                <span className="text-purple-300 font-medium">
+                  Welcome back — Account Active
                 </span>
               ) : (
-                <span>Guest Daily Usage: <strong className="text-white">{guestUsage.count} / {GUEST_DAILY_LIMIT}</strong> used</span>
+                <span>Daily guest limit: <strong className="text-white">{guestUsage.count} / {GUEST_DAILY_LIMIT}</strong> used</span>
               )}
             </span>
 
             {!isAuthenticated && (
               limitReached ? (
-                <Link href="/pricing" className="text-emerald-400 hover:underline font-semibold flex items-center gap-1">
-                  <span>Upgrade for Unlimited Links</span>
+                <Link href="/register" className="text-purple-400 hover:text-purple-300 font-medium flex items-center gap-1">
+                  <span>Sign up for unlimited links</span>
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               ) : (
-                <span className="text-zinc-500">{GUEST_DAILY_LIMIT - guestUsage.count} links remaining today</span>
+                <span className="text-purple-400/60">{GUEST_DAILY_LIMIT - guestUsage.count} remaining today</span>
               )
             )}
           </div>
@@ -208,16 +198,16 @@ export default function Home() {
           <form onSubmit={handleShorten} className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-zinc-500">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-purple-400/60">
                   <Link2 className="h-4.5 w-4.5" />
                 </div>
                 <Input
                   type="url"
-                  placeholder={limitReached ? "Guest limit reached (3/3). Sign up free to create more." : "Paste long URL (e.g. https://yourcompany.com/blog/article/...)"}
+                  placeholder={limitReached ? "Daily limit reached. Sign up free to continue." : "Paste long destination URL..."}
                   value={inputUrl}
                   disabled={limitReached}
                   onChange={(e) => setInputUrl(e.target.value)}
-                  className="pl-11 h-12 text-sm bg-zinc-900/60 border-white/10"
+                  className="pl-11 h-12 text-sm bg-purple-950/30 border-purple-500/25 text-purple-50 focus:border-purple-400"
                   required
                 />
               </div>
@@ -225,48 +215,48 @@ export default function Home() {
               <Button
                 type="submit"
                 disabled={loading || limitReached}
-                className="h-12 px-7 text-sm font-semibold whitespace-nowrap w-full sm:w-auto"
+                className="h-12 px-8 text-sm font-semibold bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-950/50 whitespace-nowrap w-full sm:w-auto"
               >
                 {loading ? (
-                  <span className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                  <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : limitReached ? (
-                  <span className="flex items-center gap-1.5 text-zinc-400">
+                  <span className="flex items-center gap-1.5 text-purple-200">
                     <Lock className="h-4 w-4" />
                     <span>Limit Reached</span>
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
-                    <span>Shorten URL</span>
+                    <span>Shorten Link</span>
                     <ArrowRight className="h-4 w-4" />
                   </span>
                 )}
               </Button>
             </div>
 
-            {/* Custom Slugs & Formal Subdomain Request Trigger */}
+            {/* Subdomain & Custom Alias Controls */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div>
                 <Input
                   placeholder={
                     isAuthenticated
-                      ? "Custom Alias / Slug (Starter+ Users)"
-                      : "Custom Alias (Starter+ Only)"
+                      ? "Custom slug (optional)"
+                      : "Custom slug (sign in required)"
                   }
                   value={customAlias}
                   disabled={limitReached || !isAuthenticated}
                   onChange={(e) => setCustomAlias(e.target.value)}
-                  className="text-xs h-10 bg-zinc-900/60 border-white/10"
+                  className="text-xs h-10 bg-purple-950/30 border-purple-500/25 text-purple-50"
                 />
               </div>
 
               <div className="flex items-center gap-2">
                 {appliedSubdomain ? (
-                  <div className="flex items-center justify-between w-full rounded-lg border border-emerald-500/30 bg-emerald-950/30 px-3 py-2 text-xs text-emerald-300">
-                    <span className="font-semibold">{appliedSubdomain}.wsio.lol</span>
+                  <div className="flex items-center justify-between w-full rounded-xl border border-purple-500/30 bg-purple-950/40 px-3 py-2 text-xs text-purple-200">
+                    <span className="font-medium">{appliedSubdomain}.wsio.lol</span>
                     <button
                       type="button"
                       onClick={() => setAppliedSubdomain("")}
-                      className="text-zinc-400 hover:text-white underline text-[10px]"
+                      className="text-purple-400 hover:text-white underline text-[10px]"
                     >
                       Change
                     </button>
@@ -276,48 +266,47 @@ export default function Home() {
                     type="button"
                     variant="outline"
                     onClick={() => setSubdomainDialogOpen(true)}
-                    className="w-full text-xs h-10 justify-between gap-2 border-white/10"
+                    className="w-full text-xs h-10 justify-between gap-2 border-purple-500/25 bg-purple-950/20 text-purple-200 hover:bg-purple-900/40"
                   >
-                    <span className="flex items-center gap-1.5 text-zinc-400">
-                      <Building2 className="h-3.5 w-3.5 text-emerald-400" />
+                    <span className="flex items-center gap-1.5 text-purple-300">
+                      <Building2 className="h-3.5 w-3.5 text-purple-400" />
                       <span>Company Subdomain</span>
                     </span>
-                    <span className="text-[10px] text-zinc-400 font-medium">Apply</span>
+                    <span className="text-[10px] text-purple-400 font-medium">Apply</span>
                   </Button>
                 )}
               </div>
             </div>
           </form>
 
-          {/* Limit Warning Banner */}
+          {/* Limit Warning */}
           {limitReached && (
-            <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-950/40 p-4 text-xs text-amber-200">
+            <div className="mt-5 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-950/40 p-4 text-xs text-amber-200">
               <div className="flex items-center gap-2">
                 <ShieldAlert className="h-4 w-4 text-amber-400 shrink-0" />
-                <span>You have reached the guest limit of 3 links today.</span>
+                <span>You have reached today's 3-link guest limit.</span>
               </div>
-              <Button asChild size="sm" className="whitespace-nowrap text-xs">
-                <Link href="/pricing">View Plans &amp; Upgrade</Link>
+              <Button asChild size="sm" className="whitespace-nowrap text-xs bg-purple-600 hover:bg-purple-500 text-white">
+                <Link href="/register">Create Free Account</Link>
               </Button>
             </div>
           )}
         </Card>
       </ScrollReveal>
 
-      {/* Generated Link Card */}
+      {/* Generated Link Result */}
       {createdLink && (
         <ScrollReveal delayMs={100}>
-          <Card className="backdrop-blur-2xl bg-zinc-950/40 border border-emerald-500/30 shadow-2xl p-6 rounded-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <div className="flex items-center gap-2 text-emerald-400 font-semibold text-xs">
-                <Sparkles className="h-4 w-4" />
-                <span>Short Link Generated Successfully</span>
-              </div>
-              <span className="text-xs text-zinc-400">{createdLink.createdAt}</span>
+          <Card className="glass-panel p-6 rounded-2xl border-purple-500/30 space-y-4">
+            <div className="flex items-center justify-between border-b border-purple-500/20 pb-3">
+              <span className="text-purple-300 font-medium text-xs">
+                Short Link Ready
+              </span>
+              <span className="text-xs text-purple-400/60">{createdLink.createdAt}</span>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-white/10 bg-zinc-900/60 p-4">
-              <div className="truncate text-base text-white font-mono font-bold">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-purple-500/20 bg-[#080512] p-4">
+              <div className="truncate text-base text-white font-mono font-semibold">
                 {getShortUrl(createdLink.code, createdLink.subdomain)}
               </div>
 
@@ -325,17 +314,17 @@ export default function Home() {
                 <Button
                   size="sm"
                   onClick={() => copyToClipboard(getShortUrl(createdLink.code, createdLink.subdomain), createdLink.code)}
-                  className="text-xs h-9 font-semibold"
+                  className="text-xs h-9 font-medium bg-purple-600 hover:bg-purple-500 text-white"
                 >
                   {copiedCode === createdLink.code ? (
                     <>
-                      <Check className="h-4 w-4 text-zinc-950" />
+                      <Check className="h-4 w-4" />
                       <span>Copied</span>
                     </>
                   ) : (
                     <>
                       <Copy className="h-4 w-4" />
-                      <span>Copy Short Link</span>
+                      <span>Copy Link</span>
                     </>
                   )}
                 </Button>
@@ -344,9 +333,9 @@ export default function Home() {
                   size="sm"
                   variant="outline"
                   onClick={() => setQrModalLink({ url: getShortUrl(createdLink.code, createdLink.subdomain), code: createdLink.code })}
-                  className="text-xs h-9 border-white/10"
+                  className="text-xs h-9 border-purple-500/30 bg-purple-950/30 text-purple-200 hover:bg-purple-900/40"
                 >
-                  <QrCode className="h-4 w-4 text-emerald-400" />
+                  <QrCode className="h-4 w-4 text-purple-400" />
                   <span>QR Code</span>
                 </Button>
 
@@ -354,7 +343,7 @@ export default function Home() {
                   asChild
                   variant="secondary"
                   size="sm"
-                  className="text-xs h-9"
+                  className="text-xs h-9 bg-purple-900/40 hover:bg-purple-800 text-purple-200 border border-purple-500/30"
                 >
                   <a
                     href={getShortUrl(createdLink.code, createdLink.subdomain)}
@@ -367,9 +356,9 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-xs text-zinc-400">
-              <span className="truncate">Destination: <span className="text-zinc-200">{createdLink.url}</span></span>
-              <Link href="/dashboard" className="text-emerald-400 hover:underline shrink-0 font-medium ml-2">
+            <div className="flex items-center justify-between text-xs text-purple-300/70">
+              <span className="truncate">Destination: <span className="text-purple-100">{createdLink.url}</span></span>
+              <Link href="/dashboard" className="text-purple-400 hover:text-white shrink-0 font-medium ml-2">
                 View in Dashboard &rarr;
               </Link>
             </div>
@@ -377,36 +366,36 @@ export default function Home() {
         </ScrollReveal>
       )}
 
-      {/* Feature Cards Grid - Glassy style */}
+      {/* Feature Cards Grid */}
       <ScrollReveal delayMs={100}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="p-6 backdrop-blur-2xl bg-zinc-950/40 border border-white/10 shadow-xl hover:border-white/20 transition-all rounded-2xl space-y-3">
-            <div className="h-10 w-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-emerald-400">
+          <Card className="glass-card p-6 space-y-3 rounded-2xl">
+            <div className="h-10 w-10 rounded-xl border border-purple-500/25 bg-purple-950/40 flex items-center justify-center text-purple-400">
               <Zap className="h-5 w-5" />
             </div>
             <h3 className="font-heading text-lg text-white font-semibold">Sub-millisecond Edge Engine</h3>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              Global routing delivers fast 301/302 redirects with near-zero latency worldwide.
+            <p className="text-xs text-purple-200/70 leading-relaxed">
+              Global routing delivers fast redirects with near-zero latency worldwide.
             </p>
           </Card>
 
-          <Card className="p-6 backdrop-blur-2xl bg-zinc-950/40 border border-white/10 shadow-xl hover:border-white/20 transition-all rounded-2xl space-y-3">
-            <div className="h-10 w-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-emerald-400">
+          <Card className="glass-card p-6 space-y-3 rounded-2xl">
+            <div className="h-10 w-10 rounded-xl border border-purple-500/25 bg-purple-950/40 flex items-center justify-center text-purple-400">
               <BarChart3 className="h-5 w-5" />
             </div>
-            <h3 className="font-heading text-lg text-white font-semibold">Click Telemetry Stream</h3>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              Track link activity, 24h &amp; 7d velocity, and top referrer origins in real-time.
+            <h3 className="font-heading text-lg text-white font-semibold">Click Telemetry</h3>
+            <p className="text-xs text-purple-200/70 leading-relaxed">
+              Track link activity, click velocity, and top referrer origins in real-time.
             </p>
           </Card>
 
-          <Card className="p-6 backdrop-blur-2xl bg-zinc-950/40 border border-white/10 shadow-xl hover:border-white/20 transition-all rounded-2xl space-y-3">
-            <div className="h-10 w-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-emerald-400">
+          <Card className="glass-card p-6 space-y-3 rounded-2xl">
+            <div className="h-10 w-10 rounded-xl border border-purple-500/25 bg-purple-950/40 flex items-center justify-center text-purple-400">
               <ShieldCheck className="h-5 w-5" />
             </div>
-            <h3 className="font-heading text-lg text-white font-semibold">Database Centralization</h3>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              All short links and access keys are stored centrally in PostgreSQL with 99.99% edge uptime.
+            <h3 className="font-heading text-lg text-white font-semibold">Centralized Security</h3>
+            <p className="text-xs text-purple-200/70 leading-relaxed">
+              Short links and API tokens are encrypted and managed in PostgreSQL with 99.99% uptime.
             </p>
           </Card>
         </div>
@@ -417,26 +406,26 @@ export default function Home() {
         <div className="space-y-6">
           <div className="text-center space-y-2">
             <h2 className="font-heading text-2xl sm:text-3xl text-white font-semibold">Frequently Asked Questions</h2>
-            <p className="text-xs text-zinc-400">Everything you need to know about wsio.</p>
+            <p className="text-xs text-purple-300/70">Clear answers to common questions.</p>
           </div>
 
           <div className="space-y-3">
             {faqItems.map((item, idx) => (
               <div
                 key={idx}
-                className="rounded-2xl border border-white/10 bg-zinc-950/40 backdrop-blur-2xl p-5 transition-colors"
+                className="rounded-2xl glass-card p-5 transition-colors"
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
                   className="flex w-full items-center justify-between text-left font-semibold text-white text-sm"
                 >
                   <span>{item.q}</span>
-                  <span className="ml-4 shrink-0 rounded-lg border border-white/10 p-1.5 text-zinc-400 hover:text-white">
+                  <span className="ml-4 shrink-0 rounded-lg border border-purple-500/30 p-1.5 text-purple-300">
                     {openFaq === idx ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                   </span>
                 </button>
                 {openFaq === idx && (
-                  <p className="mt-3 text-xs sm:text-sm leading-relaxed text-zinc-400 pr-8 animate-in fade-in-50 duration-150">
+                  <p className="mt-3 text-xs sm:text-sm leading-relaxed text-purple-200/70 pr-8 animate-in fade-in-50 duration-150">
                     {item.a}
                   </p>
                 )}
@@ -446,29 +435,26 @@ export default function Home() {
         </div>
       </ScrollReveal>
 
-      {/* Primary Call-to-Action Card */}
+      {/* CTA Section */}
       <ScrollReveal delayMs={150}>
-        <Card className="backdrop-blur-2xl bg-zinc-950/40 border border-white/10 p-8 text-center space-y-4 rounded-2xl shadow-2xl">
-          <span className="inline-block text-xs font-medium px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-300">
-            Ready to get started?
-          </span>
+        <Card className="glass-panel p-8 text-center space-y-4 rounded-2xl shadow-2xl border-purple-500/30">
           <h2 className="font-heading text-3xl sm:text-4xl text-white font-semibold">
-            Create an account or upgrade today.
+            Start managing your short links.
           </h2>
-          <p className="mx-auto max-w-md text-xs sm:text-sm text-zinc-400">
-            Unlock unlimited link shortening, custom domain applications, and real-time click telemetry.
+          <p className="mx-auto max-w-md text-xs sm:text-sm text-purple-200/70">
+            Create an account to unlock unlimited link creation, custom domain applications, and detailed analytics.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            <Button asChild size="lg" className="w-full sm:w-auto text-xs font-semibold">
+            <Button asChild size="lg" className="w-full sm:w-auto text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white px-6">
               <Link href="/register">
-                <span>Get Started Free</span>
-                <ArrowRight className="h-4 w-4" />
+                <span>Get Started</span>
+                <ArrowRight className="h-4 w-4 ml-1.5" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto text-xs border-white/10">
+            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto text-xs border-purple-500/30 bg-purple-950/30 text-purple-200 hover:bg-purple-900/40">
               <Link href="/pricing">
-                <span>Explore Pricing Plans</span>
+                <span>View Plans</span>
               </Link>
             </Button>
           </div>

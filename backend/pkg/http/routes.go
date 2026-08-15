@@ -56,6 +56,7 @@ func SetupRoutes(
 	{
 		auth.POST("/register", userHandler.Register)
 		auth.POST("/login", userHandler.Login)
+		auth.GET("/me", middleware.Auth(apiKeyRepo), userHandler.Me)
 	}
 
 	links := base.Group("/links")
@@ -66,9 +67,9 @@ func SetupRoutes(
 		}
 
 		if analyticsRepo != nil {
-			links.POST("", middleware.OptionalAuth(apiKeyRepo), middleware.GuestLimitMiddleware(analyticsRepo), linkHandler.NewLink)
+			links.POST("", middleware.OptionalAuth(apiKeyRepo), middleware.ApiKeyRateLimitMiddleware(), middleware.GuestLimitMiddleware(analyticsRepo), linkHandler.NewLink)
 		} else {
-			links.POST("", middleware.OptionalAuth(apiKeyRepo), linkHandler.NewLink)
+			links.POST("", middleware.OptionalAuth(apiKeyRepo), middleware.ApiKeyRateLimitMiddleware(), linkHandler.NewLink)
 		}
 
 		protected := links.Group("")
@@ -99,6 +100,8 @@ func SetupRoutes(
 		admin := base.Group("/admin")
 		admin.Use(middleware.Auth(apiKeyRepo), middleware.RequireAdmin())
 		{
+			admin.GET("/stats", adminHandler.GetSystemStats)
+			admin.GET("/subdomains", adminHandler.ListSubdomains)
 			admin.GET("/keys", adminHandler.ListKeys)
 			admin.POST("/keys", apiKeyHandler.CreateKey)
 			admin.DELETE("/keys/:id", adminHandler.DeleteKey)

@@ -178,6 +178,33 @@ func (h *UserHandler) Login(c *gin.Context) {
 	})
 }
 
+func (h *UserHandler) Me(c *gin.Context) {
+	val, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	userID, ok := val.(uuid.UUID)
+	if !ok || userID == uuid.Nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	user, err := h.repository.FindByID(userID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":    user.ID,
+		"email": user.Email,
+		"role":  user.Role,
+	})
+}
+
+
 
 func setSessionCookie(c *gin.Context, token string) {
 	domain := os.Getenv("COOKIE_DOMAIN")

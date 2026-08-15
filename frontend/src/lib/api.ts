@@ -94,7 +94,18 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
   } catch (err: any) {
     return { id: "", email: "", error: String(err?.message || "Network error") };
   }
+}export async function fetchCurrentUser(): Promise<User | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
+      credentials: "include",
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
 }
+
 
 export async function createShortLink(url: string, customAlias?: string, subdomain?: string): Promise<LinkResponse> {
   try {

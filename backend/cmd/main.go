@@ -35,14 +35,15 @@ func main() {
 	linkRepository := repositories.NewLinkRepository(db)
 	userRepository := repositories.NewUserRepository(db)
 	analyticsRepository := repositories.NewAnalyticsRepository(db)
+	subscriptionRepository := repositories.NewPostgresSubscriptionRepository(db)
 	apiKeyRepository := repositories.NewPostgresApiKeyRepository(db)
 
 	linkHandler := handlers.NewLinkHandler(linkRepository, analyticsRepository)
 	userHandler := handlers.NewUserHandler(userRepository)
 	analyticsHandler := handlers.NewAnalyticsHandler(analyticsRepository, linkRepository)
-	stripeHandler := handlers.NewStripeHandler()
+	stripeHandler := handlers.NewStripeHandler(subscriptionRepository, userRepository)
 	apiKeyHandler := handlers.NewApiKeyHandler(apiKeyRepository)
-	adminHandler := handlers.NewAdminHandler(apiKeyRepository, userRepository)
+	adminHandler := handlers.NewAdminHandler(apiKeyRepository, userRepository, linkRepository)
 
 	app.SetupRoutes(router, linkHandler, userHandler, analyticsHandler, analyticsRepository, apiKeyRepository, stripeHandler, apiKeyHandler, adminHandler)
 

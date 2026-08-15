@@ -1,13 +1,14 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { User } from "@/lib/api";
+import { User, fetchCurrentUser } from "@/lib/api";
 
 interface AuthContextType {
   user: User | null;
   setUser: (user: User | null) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -15,28 +16,45 @@ const AuthContext = createContext<AuthContextType>({
   setUser: () => {},
   logout: () => {},
   isAuthenticated: false,
+  loading: true,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem("wsio_user");
-    if (stored) {
-      try {
-        setUserState(JSON.parse(stored));
-      } catch (e) {
-        localStorage.removeItem("wsio_user");
+    // Attempt session restoration via secure HTTP cookie / session endpoint
+    async function initAuth() {
+      const activeUser = await fetchCurrentUser();
+      if (activeUser && activeUser.id) {
+        setUserState(activeUser);
+      } else {
+        // Fallback check from memory if available
+        const stored = typeof window !== "undefined" ? sessionStorage.getItem("wsio_session_user") : null;
+        if (stored) {
+          try {
+            setUserState(JSON.parse(stored));
+          } catch {
+            sessionStorage.removeItem("wsio_session_user");
+          }
+        }
       }
+      setLoading(false);
     }
+    initAuth();
   }, []);
 
   const setUser = (u: User | null) => {
     setUserState(u);
     if (u) {
-      localStorage.setItem("wsio_user", JSON.stringify(u));
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("wsio_session_user", JSON.stringify(u));
+      }
     } else {
-      localStorage.removeItem("wsio_user");
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("wsio_session_user");
+      }
     }
   };
 
@@ -51,6 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser,
         logout,
         isAuthenticated: !!user,
+        loading,
       }}
     >
       {children}
