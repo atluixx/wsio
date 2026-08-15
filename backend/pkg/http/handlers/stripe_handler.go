@@ -19,6 +19,12 @@ import (
 	"github.com/google/uuid"
 )
 
+// Map plan types to existing Stripe Price IDs in user account
+var defaultStripePriceIDs = map[string]string{
+	"starter": "price_1U4kYRRX4Fmw6LMasPdixrK5",
+	"diamond": "price_1U4kYyRX4Fmw6LMam5E8B9kl",
+}
+
 type StripeHandler struct {
 	subRepo  repositories.SubscriptionRepository
 	userRepo repositories.UserRepository
@@ -33,6 +39,84 @@ func NewStripeHandler(subRepo repositories.SubscriptionRepository, userRepo repo
 
 type CreateCheckoutRequest struct {
 	PlanType string `json:"planType" binding:"required"` // "starter", "diamond"
+}
+
+type StripeProductItem struct {
+	ID        string `json:"id"`
+	PriceID   string `json:"priceId"`
+	Name      string `json:"name"`
+	PlanType  string `json:"planType"`
+	Amount    int64  `json:"amount"`
+	Currency  string `json:"currency"`
+	Interval  string `json:"interval"`
+}
+
+func (h *StripeHandler) GetProducts(c *gin.Context) {
+	secretKey := os.Getenv("STRIPE_SECRET_KEY")
+	if secretKey == "" || strings.HasPrefix(secretKey, "sk_test_mock") {
+		c.JSON(http.StatusOK, []StripeProductItem{
+			{ID: "prod_starter", PriceID: defaultStripePriceIDs["starter"], Name: "Starter Plan", PlanType: "starter", Amount: 300, Currency: "eur", Interval: "month"},
+			{ID: "prod_diamond", PriceID: defaultStripePriceIDs["diamond"], Name: "Diamond Plan", PlanType: "diamond", Amount: 900, Currency: "eur", Interval: "month"},
+		})
+		return
+	}
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	req, err := http.NewRequest("GET", "https://api.stripe.com/v1/prices?expand[]=data.product", nil)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to build stripe request"})
+		return
+	}
+
+	req.Header.Set("Authorization", "Bearer "+secretKey)
+	resp, err := client.Do(req)
+	if err != nil || resp.StatusCode != 200 {
+		c.JSON(http.StatusOK, []StripeProductItem{
+			{ID: "prod_starter", PriceID: defaultStripePriceIDs["starter"], Name: "Starter Plan", PlanType: "starter", Amount: 300, Currency: "eur", Interval: "month"},
+			{ID: "prod_diamond", PriceID: defaultStripePriceIDs["diamond"], Name: "Diamond Plan", PlanType: "diamond", Amount: 900, Currency: "eur", Interval: "month"},
+		})
+		return
+	}
+	defer resp.Body.Close()
+
+	var stripePricesResp struct {
+		Data []struct {
+			ID         string `json:"id"`
+			UnitAmount int64  `json:"unit_amount"`
+			Currency   string `json:"currency"`
+			Product    struct {
+				ID   string `json:"id"`
+				Name string `json:"name"`
+			} `json:"product"`
+			Recurring struct {
+				Interval string `json:"interval"`
+			} `json:"recurring"`
+		} `json:"data"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&stripePricesResp); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse stripe products"})
+		return
+	}
+
+	var items []StripeProductItem
+	for _, p := range stripePricesResp.Data {
+		planType := "starter"
+		if strings.Contains(strings.ToLower(p.Product.Name), "diamond") {
+			planType = "diamond"
+		}
+		items = append(items, StripeProductItem{
+			ID:       p.Product.ID,
+			PriceID:  p.ID,
+			Name:     p.Product.Name,
+			PlanType: planType,
+			Amount:   p.UnitAmount,
+			Currency: p.Currency,
+			Interval: p.Recurring.Interval,
+		})
+	}
+
+	c.JSON(http.StatusOK, items)
 }
 
 func (h *StripeHandler) CreateCheckoutSession(c *gin.Context) {
@@ -61,6 +145,9 @@ func (h *StripeHandler) CreateCheckoutSession(c *gin.Context) {
 		}
 	}
 
+	// Resolve target Stripe Price ID (query from Stripe API or fallback to user configured Price ID)
+	priceID := resolveStripePriceID(secretKey, plan)
+
 	// Interact with Stripe API
 	if secretKey != "" && !strings.HasPrefix(secretKey, "sk_test_mock") {
 		successURL := appURL + "/dashboard?payment=success&plan=" + plan + "&session_id={CHECKOUT_SESSION_ID}"
@@ -70,10 +157,7 @@ func (h *StripeHandler) CreateCheckoutSession(c *gin.Context) {
 		form.Set("mode", "subscription")
 		form.Set("success_url", successURL)
 		form.Set("cancel_url", cancelURL)
-		form.Set("line_items[0][price_data][currency]", "usd")
-		form.Set("line_items[0][price_data][product_data][name]", "wsio "+strings.ToUpper(plan)+" Plan")
-		form.Set("line_items[0][price_data][unit_amount]", getPriceAmount(plan))
-		form.Set("line_items[0][price_data][recurring][interval]", "month")
+		form.Set("line_items[0][price]", priceID)
 		form.Set("line_items[0][quantity]", "1")
 		if userIDStr != "" {
 			form.Set("client_reference_id", userIDStr)
@@ -99,14 +183,13 @@ func (h *StripeHandler) CreateCheckoutSession(c *gin.Context) {
 						return
 					}
 				} else {
-					log.Printf("Stripe Checkout Error API response status %d: %s", resp.StatusCode, string(bodyBytes))
+					log.Printf("Stripe Checkout Session API status %d: %s", resp.StatusCode, string(bodyBytes))
 				}
 			}
 		}
 	}
 
-	// Fallback mock redirect URL for local testing when STRIPE_SECRET_KEY is not configured
-	// Also persist subscription to DB if logged in
+	// Fallback mock redirect URL for local sandbox testing
 	if userIDStr != "" && h.subRepo != nil {
 		if uID, err := uuid.Parse(userIDStr); err == nil {
 			_ = h.subRepo.Upsert(&domain.UserSubscription{
@@ -122,6 +205,44 @@ func (h *StripeHandler) CreateCheckoutSession(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"url": appURL + "/dashboard?payment=success&plan=" + plan,
 	})
+}
+
+func resolveStripePriceID(secretKey, plan string) string {
+	if secretKey != "" && !strings.HasPrefix(secretKey, "sk_test_mock") {
+		client := &http.Client{Timeout: 5 * time.Second}
+		req, err := http.NewRequest("GET", "https://api.stripe.com/v1/prices?expand[]=data.product", nil)
+		if err == nil {
+			req.Header.Set("Authorization", "Bearer "+secretKey)
+			resp, err := client.Do(req)
+			if err == nil && resp.StatusCode == 200 {
+				defer resp.Body.Close()
+				var stripePricesResp struct {
+					Data []struct {
+						ID      string `json:"id"`
+						Product struct {
+							Name string `json:"name"`
+						} `json:"product"`
+					} `json:"data"`
+				}
+				if json.NewDecoder(resp.Body).Decode(&stripePricesResp) == nil {
+					for _, p := range stripePricesResp.Data {
+						pName := strings.ToLower(p.Product.Name)
+						if plan == "starter" && strings.Contains(pName, "starter") {
+							return p.ID
+						}
+						if plan == "diamond" && strings.Contains(pName, "diamond") {
+							return p.ID
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if id, ok := defaultStripePriceIDs[plan]; ok {
+		return id
+	}
+	return "price_1U4kYRRX4Fmw6LMasPdixrK5"
 }
 
 func (h *StripeHandler) HandleWebhook(c *gin.Context) {
@@ -224,13 +345,6 @@ func (h *StripeHandler) HandleWebhook(c *gin.Context) {
 		"customerId":     customerId,
 		"subscriptionId": subId,
 	})
-}
-
-func getPriceAmount(plan string) string {
-	if plan == "diamond" {
-		return "1200" // $12.00
-	}
-	return "400" // $4.00
 }
 
 func verifyStripeSignature(payload []byte, sigHeader, secret string) bool {

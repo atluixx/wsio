@@ -84,6 +84,7 @@ func SetupRoutes(
 			stripe.POST("/create-checkout-session", stripeHandler.CreateCheckoutSession)
 			stripe.POST("/webhook", stripeHandler.HandleWebhook)
 			stripe.GET("/subscription", middleware.OptionalAuth(apiKeyRepo), stripeHandler.GetUserSubscription)
+			stripe.GET("/products", stripeHandler.GetProducts)
 		}
 	}
 
