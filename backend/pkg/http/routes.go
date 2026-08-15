@@ -104,6 +104,7 @@ func SetupRoutes(
 			admin.GET("/stats", adminHandler.GetSystemStats)
 			admin.GET("/subdomains", adminHandler.ListSubdomains)
 			admin.GET("/keys", adminHandler.ListKeys)
+			admin.GET("/users", adminHandler.ListUsers)
 			admin.POST("/keys", apiKeyHandler.CreateKey)
 			admin.DELETE("/keys/:id", adminHandler.DeleteKey)
 		}

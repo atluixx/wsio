@@ -43,7 +43,7 @@ func main() {
 	analyticsHandler := handlers.NewAnalyticsHandler(analyticsRepository, linkRepository)
 	stripeHandler := handlers.NewStripeHandler(subscriptionRepository, userRepository)
 	apiKeyHandler := handlers.NewApiKeyHandler(apiKeyRepository)
-	adminHandler := handlers.NewAdminHandler(apiKeyRepository, userRepository, linkRepository)
+	adminHandler := handlers.NewAdminHandler(apiKeyRepository, userRepository, linkRepository, subscriptionRepository)
 
 	app.SetupRoutes(router, linkHandler, userHandler, analyticsHandler, analyticsRepository, apiKeyRepository, stripeHandler, apiKeyHandler, adminHandler)
 

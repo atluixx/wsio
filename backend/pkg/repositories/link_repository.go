@@ -15,6 +15,7 @@ type LinkRepository interface {
 	FindByCode(code string) (*domain.Link, error)
 	FindByCodeAndUser(code string, userID uuid.UUID) (*domain.Link, error)
 	Delete(link *domain.Link) error
+	FindAll() ([]*domain.Link, error)
 }
 
 type linkRepository struct {
@@ -71,4 +72,10 @@ func (r *linkRepository) FindByCodeAndUser(code string, userID uuid.UUID) (*doma
 
 func (r *linkRepository) Delete(link *domain.Link) error {
 	return r.db.Delete(link).Error
+}
+
+func (r *linkRepository) FindAll() ([]*domain.Link, error) {
+	var links []*domain.Link
+	err := r.db.Order("created_at desc").Find(&links).Error
+	return links, err
 }

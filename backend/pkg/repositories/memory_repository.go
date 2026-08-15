@@ -58,6 +58,16 @@ func (r *inMemoryUserRepository) FindByEmail(email string) (*domain.User, error)
 	return nil, ErrUserNotFound
 }
 
+func (r *inMemoryUserRepository) FindAll() ([]*domain.User, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	var users []*domain.User
+	for _, u := range r.users {
+		users = append(users, u)
+	}
+	return users, nil
+}
+
 type inMemoryLinkRepository struct {
 	mu    sync.RWMutex
 	links map[string]*domain.Link
@@ -105,6 +115,16 @@ func (r *inMemoryLinkRepository) Delete(link *domain.Link) error {
 
 	delete(r.links, link.Code)
 	return nil
+}
+
+func (r *inMemoryLinkRepository) FindAll() ([]*domain.Link, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	var links []*domain.Link
+	for _, l := range r.links {
+		links = append(links, l)
+	}
+	return links, nil
 }
 
 type inMemoryAnalyticsRepository struct {

@@ -17,6 +17,7 @@ type SubscriptionRepository interface {
 	GetByUserID(userID uuid.UUID) (*domain.UserSubscription, error)
 	Upsert(sub *domain.UserSubscription) error
 	GetByStripeCustomerID(customerID string) (*domain.UserSubscription, error)
+	FindAll() ([]*domain.UserSubscription, error)
 }
 
 type postgresSubscriptionRepository struct {
@@ -63,6 +64,12 @@ func (r *postgresSubscriptionRepository) Upsert(sub *domain.UserSubscription) er
 	}).Create(sub).Error
 }
 
+func (r *postgresSubscriptionRepository) FindAll() ([]*domain.UserSubscription, error) {
+	var subs []*domain.UserSubscription
+	err := r.db.Order("created_at desc").Find(&subs).Error
+	return subs, err
+}
+
 type inMemorySubscriptionRepository struct {
 	mu            sync.RWMutex
 	subscriptions map[uuid.UUID]*domain.UserSubscription
@@ -105,4 +112,14 @@ func (r *inMemorySubscriptionRepository) Upsert(sub *domain.UserSubscription) er
 	}
 	r.subscriptions[sub.UserID] = sub
 	return nil
+}
+
+func (r *inMemorySubscriptionRepository) FindAll() ([]*domain.UserSubscription, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	var subs []*domain.UserSubscription
+	for _, sub := range r.subscriptions {
+		subs = append(subs, sub)
+	}
+	return subs, nil
 }

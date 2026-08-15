@@ -14,6 +14,7 @@ type UserRepository interface {
 	Create(user *domain.User) error
 	FindByID(id uuid.UUID) (*domain.User, error)
 	FindByEmail(email string) (*domain.User, error)
+	FindAll() ([]*domain.User, error)
 }
 
 type userRepository struct {
@@ -66,4 +67,10 @@ func (r *userRepository) FindByEmail(email string) (*domain.User, error) {
 	}
 
 	return &user, nil
+}
+
+func (r *userRepository) FindAll() ([]*domain.User, error) {
+	var users []*domain.User
+	err := r.db.Order("created_at desc").Find(&users).Error
+	return users, err
 }

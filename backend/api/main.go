@@ -71,7 +71,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	analyticsHandler := handlers.NewAnalyticsHandler(analyticsRepo, linkRepo)
 	stripeHandler := handlers.NewStripeHandler(subRepo, userRepo)
 	apiKeyHandler := handlers.NewApiKeyHandler(apiKeyRepo)
-	adminHandler := handlers.NewAdminHandler(apiKeyRepo, userRepo, linkRepo)
+	adminHandler := handlers.NewAdminHandler(apiKeyRepo, userRepo, linkRepo, subRepo)
 
 	app.SetupRoutes(router, linkHandler, userHandler, analyticsHandler, analyticsRepo, apiKeyRepo, stripeHandler, apiKeyHandler, adminHandler)
 
