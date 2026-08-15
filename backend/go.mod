@@ -1,6 +1,6 @@
 module github.com/atluixx/wsio
 
-go 1.26.5
+go 1.22.0
 
 require (
 	github.com/gin-gonic/gin v1.12.0
