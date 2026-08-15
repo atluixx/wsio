@@ -97,6 +97,15 @@ func (h *LinkHandler) RedirectLink(c *gin.Context) {
 		return
 	}
 
+	if c.Query("json") == "true" || strings.Contains(c.GetHeader("Accept"), "application/json") {
+		c.JSON(http.StatusOK, gin.H{
+			"id":   link.ID,
+			"code": link.Code,
+			"url":  link.URL,
+		})
+		return
+	}
+
 	c.Redirect(http.StatusFound, link.URL)
 }
 

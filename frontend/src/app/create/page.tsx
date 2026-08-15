@@ -75,6 +75,10 @@ export default function CreateLinkPage() {
     }
   };
 
+  const getShortUrl = (code: string) => {
+    return `https://wsio.lol/l/${code}`;
+  };
+
   const copyToClipboard = (text: string, code: string) => {
     navigator.clipboard.writeText(text);
     setCopiedCode(code);
@@ -192,17 +196,12 @@ export default function CreateLinkPage() {
 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded border border-zinc-800 bg-zinc-900/80 p-3">
                   <div className="truncate font-mono text-sm text-white">
-                    https://api.wsio.lol/api/v1/links/{item.code}
+                    {getShortUrl(item.code)}
                   </div>
 
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() =>
-                        copyToClipboard(
-                          `https://api.wsio.lol/api/v1/links/${item.code}`,
-                          item.code
-                        )
-                      }
+                      onClick={() => copyToClipboard(getShortUrl(item.code), item.code)}
                       className="flex items-center gap-1.5 rounded border border-zinc-700 bg-zinc-800 px-3 py-1.5 font-mono text-xs text-white transition-colors hover:bg-zinc-700"
                     >
                       {copiedCode === item.code ? (
@@ -219,7 +218,7 @@ export default function CreateLinkPage() {
                     </button>
 
                     <a
-                      href={`https://api.wsio.lol/api/v1/links/${item.code}`}
+                      href={getShortUrl(item.code)}
                       target="_blank"
                       rel="noreferrer"
                       className="flex items-center gap-1.5 rounded border border-zinc-700 bg-zinc-800 px-3 py-1.5 font-mono text-xs text-white transition-colors hover:bg-zinc-700"

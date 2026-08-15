@@ -108,6 +108,10 @@ export default function Home() {
     }
   };
 
+  const getShortUrl = (code: string) => {
+    return `https://wsio.lol/l/${code}`;
+  };
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-20">
       {/* Hero Section */}
@@ -202,17 +206,12 @@ export default function Home() {
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded border border-zinc-800 bg-zinc-900/80 p-3">
               <div className="truncate font-mono text-sm text-white">
-                https://api.wsio.lol/api/v1/links/{createdLink.code}
+                {getShortUrl(createdLink.code)}
               </div>
 
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() =>
-                    copyToClipboard(
-                      `https://api.wsio.lol/api/v1/links/${createdLink.code}`,
-                      createdLink.code
-                    )
-                  }
+                  onClick={() => copyToClipboard(getShortUrl(createdLink.code), createdLink.code)}
                   className="flex items-center gap-1.5 rounded border border-zinc-700 bg-zinc-800 px-3 py-1.5 font-mono text-xs text-white transition-colors hover:bg-zinc-700"
                 >
                   {copiedCode === createdLink.code ? (
@@ -229,7 +228,7 @@ export default function Home() {
                 </button>
 
                 <a
-                  href={`https://api.wsio.lol/api/v1/links/${createdLink.code}`}
+                  href={getShortUrl(createdLink.code)}
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-1.5 rounded border border-zinc-700 bg-zinc-800 px-3 py-1.5 font-mono text-xs text-white transition-colors hover:bg-zinc-700"
@@ -277,9 +276,7 @@ export default function Home() {
                     <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-zinc-300">
                       {link.code}
                     </span>
-                    <span className="truncate">
-                      https://api.wsio.lol/api/v1/links/{link.code}
-                    </span>
+                    <span className="truncate">{getShortUrl(link.code)}</span>
                   </div>
                   <div className="mt-1 truncate font-mono text-xs text-zinc-500">
                     {link.url}
@@ -288,12 +285,7 @@ export default function Home() {
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() =>
-                      copyToClipboard(
-                        `https://api.wsio.lol/api/v1/links/${link.code}`,
-                        link.code
-                      )
-                    }
+                    onClick={() => copyToClipboard(getShortUrl(link.code), link.code)}
                     className="flex items-center gap-1 rounded border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 font-mono text-xs text-zinc-300 hover:border-zinc-700 hover:text-white"
                   >
                     {copiedCode === link.code ? (
@@ -304,7 +296,7 @@ export default function Home() {
                   </button>
 
                   <a
-                    href={`https://api.wsio.lol/api/v1/links/${link.code}`}
+                    href={getShortUrl(link.code)}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-1 rounded border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 font-mono text-xs text-zinc-300 hover:border-zinc-700 hover:text-white"
