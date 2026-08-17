@@ -1,10 +1,5 @@
 import { NextResponse } from "next/server";
 
-const PRICE_IDS: Record<string, string> = {
-  starter: "price_1U4kYRRX4Fmw6LMasPdixrK5",
-  diamond: "price_1U4kYyRX4Fmw6LMam5E8B9kl",
-};
-
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
@@ -13,18 +8,30 @@ export async function POST(req: Request) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://wsio.lol";
 
     if (secretKey && !secretKey.startsWith("sk_test_mock")) {
-      const priceId = PRICE_IDS[planType] || PRICE_IDS["starter"];
       const successUrl = `${appUrl}/dashboard?payment=success&plan=${planType}&session_id={CHECKOUT_SESSION_ID}`;
       const cancelUrl = `${appUrl}/pricing?canceled=true`;
+
+      const envPriceId = planType === "diamond" ? process.env.STRIPE_DIAMOND_PRICE_ID : process.env.STRIPE_STARTER_PRICE_ID;
 
       const params = new URLSearchParams({
         mode: "subscription",
         success_url: successUrl,
         cancel_url: cancelUrl,
-        "line_items[0][price]": priceId,
-        "line_items[0][quantity]": "1",
         "metadata[plan_type]": planType,
       });
+
+      if (envPriceId && envPriceId.startsWith("price_")) {
+        params.append("line_items[0][price]", envPriceId);
+        params.append("line_items[0][quantity]", "1");
+      } else {
+        // Fallback to inline price_data if no custom Stripe Price ID env var is configured
+        const unitAmount = planType === "diamond" ? "900" : "300";
+        params.append("line_items[0][price_data][currency]", "eur");
+        params.append("line_items[0][price_data][product_data][name]", `wsio ${planType.toUpperCase()} Subscription`);
+        params.append("line_items[0][price_data][unit_amount]", unitAmount);
+        params.append("line_items[0][price_data][recurring][interval]", "month");
+        params.append("line_items[0][quantity]", "1");
+      }
 
       const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
         method: "POST",
