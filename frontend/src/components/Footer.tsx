@@ -4,35 +4,47 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-white/10 bg-[#050507] text-zinc-400">
+    <footer className="border-t border-white/10 bg-[#050507] text-zinc-300">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-4">
           {/* Column 1: Brand */}
           <div className="space-y-3 md:col-span-1">
-            <Link href="/" className="inline-block font-heading text-2xl font-bold tracking-tight text-white">
-              wsio<span className="text-zinc-500">.</span>
+            <Link
+              href="/"
+              className="inline-block font-heading text-2xl font-bold tracking-tight text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-md"
+            >
+              wsio<span className="text-zinc-400">.</span>
             </Link>
-            <p className="text-xs leading-relaxed text-zinc-400">
+            <p className="text-xs leading-relaxed text-zinc-300">
               High-performance URL management platform delivering fast redirection, custom branding, and real-time click telemetry.
             </p>
           </div>
 
           {/* Column 2: Product */}
           <div className="space-y-3 text-xs">
-            <h3 className="font-semibold text-white tracking-wider uppercase text-[11px]">Product</h3>
-            <ul className="space-y-2 text-zinc-400">
+            <p className="font-semibold text-white tracking-wider uppercase text-[11px]">Product</p>
+            <ul className="space-y-2 text-zinc-300">
               <li>
-                <Link href="/" className="transition-colors hover:text-white">
+                <Link
+                  href="/"
+                  className="transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-sm"
+                >
                   URL Shortener
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard" className="transition-colors hover:text-white">
+                <Link
+                  href="/dashboard"
+                  className="transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-sm"
+                >
                   Dashboard &amp; Telemetry
                 </Link>
               </li>
               <li>
-                <Link href="/pricing" className="transition-colors hover:text-white">
+                <Link
+                  href="/pricing"
+                  className="transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-sm"
+                >
                   Plans &amp; Pricing
                 </Link>
               </li>
@@ -41,20 +53,29 @@ export function Footer() {
 
           {/* Column 3: Legal & Privacy */}
           <div className="space-y-3 text-xs">
-            <h3 className="font-semibold text-white tracking-wider uppercase text-[11px]">Legal &amp; Compliance</h3>
-            <ul className="space-y-2 text-zinc-400">
+            <p className="font-semibold text-white tracking-wider uppercase text-[11px]">Legal &amp; Compliance</p>
+            <ul className="space-y-2 text-zinc-300">
               <li>
-                <Link href="/privacy" className="transition-colors hover:text-white">
+                <Link
+                  href="/privacy"
+                  className="transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-sm"
+                >
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="transition-colors hover:text-white">
+                <Link
+                  href="/terms"
+                  className="transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-sm"
+                >
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="/privacy#cookies" className="transition-colors hover:text-white">
+                <Link
+                  href="/privacy#cookies"
+                  className="transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-sm"
+                >
                   Cookie Declaration (LGPD/GDPR)
                 </Link>
               </li>
@@ -63,11 +84,11 @@ export function Footer() {
 
           {/* Column 4: System Operational Status */}
           <div className="space-y-3 text-xs">
-            <h3 className="font-semibold text-white tracking-wider uppercase text-[11px]">Platform Health</h3>
-            <p className="text-xs text-zinc-400 leading-relaxed">
+            <p className="font-semibold text-white tracking-wider uppercase text-[11px]">Platform Health</p>
+            <p className="text-xs text-zinc-300 leading-relaxed">
               Global distributed edge infrastructure providing low-latency redirection.
             </p>
-            <div className="flex items-center gap-2 pt-1 text-zinc-300 text-[11px]">
+            <div className="flex items-center gap-2 pt-1 text-zinc-200 text-[11px]">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -78,14 +99,29 @@ export function Footer() {
         </div>
 
         {/* Bottom copyright */}
-        <div className="mt-12 border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-4">
+        <div className="mt-12 border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-300 gap-4">
           <div>
             &copy; {currentYear} wsio. All rights reserved.
           </div>
           <div className="flex items-center gap-6">
-            <Link href="/privacy" className="hover:text-zinc-300 transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-zinc-300 transition-colors">Terms</Link>
-            <Link href="/pricing" className="hover:text-zinc-300 transition-colors">Pricing</Link>
+            <Link
+              href="/privacy"
+              className="hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-sm"
+            >
+              Privacy
+            </Link>
+            <Link
+              href="/terms"
+              className="hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-sm"
+            >
+              Terms
+            </Link>
+            <Link
+              href="/pricing"
+              className="hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-sm"
+            >
+              Pricing
+            </Link>
           </div>
         </div>
       </div>

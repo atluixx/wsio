@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { createShortLink, LinkItem } from "@/lib/api";
@@ -11,8 +12,6 @@ import {
   GUEST_DAILY_LIMIT,
 } from "@/lib/guestLinks";
 import { useToast } from "@/components/Toast";
-import { QrCodeModal } from "@/components/QrCodeModal";
-import { SubdomainRequestDialog } from "@/components/SubdomainRequestDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -33,6 +32,16 @@ import {
   QrCode,
 } from "lucide-react";
 import { ScrollReveal } from "@/components/ScrollReveal";
+
+const QrCodeModal = dynamic(
+  () => import("@/components/QrCodeModal").then((m) => m.QrCodeModal),
+  { ssr: false }
+);
+
+const SubdomainRequestDialog = dynamic(
+  () => import("@/components/SubdomainRequestDialog").then((m) => m.SubdomainRequestDialog),
+  { ssr: false }
+);
 
 export function HomeClient() {
   const { user, isAuthenticated } = useAuth();
@@ -152,14 +161,16 @@ export function HomeClient() {
         />
       )}
 
-      <SubdomainRequestDialog
-        open={subdomainDialogOpen}
-        onOpenChange={setSubdomainDialogOpen}
-        onSubdomainApplied={(sub) => setAppliedSubdomain(sub)}
-      />
+      {subdomainDialogOpen && (
+        <SubdomainRequestDialog
+          open={subdomainDialogOpen}
+          onOpenChange={setSubdomainDialogOpen}
+          onSubdomainApplied={(sub) => setAppliedSubdomain(sub)}
+        />
+      )}
 
       {/* Hero Section */}
-      <ScrollReveal>
+      <ScrollReveal priority>
         <div className="text-center space-y-5 max-w-2xl mx-auto">
           <h1 className="font-heading text-4xl sm:text-6xl font-bold tracking-tight text-white leading-[1.15]">
             Transform long links into concise, powerful URLs.
