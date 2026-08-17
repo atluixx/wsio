@@ -27,6 +27,7 @@ export async function POST(req: Request) {
         const unitAmount = planType === "diamond" ? "900" : "300";
         params.append("line_items[0][price_data][currency]", "eur");
         params.append("line_items[0][price_data][product_data][name]", `wsio ${planType.toUpperCase()} Subscription`);
+        params.append("line_items[0][price_data][product_data][tax_code]", "txcd_10103100");
         params.append("line_items[0][price_data][unit_amount]", unitAmount);
         params.append("line_items[0][price_data][recurring][interval]", "month");
         params.append("line_items[0][quantity]", "1");

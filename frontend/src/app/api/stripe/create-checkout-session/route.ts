@@ -24,10 +24,11 @@ export async function POST(req: Request) {
         params.append("line_items[0][price]", envPriceId);
         params.append("line_items[0][quantity]", "1");
       } else {
-        // Fallback to inline price_data if no custom Stripe Price ID env var is configured
+        // Fallback to inline price_data with required product tax_code for Managed Payments
         const unitAmount = planType === "diamond" ? "900" : "300";
         params.append("line_items[0][price_data][currency]", "eur");
         params.append("line_items[0][price_data][product_data][name]", `wsio ${planType.toUpperCase()} Subscription`);
+        params.append("line_items[0][price_data][product_data][tax_code]", "txcd_10103100");
         params.append("line_items[0][price_data][unit_amount]", unitAmount);
         params.append("line_items[0][price_data][recurring][interval]", "month");
         params.append("line_items[0][quantity]", "1");
