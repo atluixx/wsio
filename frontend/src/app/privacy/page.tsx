@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import Link from "next/link";
-import { ArrowLeft, Shield, EyeOff, Server, Cookie } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
@@ -47,86 +46,78 @@ export default function PrivacyPage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-20 space-y-10 font-sans">
+    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 sm:py-16 space-y-8 font-sans">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumbs) }}
       />
+      
       <ScrollReveal>
-        <div className="border-b border-white/10 pb-6 space-y-3">
-          <Button asChild variant="ghost" size="sm" className="text-xs h-8 -ml-2 text-zinc-400 hover:text-white">
+        <div className="space-y-4 border-b border-white/10 pb-8">
+          <Button asChild variant="ghost" size="sm" className="text-xs h-7 -ml-2 text-zinc-400 hover:text-white">
             <Link href="/">
-              <ArrowLeft className="h-3.5 w-3.5" />
-              <span>Back to Home</span>
+              <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+              <span>Home</span>
             </Link>
           </Button>
-          <h1 className="font-heading text-3xl sm:text-5xl text-white font-bold">
+          <h1 className="text-3xl sm:text-4xl text-white font-bold tracking-tight">
             Privacy Policy
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-2xl">
-            At wsio, user privacy is an architectural requirement. We build simple, privacy-respecting software with full LGPD and GDPR compliance. Also read our{" "}
-            <Link href="/terms" className="text-zinc-200 underline hover:text-white transition-colors">
-              Terms of Service
-            </Link>{" "}
-            or explore our{" "}
-            <Link href="/pricing" className="text-zinc-200 underline hover:text-white transition-colors">
-              Pricing Plans
-            </Link>.
+          <p className="text-xs text-zinc-400 font-mono">
+            Last updated: August 17, 2026 &bull; Compliant with GDPR &amp; LGPD
           </p>
         </div>
       </ScrollReveal>
 
       <ScrollReveal delayMs={50}>
-        <div className="space-y-6 text-xs sm:text-sm text-zinc-300 leading-relaxed">
-          {/* Section 1 */}
-          <Card className="p-6 space-y-3">
-            <div className="flex items-center gap-2 text-white font-semibold text-base">
-              <EyeOff className="h-5 w-5 text-emerald-400" />
-              <h2>1. Zero Third-Party Tracking</h2>
-            </div>
-            <p className="text-zinc-400">
-              We do not sell user data, utilize cross-site advertising cookies, or embed third-party tracking scripts into link redirections.
-            </p>
-          </Card>
+        <div className="prose prose-invert prose-zinc max-w-none text-xs sm:text-sm leading-relaxed space-y-8 text-zinc-300">
+          <p>
+            At <strong>wsio.</strong>, privacy is a core structural guarantee. We process only the minimum operational data necessary to perform high-speed URL redirection and session management. We do not track users across the web or monetize behavioral data.
+          </p>
 
-          {/* Section 2 */}
-          <Card className="p-6 space-y-3">
-            <div className="flex items-center gap-2 text-white font-semibold text-base">
-              <Server className="h-5 w-5 text-sky-400" />
-              <h2>2. Information We Process</h2>
-            </div>
+          <section className="space-y-3 pt-2">
+            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight border-b border-white/10 pb-2">
+              1. Zero Third-Party Ad Tracking
+            </h2>
             <p className="text-zinc-400">
-              We process minimal operational data strictly necessary to execute short link redirections:
+              We operate zero cross-site ad trackers, behavioral cookies, or commercial fingerprinting scripts. Redirect loops execute strictly at the edge to forward requests directly to target destinations.
             </p>
-            <ul className="list-disc pl-5 space-y-1 text-zinc-400">
-              <li><strong className="text-white">Destination URLs:</strong> Target web addresses provided to create short links.</li>
-              <li><strong className="text-white">Account Credentials:</strong> Email addresses submitted for authentication and account sync.</li>
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight border-b border-white/10 pb-2">
+              2. Data We Process
+            </h2>
+            <p className="text-zinc-400">
+              We process minimal data strictly required to deliver link services:
+            </p>
+            <ul className="list-disc pl-5 space-y-1.5 text-zinc-400">
+              <li><strong className="text-white">Target URLs:</strong> Web addresses provided by users for link creation.</li>
+              <li><strong className="text-white">Account Information:</strong> Email addresses and hashed passwords for authenticated users.</li>
+              <li><strong className="text-white">Aggregate Telemetry:</strong> Anonymized click counts and referrers for dashboard statistics.</li>
             </ul>
-          </Card>
+          </section>
 
-          {/* Section 3 */}
-          <Card id="cookies" className="p-6 space-y-3">
-            <div className="flex items-center gap-2 text-white font-semibold text-base">
-              <Cookie className="h-5 w-5 text-amber-400" />
-              <h2>3. Cookies &amp; Data Rights (LGPD / GDPR)</h2>
-            </div>
+          <section className="space-y-3" id="cookies">
+            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight border-b border-white/10 pb-2">
+              3. Cookies &amp; Local Storage
+            </h2>
             <p className="text-zinc-400">
-              We use necessary HTTP-only authentication cookies for registered user sessions and browser local storage for guest mode links. You can manage your preferences or request complete account deletion at any time.
+              We use essential HTTP-only cookies solely for maintaining active user login sessions. Unauthenticated guest link history is saved locally in your browser storage and is never uploaded until an account is registered.
             </p>
-          </Card>
+          </section>
 
-          {/* Section 4 */}
-          <Card id="security" className="p-6 space-y-3">
-            <div className="flex items-center gap-2 text-white font-semibold text-base">
-              <Shield className="h-5 w-5 text-purple-400" />
-              <h2>4. Encryption &amp; Security Model</h2>
-            </div>
+          <section className="space-y-3" id="security">
+            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight border-b border-white/10 pb-2">
+              4. Security &amp; Data Subject Rights
+            </h2>
             <p className="text-zinc-400">
-              All communications between your browser and our servers are encrypted via TLS. Active short links remain under your control and can be deleted from your dashboard at any time.
+              Under GDPR and LGPD regulations, you maintain the right to inspect, export, or permanently delete your account and associated short links at any time directly through your user dashboard.
             </p>
-          </Card>
+          </section>
         </div>
       </ScrollReveal>
     </div>
   );
 }
+

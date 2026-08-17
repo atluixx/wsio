@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import Link from "next/link";
-import { ArrowLeft, ShieldCheck, Scale, AlertTriangle, Lock } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
@@ -47,90 +46,72 @@ export default function TermsPage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-20 space-y-10 font-sans">
+    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 sm:py-16 space-y-8 font-sans">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumbs) }}
       />
+      
       <ScrollReveal>
-        <div className="border-b border-white/10 pb-6 space-y-3">
-          <Button asChild variant="ghost" size="sm" className="text-xs h-8 -ml-2 text-zinc-400 hover:text-white">
+        <div className="space-y-4 border-b border-white/10 pb-8">
+          <Button asChild variant="ghost" size="sm" className="text-xs h-7 -ml-2 text-zinc-400 hover:text-white">
             <Link href="/">
-              <ArrowLeft className="h-3.5 w-3.5" />
-              <span>Back to Home</span>
+              <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+              <span>Home</span>
             </Link>
           </Button>
-          <h1 className="font-heading text-3xl sm:text-5xl text-white font-bold">
+          <h1 className="text-3xl sm:text-4xl text-white font-bold tracking-tight">
             Terms of Service
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-2xl">
-            Please read these terms carefully before using the wsio link management platform. Please also review our{" "}
-            <Link href="/privacy" className="text-zinc-200 underline hover:text-white transition-colors">
-              Privacy Policy
-            </Link>{" "}
-            and{" "}
-            <Link href="/pricing" className="text-zinc-200 underline hover:text-white transition-colors">
-              Pricing Plans
-            </Link>.
+          <p className="text-xs text-zinc-400 font-mono">
+            Last updated: August 17, 2026
           </p>
         </div>
       </ScrollReveal>
 
       <ScrollReveal delayMs={50}>
-        <div className="space-y-6 text-xs sm:text-sm text-zinc-300 leading-relaxed">
-          {/* Section 1 */}
-          <Card className="p-6 space-y-3">
-            <div className="flex items-center gap-2 text-white font-semibold text-base">
-              <Scale className="h-5 w-5 text-emerald-400" />
-              <h2>1. Acceptance of Terms</h2>
-            </div>
-            <p className="text-zinc-400">
-              By accessing or using wsio, you agree to be bound by these Terms of Service. If you do not agree, you may not use the service.
-            </p>
-          </Card>
+        <div className="prose prose-invert prose-zinc max-w-none text-xs sm:text-sm leading-relaxed space-y-8 text-zinc-300">
+          <p>
+            By accessing or using <strong>wsio.</strong>, you agree to comply with and be bound by these Terms of Service. If you do not agree, you must not use the platform.
+          </p>
 
-          {/* Section 2 */}
-          <Card className="p-6 space-y-3">
-            <div className="flex items-center gap-2 text-white font-semibold text-base">
-              <AlertTriangle className="h-5 w-5 text-amber-400" />
-              <h2>2. Acceptable Use Policy</h2>
-            </div>
+          <section className="space-y-3 pt-2">
+            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight border-b border-white/10 pb-2">
+              1. Service Overview &amp; Acceptable Use
+            </h2>
             <p className="text-zinc-400">
-              wsio is designed for URL shortening and redirection. You agree strictly NOT to use the service to:
+              wsio provides high-performance URL redirection and short link management. You strictly agree not to use wsio to:
             </p>
-            <ul className="list-disc pl-5 space-y-1 text-zinc-400">
-              <li>Distribute malware, phishing links, or deceptive software payloads.</li>
-              <li>Engage in unsolicited spamming or automated bot traffic generation.</li>
-              <li>Violate applicable privacy regulations or intellectual property laws.</li>
+            <ul className="list-disc pl-5 space-y-1.5 text-zinc-400">
+              <li>Distribute malware, ransomware, phishing, or deceptive software payloads.</li>
+              <li>Send unsolicited commercial spam or automated bot traffic.</li>
+              <li>Infringe upon intellectual property, privacy, or legal rights of third parties.</li>
             </ul>
             <p className="text-zinc-400">
-              Links identified in violation of this policy will be disabled immediately without prior notice.
+              Links detected in violation of our acceptable use policies will be terminated immediately without prior notice.
             </p>
-          </Card>
+          </section>
 
-          {/* Section 3 */}
-          <Card className="p-6 space-y-3">
-            <div className="flex items-center gap-2 text-white font-semibold text-base">
-              <Lock className="h-5 w-5 text-sky-400" />
-              <h2>3. Account Responsibility</h2>
-            </div>
+          <section className="space-y-3">
+            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight border-b border-white/10 pb-2">
+              2. Account Responsibilities
+            </h2>
             <p className="text-zinc-400">
-              Guest links are saved locally in browser storage. Registered users maintain links securely within their cloud dashboard. You are responsible for maintaining account credential confidentiality.
+              You are responsible for maintaining the confidentiality of your account authentication tokens and API secret keys. Any activity initiated under your credentials remains your responsibility.
             </p>
-          </Card>
+          </section>
 
-          {/* Section 4 */}
-          <Card className="p-6 space-y-3">
-            <div className="flex items-center gap-2 text-white font-semibold text-base">
-              <ShieldCheck className="h-5 w-5 text-purple-400" />
-              <h2>4. Service Availability</h2>
-            </div>
+          <section className="space-y-3">
+            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight border-b border-white/10 pb-2">
+              3. Service Availability &amp; Subscriptions
+            </h2>
             <p className="text-zinc-400">
-              We strive for continuous service uptime on our global edge network. Subscriptions are billed according to your selected plan parameters.
+              We strive for continuous edge availability. Paid subscription tiers automatically renew according to your selected billing frequency unless cancelled prior to the renewal date.
             </p>
-          </Card>
+          </section>
         </div>
       </ScrollReveal>
     </div>
   );
 }
+
