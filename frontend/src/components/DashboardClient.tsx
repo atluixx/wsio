@@ -274,7 +274,7 @@ export function DashboardClient() {
       {/* Subscription Dashboard Card */}
       <ScrollReveal delayMs={50}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-sans">
-          <div className="craft-panel p-6 rounded-2xl md:col-span-2 space-y-4 border-white/10">
+          <div className="minimal-card p-6 rounded-2xl md:col-span-2 space-y-4 border-white/10">
             <div className="flex items-center justify-between border-b border-white/10 pb-3 font-mono">
               <div className="flex items-center gap-2">
                 <CreditCard className="h-4 w-4 text-emerald-400" />
@@ -338,7 +338,7 @@ export function DashboardClient() {
             </div>
           </div>
 
-          <div className="craft-card p-6 rounded-2xl space-y-2 border-white/10 font-mono">
+          <div className="minimal-card p-6 rounded-2xl space-y-2 border-white/10 font-mono">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <span className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">Active Links</span>
               <Link2 className="h-4 w-4 text-emerald-400" />
@@ -376,7 +376,7 @@ export function DashboardClient() {
           <h2 className="text-xl font-bold text-white tracking-tight">Active Link Infrastructure</h2>
 
           {filteredLinks.length === 0 ? (
-            <div className="craft-card p-10 text-center space-y-3 rounded-2xl border-white/10">
+            <div className="minimal-card p-10 text-center space-y-3 rounded-2xl border-white/10">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-zinc-900 text-emerald-400 font-mono">
                 <Link2 className="h-6 w-6" />
               </div>
@@ -402,7 +402,7 @@ export function DashboardClient() {
                 return (
                   <div
                     key={link.code}
-                    className="craft-card p-5 space-y-3 rounded-2xl border-white/10"
+                    className="minimal-card p-5 space-y-3 rounded-2xl border-white/10"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="min-w-0 flex-1 space-y-1">
@@ -589,7 +589,7 @@ export function DashboardClient() {
       {/* API Key Management */}
       {isAuthenticated && (
         <ScrollReveal delayMs={150}>
-          <div className="craft-panel p-6 space-y-5 rounded-2xl border-white/10 font-sans">
+          <div className="minimal-card p-6 space-y-5 rounded-2xl border-white/10 font-sans">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4 font-mono">
               <div className="space-y-1">
                 <div className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-bold">

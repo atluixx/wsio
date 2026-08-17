@@ -104,55 +104,46 @@ export function PricingClient() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-20 space-y-12 sm:space-y-16 font-sans">
+    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-20 space-y-12 font-sans">
       {/* Header */}
       <ScrollReveal>
-        <div className="text-center space-y-4 max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-mono text-emerald-400">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>TRANSPARENT INFRASTRUCTURE PRICING</span>
-          </div>
-
-          <h1 className="text-4xl sm:text-6xl text-white font-extrabold tracking-tight leading-[1.1]">
-            Simple, predictable plans.
+        <div className="text-center space-y-3 max-w-lg mx-auto">
+          <h1 className="text-3xl sm:text-5xl text-white font-extrabold tracking-tight">
+            Simple, transparent pricing.
           </h1>
 
-          <p className="text-sm sm:text-base text-zinc-400 leading-relaxed max-w-lg mx-auto">
-            Start for free with our link generator, or upgrade for branded subdomains, custom slugs, and high rate-limit API keys.
+          <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
+            Free forever for basic sharing. Upgrade for custom slugs, analytics, and API keys.
           </p>
 
-          <div className="pt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-zinc-900/90 p-1.5 text-xs font-mono">
+          <div className="pt-2 inline-flex items-center gap-1 rounded-xl border border-white/10 bg-zinc-900 p-1 text-xs font-mono">
             <button
               onClick={() => setAnnualBilling(false)}
               className={
                 !annualBilling
-                  ? "rounded-full px-4 py-2 transition-colors cursor-pointer min-h-[38px] bg-emerald-500 text-emerald-950 font-bold shadow-sm"
-                  : "rounded-full px-4 py-2 transition-colors cursor-pointer min-h-[38px] text-zinc-400 hover:text-white"
+                  ? "rounded-lg px-3 py-1.5 bg-white text-zinc-950 font-bold"
+                  : "rounded-lg px-3 py-1.5 text-zinc-400 hover:text-white"
               }
             >
-              Monthly Billing
+              Monthly
             </button>
             <button
               onClick={() => setAnnualBilling(true)}
               className={
                 annualBilling
-                  ? "flex items-center gap-2 rounded-full px-4 py-2 transition-colors cursor-pointer min-h-[38px] bg-emerald-500 text-emerald-950 font-bold shadow-sm"
-                  : "flex items-center gap-2 rounded-full px-4 py-2 transition-colors cursor-pointer min-h-[38px] text-zinc-400 hover:text-white"
+                  ? "rounded-lg px-3 py-1.5 bg-white text-zinc-950 font-bold"
+                  : "rounded-lg px-3 py-1.5 text-zinc-400 hover:text-white"
               }
             >
-              <span>Annual Billing</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-400/40">
-                Save 20%
-              </span>
+              Annual (-20%)
             </button>
           </div>
-
         </div>
       </ScrollReveal>
 
       {/* Plan Cards Grid */}
-      <ScrollReveal delayMs={100}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <ScrollReveal delayMs={50}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {plans.map((plan, idx) => {
             const planKey = plan.name.toLowerCase().includes("starter")
               ? "starter"
@@ -163,69 +154,56 @@ export function PricingClient() {
             return (
               <div
                 key={idx}
-                className={`flex flex-col justify-between relative p-6 sm:p-7 rounded-2xl transition-all duration-300 ${
-                  plan.highlight
-                    ? "craft-panel border-emerald-500/40 shadow-2xl glow-emerald ring-1 ring-emerald-500/20"
-                    : "craft-card border-white/10"
+                className={`flex flex-col justify-between p-6 rounded-2xl minimal-card ${
+                  plan.highlight ? "border-white/20 bg-zinc-900/60" : ""
                 }`}
               >
-                <div className="space-y-6">
-                  <div className="border-b border-white/10 pb-4 space-y-2">
+                <div className="space-y-4">
+                  <div className="space-y-1">
                     <div className="flex items-center justify-between">
-                      <h2 className="text-xl font-bold text-white font-sans">{plan.name}</h2>
-                      <span className={`text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
-                        plan.highlight
-                          ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
-                          : "bg-zinc-800 text-zinc-400 border-white/10"
-                      }`}>{plan.tag}</span>
+                      <h2 className="text-lg font-bold text-white">{plan.name}</h2>
+                      {plan.highlight && (
+                        <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-white text-zinc-950">
+                          Popular
+                        </span>
+                      )}
                     </div>
-                    <p className="text-xs text-zinc-400 leading-relaxed min-h-[36px]">{plan.description}</p>
+                    <p className="text-xs text-zinc-400 min-h-[32px]">{plan.description}</p>
                   </div>
 
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     <div className="flex items-baseline gap-1 font-mono">
-                      <span className="text-4xl font-extrabold text-white">
+                      <span className="text-3xl font-extrabold text-white">
                         {annualBilling ? plan.priceAnnual : plan.priceMonthly}
                       </span>
-                      <span className="text-xs text-zinc-400">/ month</span>
+                      <span className="text-xs text-zinc-400">/ mo</span>
                     </div>
-                    <div className="text-[11px] font-mono text-zinc-500">{plan.billingPeriod}</div>
                   </div>
 
-                  {/* Features List */}
-                  <div className="space-y-2.5 pt-2">
-                    <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 font-semibold block">
-                      Included Capabilities:
-                    </span>
-                    <ul className="space-y-2 text-xs text-zinc-300">
-                      {plan.features.map((feat, fIdx) => (
-                        <li key={fIdx} className="flex items-start gap-2">
-                          <Check className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-                          <span>{feat}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  <ul className="space-y-2 text-xs text-zinc-300 pt-2 border-t border-white/5">
+                    {plan.features.map((feat, fIdx) => (
+                      <li key={fIdx} className="flex items-start gap-2">
+                        <Check className="h-3.5 w-3.5 text-zinc-400 shrink-0 mt-0.5" />
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
 
-                <div className="pt-8">
+                <div className="pt-6">
                   <Button
-                    variant={plan.ctaVariant}
                     onClick={() => handleSubscribe(planKey)}
                     disabled={submittingPlan === planKey}
-                    className={`w-full h-11 text-xs font-semibold rounded-xl ${
+                    className={`w-full h-10 text-xs font-semibold rounded-xl ${
                       plan.highlight
-                        ? "bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold shadow-lg"
-                        : "bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10 font-medium"
+                        ? "bg-white hover:bg-zinc-200 text-zinc-950 font-bold"
+                        : "bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10"
                     }`}
                   >
                     {submittingPlan === planKey ? (
                       <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                     ) : (
-                      <span className="flex items-center justify-center gap-2">
-                        <span>{plan.ctaText}</span>
-                        <ArrowRight className="h-4 w-4" />
-                      </span>
+                      <span>{plan.ctaText}</span>
                     )}
                   </Button>
                 </div>
@@ -236,30 +214,26 @@ export function PricingClient() {
       </ScrollReveal>
 
       {/* Feature Comparison Matrix */}
-      <ScrollReveal delayMs={150}>
-        <div className="space-y-6">
-          <div className="border-b border-white/10 pb-4">
-            <h2 className="text-2xl sm:text-3xl text-white font-bold tracking-tight">Feature Matrix</h2>
-            <p className="text-xs text-zinc-400 mt-1">Detailed side-by-side comparison across all tiers.</p>
-          </div>
-
-          <div className="overflow-x-auto rounded-2xl craft-panel border-white/10">
-            <table className="w-full text-left text-xs min-w-[540px]">
+      <ScrollReveal delayMs={100}>
+        <div className="space-y-4">
+          <h2 className="text-lg font-bold text-white tracking-tight">Compare Tiers</h2>
+          <div className="overflow-x-auto rounded-2xl minimal-card">
+            <table className="w-full text-left text-xs min-w-[500px]">
               <thead>
-                <tr className="border-b border-white/10 bg-zinc-950 text-zinc-400 font-mono uppercase tracking-wider">
-                  <th className="p-4 font-semibold">Capability</th>
-                  <th className="p-4 font-semibold text-center">Free</th>
-                  <th className="p-4 font-semibold text-center text-emerald-400">Starter</th>
-                  <th className="p-4 font-semibold text-center text-zinc-200">Diamond</th>
+                <tr className="border-b border-white/10 bg-zinc-950 text-zinc-400 font-mono">
+                  <th className="p-3.5 font-semibold">Feature</th>
+                  <th className="p-3.5 font-semibold text-center">Free</th>
+                  <th className="p-3.5 font-semibold text-center text-white">Starter</th>
+                  <th className="p-3.5 font-semibold text-center text-zinc-200">Diamond</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-zinc-300 font-mono">
                 {comparisonFeatures.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-zinc-900/40 transition-colors">
-                    <td className="p-4 font-medium text-white font-sans">{row.name}</td>
-                    <td className="p-4 text-center text-zinc-500">{row.free}</td>
-                    <td className="p-4 text-center font-semibold text-emerald-400">{row.starter}</td>
-                    <td className="p-4 text-center font-semibold text-zinc-200">{row.diamond}</td>
+                  <tr key={idx} className="hover:bg-zinc-900/40">
+                    <td className="p-3.5 font-medium text-white font-sans">{row.name}</td>
+                    <td className="p-3.5 text-center text-zinc-500">{row.free}</td>
+                    <td className="p-3.5 text-center font-bold text-white">{row.starter}</td>
+                    <td className="p-3.5 text-center font-bold text-zinc-200">{row.diamond}</td>
                   </tr>
                 ))}
               </tbody>
@@ -267,32 +241,8 @@ export function PricingClient() {
           </div>
         </div>
       </ScrollReveal>
-
-      {/* FAQ Section */}
-      <ScrollReveal delayMs={200}>
-        <div className="craft-panel p-6 sm:p-8 space-y-4 rounded-2xl border-white/10">
-          <div className="flex items-center gap-2.5 text-white font-bold">
-            <HelpCircle className="h-5 w-5 text-emerald-400" />
-            <h2 className="text-xl">Pricing FAQ</h2>
-          </div>
-
-          <div className="space-y-4 text-xs sm:text-sm text-zinc-400 leading-relaxed">
-            <div>
-              <h3 className="font-semibold text-white">What happens when I reach the guest daily cap?</h3>
-              <p className="mt-1">
-                Guest link creations are limited to 3 per day per IP. Signing up for a free account removes daily limits and enables persistent cloud link history.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-white">Can I change or cancel my plan anytime?</h3>
-              <p className="mt-1">
-                Yes. You can manage or cancel your subscription directly inside your user dashboard.
-              </p>
-            </div>
-          </div>
-        </div>
-      </ScrollReveal>
     </div>
   );
 }
+
 
