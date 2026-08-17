@@ -1,17 +1,57 @@
+import type { Metadata } from "next";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import Link from "next/link";
 import { ArrowLeft, Shield, EyeOff, Server, Cookie } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Privacy Policy — wsio.",
-  description: "Privacy commitments and security model for wsio URL redirection engine.",
+  description: "Learn about wsio zero-tracking policy, LGPD and GDPR compliance, and minimal data processing model.",
+  alternates: {
+    canonical: "https://wsio.lol/privacy",
+  },
+  openGraph: {
+    title: "Privacy Policy — wsio.",
+    description: "Learn about wsio zero-tracking policy, LGPD and GDPR compliance, and minimal data processing model.",
+    url: "https://wsio.lol/privacy",
+    siteName: "wsio.",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Privacy Policy — wsio.",
+    description: "Learn about wsio zero-tracking policy, LGPD and GDPR compliance, and minimal data processing model.",
+  },
 };
 
 export default function PrivacyPage() {
+  const jsonLdBreadcrumbs = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://wsio.lol"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Privacy Policy",
+        "item": "https://wsio.lol/privacy"
+      }
+    ]
+  };
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-20 space-y-10 font-sans">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumbs) }}
+      />
       <ScrollReveal>
         <div className="border-b border-white/10 pb-6 space-y-3">
           <Button asChild variant="ghost" size="sm" className="text-xs h-8 -ml-2 text-zinc-400 hover:text-white">
@@ -24,7 +64,14 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-2xl">
-            At wsio, user privacy is an architectural requirement. We build simple, privacy-respecting software with full LGPD and GDPR compliance.
+            At wsio, user privacy is an architectural requirement. We build simple, privacy-respecting software with full LGPD and GDPR compliance. Also read our{" "}
+            <Link href="/terms" className="text-zinc-200 underline hover:text-white transition-colors">
+              Terms of Service
+            </Link>{" "}
+            or explore our{" "}
+            <Link href="/pricing" className="text-zinc-200 underline hover:text-white transition-colors">
+              Pricing Plans
+            </Link>.
           </p>
         </div>
       </ScrollReveal>

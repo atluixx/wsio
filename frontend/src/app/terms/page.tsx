@@ -1,17 +1,57 @@
+import type { Metadata } from "next";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import Link from "next/link";
 import { ArrowLeft, ShieldCheck, Scale, AlertTriangle, Lock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Terms of Service — wsio.",
-  description: "Terms of Service and acceptable use policy for wsio URL shortener.",
+  description: "Read the wsio terms of service and acceptable use policy for short links and API services.",
+  alternates: {
+    canonical: "https://wsio.lol/terms",
+  },
+  openGraph: {
+    title: "Terms of Service — wsio.",
+    description: "Read the wsio terms of service and acceptable use policy for short links and API services.",
+    url: "https://wsio.lol/terms",
+    siteName: "wsio.",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Terms of Service — wsio.",
+    description: "Read the wsio terms of service and acceptable use policy for short links and API services.",
+  },
 };
 
 export default function TermsPage() {
+  const jsonLdBreadcrumbs = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://wsio.lol"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Terms of Service",
+        "item": "https://wsio.lol/terms"
+      }
+    ]
+  };
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-20 space-y-10 font-sans">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumbs) }}
+      />
       <ScrollReveal>
         <div className="border-b border-white/10 pb-6 space-y-3">
           <Button asChild variant="ghost" size="sm" className="text-xs h-8 -ml-2 text-zinc-400 hover:text-white">
@@ -24,7 +64,14 @@ export default function TermsPage() {
             Terms of Service
           </h1>
           <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-2xl">
-            Please read these terms carefully before using the wsio link management platform.
+            Please read these terms carefully before using the wsio link management platform. Please also review our{" "}
+            <Link href="/privacy" className="text-zinc-200 underline hover:text-white transition-colors">
+              Privacy Policy
+            </Link>{" "}
+            and{" "}
+            <Link href="/pricing" className="text-zinc-200 underline hover:text-white transition-colors">
+              Pricing Plans
+            </Link>.
           </p>
         </div>
       </ScrollReveal>

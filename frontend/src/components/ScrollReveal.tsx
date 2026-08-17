@@ -6,13 +6,26 @@ interface ScrollRevealProps {
   children: React.ReactNode;
   delayMs?: number;
   className?: string;
+  /** When true, content is immediately visible on SSR/initial render to avoid LCP paint delay */
+  priority?: boolean;
 }
 
-export function ScrollReveal({ children, delayMs = 0, className = "" }: ScrollRevealProps) {
-  const [isVisible, setIsVisible] = useState(false);
+export function ScrollReveal({
+  children,
+  delayMs = 0,
+  className = "",
+  priority = false,
+}: ScrollRevealProps) {
+  // If priority is true or delayMs is 0, start as visible to prevent LCP render delays
+  const [isVisible, setIsVisible] = useState(priority || delayMs === 0);
   const domRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (priority || delayMs === 0) {
+      setIsVisible(true);
+      return;
+    }
+
     const currentRef = domRef.current;
     if (!currentRef) return;
 
@@ -35,7 +48,7 @@ export function ScrollReveal({ children, delayMs = 0, className = "" }: ScrollRe
     return () => {
       if (currentRef) observer.unobserve(currentRef);
     };
-  }, [delayMs]);
+  }, [delayMs, priority]);
 
   return (
     <div
