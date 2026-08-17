@@ -53,7 +53,6 @@ export function DashboardClient() {
 
   const [apiKeys, setApiKeys] = useState<ApiKeyItem[]>([]);
   const [newKeyName, setNewKeyName] = useState("");
-  const [newKeyPlan] = useState("starter");
   const [creatingKey, setCreatingKey] = useState(false);
   
   // API Key Modal State
@@ -69,13 +68,20 @@ export function DashboardClient() {
       const params = new URLSearchParams(window.location.search);
       const planParam = params.get("plan");
       const paymentParam = params.get("payment");
+      const storageKey = user?.id ? `wsio_user_plan_${user.id}` : "wsio_user_plan";
 
       if (paymentParam === "success" && planParam) {
         const cleanPlan = planParam.toLowerCase();
         setCurrentPlan(cleanPlan);
+        localStorage.setItem(storageKey, cleanPlan);
         showToast(`Subscription activated! Upgraded to ${cleanPlan === "diamond" ? "Diamond Plan" : "Starter Plan"}.`, "success");
       } else if (user?.role === "admin") {
         setCurrentPlan("diamond");
+      } else {
+        const savedPlan = localStorage.getItem(storageKey);
+        if (savedPlan) {
+          setCurrentPlan(savedPlan);
+        }
       }
     }
   }, [user]);
@@ -103,10 +109,22 @@ export function DashboardClient() {
       return;
     }
 
+    const storageKey = user?.id ? `wsio_user_plan_${user.id}` : "wsio_user_plan";
+    if (typeof window !== "undefined") {
+      const savedPlan = localStorage.getItem(storageKey);
+      if (savedPlan) {
+        setCurrentPlan(savedPlan);
+      }
+    }
+
     if (isAuthenticated && user?.id) {
       const sub = await fetchUserSubscription(user.id);
       if (sub?.planType) {
-        setCurrentPlan(sub.planType.toLowerCase());
+        const plan = sub.planType.toLowerCase();
+        setCurrentPlan(plan);
+        if (typeof window !== "undefined") {
+          localStorage.setItem(storageKey, plan);
+        }
       }
     }
   };
@@ -129,7 +147,9 @@ export function DashboardClient() {
     if (!newKeyName.trim()) return;
 
     setCreatingKey(true);
-    const res = await createApiKey(newKeyName, newKeyPlan);
+    // Use actual user plan when generating API Key
+    const keyPlanToUse = currentPlan !== "free" ? currentPlan : "starter";
+    const res = await createApiKey(newKeyName, keyPlanToUse);
     setCreatingKey(false);
 
     if (res.key) {

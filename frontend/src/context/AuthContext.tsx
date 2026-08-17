@@ -29,14 +29,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const activeUser = await fetchCurrentUser();
       if (activeUser && activeUser.id) {
         setUserState(activeUser);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("wsio_user", JSON.stringify(activeUser));
+          sessionStorage.setItem("wsio_session_user", JSON.stringify(activeUser));
+        }
       } else {
-        // Fallback check from memory if available
-        const stored = typeof window !== "undefined" ? sessionStorage.getItem("wsio_session_user") : null;
+        // Fallback check from memory/storage if available
+        const stored = typeof window !== "undefined"
+          ? localStorage.getItem("wsio_user") || sessionStorage.getItem("wsio_session_user")
+          : null;
         if (stored) {
           try {
             setUserState(JSON.parse(stored));
           } catch {
-            sessionStorage.removeItem("wsio_session_user");
+            if (typeof window !== "undefined") {
+              localStorage.removeItem("wsio_user");
+              sessionStorage.removeItem("wsio_session_user");
+            }
           }
         }
       }
@@ -47,12 +56,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const setUser = (u: User | null) => {
     setUserState(u);
-    if (u) {
-      if (typeof window !== "undefined") {
+    if (typeof window !== "undefined") {
+      if (u) {
+        localStorage.setItem("wsio_user", JSON.stringify(u));
         sessionStorage.setItem("wsio_session_user", JSON.stringify(u));
-      }
-    } else {
-      if (typeof window !== "undefined") {
+      } else {
+        localStorage.removeItem("wsio_user");
         sessionStorage.removeItem("wsio_session_user");
       }
     }

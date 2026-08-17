@@ -3,9 +3,19 @@ import crypto from "crypto";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.wsio.lol";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const backendRes = await fetch(`${API_BASE_URL}/api/v1/links`).catch(() => null);
+    const headers: Record<string, string> = {};
+    const userIdHeader = req.headers.get("X-User-ID");
+    if (userIdHeader) {
+      headers["X-User-ID"] = userIdHeader;
+    }
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader) {
+      headers["Authorization"] = authHeader;
+    }
+
+    const backendRes = await fetch(`${API_BASE_URL}/api/v1/links`, { headers }).catch(() => null);
     if (backendRes && backendRes.ok) {
       const data = await backendRes.json();
       return NextResponse.json(data);

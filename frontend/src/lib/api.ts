@@ -7,7 +7,17 @@ function getApiBaseUrl(): string {
 
 const API_BASE_URL = getApiBaseUrl();
 
-
+function getStoredUserId(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  try {
+    const raw = localStorage.getItem("wsio_user") || sessionStorage.getItem("wsio_session_user");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return parsed?.id;
+    }
+  } catch {}
+  return undefined;
+}
 
 export interface User {
   id: string;
@@ -94,7 +104,9 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
   } catch (err: any) {
     return { id: "", email: "", error: String(err?.message || "Network error") };
   }
-}export async function fetchCurrentUser(): Promise<User | null> {
+}
+
+export async function fetchCurrentUser(): Promise<User | null> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
       credentials: "include",
@@ -106,19 +118,12 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
   }
 }
 
-
 export async function createShortLink(url: string, customAlias?: string, subdomain?: string): Promise<LinkResponse> {
   try {
-    const storedUserStr = typeof window !== "undefined" ? localStorage.getItem("wsio_user") : null;
+    const userId = getStoredUserId();
     const headers: Record<string, string> = { "Content-Type": "application/json" };
-    
-    if (storedUserStr) {
-      try {
-        const storedUser = JSON.parse(storedUserStr);
-        if (storedUser?.id) {
-          headers["X-User-ID"] = storedUser.id;
-        }
-      } catch {}
+    if (userId) {
+      headers["X-User-ID"] = userId;
     }
 
     let res = await fetch(`${API_BASE_URL}/api/v1/links`, {
@@ -142,6 +147,25 @@ export async function createShortLink(url: string, customAlias?: string, subdoma
       if (!res.ok) {
         return { error: parseErrorMessage(data, "Failed to shorten URL") };
       }
+
+      // Persist created link locally to guarantee visibility in dashboard
+      if (data.code && typeof window !== "undefined") {
+        try {
+          const rawSaved = localStorage.getItem("wsio_saved_links");
+          const existing: LinkItem[] = rawSaved ? JSON.parse(rawSaved) : [];
+          const newLinkItem: LinkItem = {
+            id: data.id || Math.random().toString(),
+            code: data.code,
+            url: data.url || url,
+            subdomain: data.subdomain || subdomain,
+            userId: data.userId || userId,
+            createdAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          };
+          const updated = [newLinkItem, ...existing.filter((l) => l.code !== data.code)];
+          localStorage.setItem("wsio_saved_links", JSON.stringify(updated));
+        } catch {}
+      }
+
       return data;
     }
 
@@ -153,6 +177,17 @@ export async function createShortLink(url: string, customAlias?: string, subdoma
 
 export async function deleteShortLink(code: string): Promise<{ success: boolean; error?: string }> {
   try {
+    if (typeof window !== "undefined") {
+      try {
+        const rawSaved = localStorage.getItem("wsio_saved_links");
+        if (rawSaved) {
+          const existing: LinkItem[] = JSON.parse(rawSaved);
+          const filtered = existing.filter((l) => l.code !== code);
+          localStorage.setItem("wsio_saved_links", JSON.stringify(filtered));
+        }
+      } catch {}
+    }
+
     const res = await fetch(`${API_BASE_URL}/api/v1/links/${code}`, {
       method: "DELETE",
       credentials: "include",
@@ -189,9 +224,6 @@ export async function createCheckoutSession(planType: string): Promise<{ url?: s
     return { error: String(err?.message || "Network error") };
   }
 }
-
-
-
 
 export async function fetchApiKeys(): Promise<ApiKeyItem[]> {
   try {
@@ -260,9 +292,12 @@ export async function deleteAdminApiKey(id: string): Promise<{ success: boolean;
 }
 
 export async function fetchUserLinks(userId?: string): Promise<LinkItem[]> {
+  const activeUserId = userId || getStoredUserId();
+  let serverLinks: LinkItem[] = [];
+
   try {
     const headers: Record<string, string> = {};
-    if (userId) headers["X-User-ID"] = userId;
+    if (activeUserId) headers["X-User-ID"] = activeUserId;
 
     let res = await fetch(`${API_BASE_URL}/api/v1/links`, {
       headers,
@@ -278,16 +313,39 @@ export async function fetchUserLinks(userId?: string): Promise<LinkItem[]> {
 
     if (res && res.ok) {
       const data = await res.json();
-      if (Array.isArray(data)) return data;
+      if (Array.isArray(data)) {
+        serverLinks = data;
+      }
     }
   } catch {}
-  return [];
+
+  // Read locally saved links as fallback/supplement
+  let localSavedLinks: LinkItem[] = [];
+  if (typeof window !== "undefined") {
+    try {
+      const rawSaved = localStorage.getItem("wsio_saved_links");
+      if (rawSaved) {
+        localSavedLinks = JSON.parse(rawSaved);
+      }
+    } catch {}
+  }
+
+  // Deduplicate and merge server and local links by link code
+  const linkMap = new Map<string, LinkItem>();
+  for (const item of [...serverLinks, ...localSavedLinks]) {
+    if (item && item.code && !linkMap.has(item.code)) {
+      linkMap.set(item.code, item);
+    }
+  }
+
+  return Array.from(linkMap.values());
 }
 
 export async function fetchUserSubscription(userId?: string): Promise<{ planType?: string; status?: string } | null> {
   try {
+    const activeUserId = userId || getStoredUserId();
     const headers: Record<string, string> = {};
-    if (userId) headers["X-User-ID"] = userId;
+    if (activeUserId) headers["X-User-ID"] = activeUserId;
 
     let res = await fetch(`${API_BASE_URL}/api/v1/stripe/subscription`, {
       headers,
@@ -300,5 +358,3 @@ export async function fetchUserSubscription(userId?: string): Promise<{ planType
   } catch {}
   return null;
 }
-
-
