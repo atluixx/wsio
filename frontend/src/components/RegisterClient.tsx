@@ -7,7 +7,6 @@ import { useAuth } from "@/context/AuthContext";
 import { registerUser } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 import { Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, ShieldCheck } from "lucide-react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
@@ -64,39 +63,40 @@ export function RegisterClient() {
       <ScrollReveal className="w-full max-w-md">
         {/* Card Header */}
         <div className="mb-6 text-center space-y-2">
-          <Link href="/" className="inline-block font-heading text-3xl font-bold text-white tracking-tight">
-            wsio<span className="text-zinc-500">.</span>
+          <Link href="/" className="inline-flex items-center gap-2 text-2xl font-bold text-white tracking-tight">
+            <div className="flex h-7 w-7 items-center justify-center rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-xs">
+              &gt;
+            </div>
+            <span>wsio<span className="text-emerald-400">.</span></span>
           </Link>
-          <h1 className="font-heading text-2xl sm:text-3xl text-white font-bold">
+          <h1 className="text-2xl sm:text-3xl text-white font-extrabold tracking-tight">
             Create Your Account
           </h1>
-          <p className="text-xs text-zinc-400">
-            Sign up to unlock unlimited short link creation &amp; telemetry. By signing up you agree to our{" "}
-            <Link href="/terms" className="text-zinc-300 underline hover:text-white transition-colors">Terms</Link> and{" "}
-            <Link href="/privacy" className="text-zinc-300 underline hover:text-white transition-colors">Privacy Policy</Link>.
+          <p className="text-xs text-zinc-400 leading-relaxed">
+            Unlock unlimited short links, custom aliases, and live telemetry.
           </p>
         </div>
 
         {/* Card Body */}
-        <Card className="p-6 sm:p-8 shadow-2xl backdrop-blur-xl space-y-4">
+        <div className="craft-panel p-6 sm:p-8 rounded-2xl space-y-4 border-white/10">
           {error && (
-            <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-950/30 p-3.5 text-xs text-red-300">
+            <div className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-300 font-mono">
               <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
               <span>{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-950/40 p-3.5 text-xs text-emerald-300">
+            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-xs text-emerald-300 font-mono">
               <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
-              <span>Account created successfully! Redirecting...</span>
+              <span>Account provisioned! Opening dashboard...</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4 font-mono">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
-                Email Address
+              <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">
+                Work Email Address
               </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-zinc-500">
@@ -104,18 +104,18 @@ export function RegisterClient() {
                 </div>
                 <Input
                   type="email"
-                  placeholder="name@company.com"
+                  placeholder="developer@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 h-11 text-xs"
+                  className="pl-10 h-11 text-xs craft-input text-white rounded-xl"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
-                Password <span className="text-zinc-400 font-normal">(min 8 characters)</span>
+              <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">
+                Password <span className="text-zinc-500 font-normal">(min 8 characters)</span>
               </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-zinc-500">
@@ -126,14 +126,14 @@ export function RegisterClient() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 h-11 text-xs"
+                  className="pl-10 h-11 text-xs craft-input text-white rounded-xl"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+              <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">
                 Confirm Password
               </label>
               <div className="relative">
@@ -145,7 +145,7 @@ export function RegisterClient() {
                   placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pl-10 h-11 text-xs"
+                  className="pl-10 h-11 text-xs craft-input text-white rounded-xl"
                   required
                 />
               </div>
@@ -154,10 +154,10 @@ export function RegisterClient() {
             <Button
               type="submit"
               disabled={loading || success}
-              className="w-full mt-2 h-11 text-xs font-semibold gap-1.5"
+              className="w-full mt-2 h-11 text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-emerald-950 rounded-xl gap-1.5 font-sans"
             >
               {loading ? (
-                <span className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                <span className="h-4 w-4 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <span>Create Free Account</span>
@@ -167,14 +167,15 @@ export function RegisterClient() {
             </Button>
           </form>
 
-          <div className="border-t border-white/10 pt-4 text-center text-xs text-zinc-400">
-            Already have an account?{" "}
-            <Link href="/login" className="text-white hover:underline font-semibold">
+          <div className="border-t border-white/10 pt-4 text-center text-xs text-zinc-400 font-sans">
+            Already registered?{" "}
+            <Link href="/login" className="text-emerald-400 hover:underline font-semibold">
               Sign in instead
             </Link>
           </div>
-        </Card>
+        </div>
       </ScrollReveal>
     </div>
   );
 }
+

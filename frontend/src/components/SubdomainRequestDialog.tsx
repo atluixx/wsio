@@ -91,13 +91,14 @@ export function SubdomainRequestDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md glass-panel border-white/10 text-zinc-100 bg-[#0c0c0e]/95">
+      <DialogContent className="max-w-md craft-panel border-white/10 text-zinc-100 bg-[#0c0c0e]/95 rounded-2xl font-sans">
         <DialogHeader>
-          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300 mb-1">
-            <Building2 className="h-4 w-4 text-white" />
-            <span>Brand Subdomain Provisioning</span>
+          <div className="flex items-center gap-2 text-xs font-mono text-emerald-400 mb-1">
+            <Building2 className="h-4 w-4" />
+            <span>BRAND SUBDOMAIN PROVISIONING</span>
           </div>
-          <DialogTitle className="text-xl text-white font-bold">Apply for Custom Subdomain</DialogTitle>
+          <DialogTitle className="text-xl text-white font-bold tracking-tight">Apply for Branded Subdomain</DialogTitle>
+
           <DialogDescription className="text-zinc-400 text-xs">
             Submit a formal request for a custom domain alias (e.g. <code className="text-zinc-200 font-mono">yourbrand.wsio.lol</code>).
           </DialogDescription>
