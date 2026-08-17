@@ -68,20 +68,13 @@ export function DashboardClient() {
       const params = new URLSearchParams(window.location.search);
       const planParam = params.get("plan");
       const paymentParam = params.get("payment");
-      const storageKey = user?.id ? `wsio_user_plan_${user.id}` : "wsio_user_plan";
 
       if (paymentParam === "success" && planParam) {
         const cleanPlan = planParam.toLowerCase();
         setCurrentPlan(cleanPlan);
-        localStorage.setItem(storageKey, cleanPlan);
         showToast(`Subscription activated! Upgraded to ${cleanPlan === "diamond" ? "Diamond Plan" : "Starter Plan"}.`, "success");
       } else if (user?.role === "admin") {
         setCurrentPlan("diamond");
-      } else {
-        const savedPlan = localStorage.getItem(storageKey);
-        if (savedPlan) {
-          setCurrentPlan(savedPlan);
-        }
       }
     }
   }, [user]);
@@ -109,22 +102,10 @@ export function DashboardClient() {
       return;
     }
 
-    const storageKey = user?.id ? `wsio_user_plan_${user.id}` : "wsio_user_plan";
-    if (typeof window !== "undefined") {
-      const savedPlan = localStorage.getItem(storageKey);
-      if (savedPlan) {
-        setCurrentPlan(savedPlan);
-      }
-    }
-
     if (isAuthenticated && user?.id) {
       const sub = await fetchUserSubscription(user.id);
       if (sub?.planType) {
-        const plan = sub.planType.toLowerCase();
-        setCurrentPlan(plan);
-        if (typeof window !== "undefined") {
-          localStorage.setItem(storageKey, plan);
-        }
+        setCurrentPlan(sub.planType.toLowerCase());
       }
     }
   };
@@ -147,7 +128,7 @@ export function DashboardClient() {
     if (!newKeyName.trim()) return;
 
     setCreatingKey(true);
-    // Use actual user plan when generating API Key
+    // Use actual dynamically loaded user plan when generating API Key
     const keyPlanToUse = currentPlan !== "free" ? currentPlan : "starter";
     const res = await createApiKey(newKeyName, keyPlanToUse);
     setCreatingKey(false);
@@ -513,7 +494,7 @@ export function DashboardClient() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => setDeleteConfirm(null)}
+                              onClick={() => setDeleteConfirm(link.code)}
                               className="text-xs h-9 text-zinc-400"
                             >
                               Cancel
