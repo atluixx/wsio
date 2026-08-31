@@ -30,6 +30,9 @@ export const metadata: Metadata = {
     "Build a clean, fast link-in-bio page. One link for your socials, work, and everything you share — with click analytics.",
   robots: { index: true, follow: true },
   alternates: { canonical: APP_URL },
+  ...(process.env.GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
+    : {}),
   openGraph: {
     title: "wsio. — One link for everything you do",
     description:
