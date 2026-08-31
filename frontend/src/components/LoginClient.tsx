@@ -62,7 +62,7 @@ export function LoginClient() {
             Sign In to Your Account
           </h1>
           <p className="text-xs text-zinc-400">
-            Access your URL workspace, subdomains, and click telemetry.
+            Access your page, links, and click analytics.
           </p>
         </div>
 

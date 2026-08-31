@@ -3,19 +3,13 @@ package http
 import (
 	"github.com/atluixx/wsio/pkg/http/handlers"
 	"github.com/atluixx/wsio/pkg/http/middleware"
-	"github.com/atluixx/wsio/pkg/repositories"
 	"github.com/gin-gonic/gin"
 )
 
 func SetupRoutes(
 	r *gin.Engine,
-	linkHandler *handlers.LinkHandler,
 	userHandler *handlers.UserHandler,
-	analyticsHandler *handlers.AnalyticsHandler,
-	analyticsRepo repositories.AnalyticsRepository,
-	apiKeyRepo repositories.ApiKeyRepository,
-	stripeHandler *handlers.StripeHandler,
-	apiKeyHandler *handlers.ApiKeyHandler,
+	profileHandler *handlers.ProfileHandler,
 	adminHandler *handlers.AdminHandler,
 ) {
 	r.HandleMethodNotAllowed = true
@@ -30,7 +24,7 @@ func SetupRoutes(
 			c.Header("Access-Control-Allow-Origin", "*")
 		}
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie, X-Requested-With, Accept, Origin, X-User-ID, X-API-Key")
+		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie, X-Requested-With, Accept, Origin, X-User-ID")
 		c.Header("Access-Control-Expose-Headers", "Content-Length, Set-Cookie")
 		c.Header("Vary", "Origin")
 
@@ -45,8 +39,8 @@ func SetupRoutes(
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status":  "online",
-			"service": "wsio API engine",
-			"version": "1.0",
+			"service": "wsio link-in-bio API",
+			"version": "2.0",
 		})
 	})
 
@@ -56,60 +50,34 @@ func SetupRoutes(
 	{
 		auth.POST("/register", userHandler.Register)
 		auth.POST("/login", userHandler.Login)
-		auth.GET("/me", middleware.Auth(apiKeyRepo), userHandler.Me)
+		auth.GET("/me", middleware.Auth(), userHandler.Me)
 	}
 
-	links := base.Group("/links")
+	// Public profile surface
+	base.GET("/profiles/:username", profileHandler.GetPublicProfile)
+	base.GET("/click/:id", profileHandler.TrackAndRedirect)
+
+	// Current user's profile management
+	me := base.Group("/me")
+	me.Use(middleware.Auth())
 	{
-		links.GET("/:code", linkHandler.RedirectLink)
-		if analyticsHandler != nil {
-			links.GET("/:code/analytics", analyticsHandler.GetAnalytics)
-		}
+		me.GET("/profile", profileHandler.GetMyProfile)
+		me.PUT("/profile", profileHandler.UpsertMyProfile)
+		me.GET("/profile/analytics", profileHandler.GetMyProfileAnalytics)
 
-		if analyticsRepo != nil {
-			links.POST("", middleware.OptionalAuth(apiKeyRepo), middleware.ApiKeyRateLimitMiddleware(), middleware.GuestLimitMiddleware(analyticsRepo), linkHandler.NewLink)
-		} else {
-			links.POST("", middleware.OptionalAuth(apiKeyRepo), middleware.ApiKeyRateLimitMiddleware(), linkHandler.NewLink)
-		}
-
-		protected := links.Group("")
-		protected.Use(middleware.Auth(apiKeyRepo))
-
-		protected.DELETE("/:code", linkHandler.DeleteLink)
-	}
-
-	if stripeHandler != nil {
-		stripe := base.Group("/stripe")
-		{
-			stripe.POST("/create-checkout-session", stripeHandler.CreateCheckoutSession)
-			stripe.POST("/webhook", stripeHandler.HandleWebhook)
-			stripe.GET("/subscription", middleware.OptionalAuth(apiKeyRepo), stripeHandler.GetUserSubscription)
-			stripe.GET("/products", stripeHandler.GetProducts)
-		}
-	}
-
-	if apiKeyHandler != nil {
-		keys := base.Group("/keys")
-		{
-			keys.POST("", middleware.OptionalAuth(apiKeyRepo), apiKeyHandler.CreateKey)
-			keys.GET("", middleware.Auth(apiKeyRepo), apiKeyHandler.ListKeys)
-			keys.DELETE("/:id", middleware.Auth(apiKeyRepo), apiKeyHandler.DeleteKey)
-		}
+		me.POST("/profile/links", profileHandler.CreateMyProfileLink)
+		me.PUT("/profile/links/reorder", profileHandler.ReorderMyProfileLinks)
+		me.PUT("/profile/links/:id", profileHandler.UpdateMyProfileLink)
+		me.DELETE("/profile/links/:id", profileHandler.DeleteMyProfileLink)
+		me.GET("/profile/links/:id/analytics", profileHandler.GetMyProfileLinkAnalytics)
 	}
 
 	if adminHandler != nil {
 		admin := base.Group("/admin")
-		admin.Use(middleware.Auth(apiKeyRepo), middleware.RequireAdmin())
+		admin.Use(middleware.Auth(), middleware.RequireAdmin())
 		{
 			admin.GET("/stats", adminHandler.GetSystemStats)
-			admin.GET("/subdomains", adminHandler.ListSubdomains)
-			admin.GET("/keys", adminHandler.ListKeys)
 			admin.GET("/users", adminHandler.ListUsers)
-			admin.POST("/keys", apiKeyHandler.CreateKey)
-			admin.DELETE("/keys/:id", adminHandler.DeleteKey)
 		}
 	}
-
-	r.GET("/:code", linkHandler.RedirectLink)
 }
-

@@ -21,10 +21,8 @@ export function ScrollReveal({
   const domRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (priority || delayMs === 0) {
-      setIsVisible(true);
-      return;
-    }
+    // Already visible from initial state; no observer needed.
+    if (priority || delayMs === 0) return;
 
     const currentRef = domRef.current;
     if (!currentRef) return;

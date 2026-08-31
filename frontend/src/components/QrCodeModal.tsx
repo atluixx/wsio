@@ -50,7 +50,7 @@ export function QrCodeModal({ url, code, onClose }: QrCodeModalProps) {
             <QrCode className="h-4 w-4" />
             <span>Vector QR Code</span>
           </div>
-          <h3 className="font-serif text-xl text-white">Scan &amp; Share Hash</h3>
+          <h3 className="font-serif text-xl text-white">Scan &amp; Share</h3>
           <p className="text-[11px] text-zinc-400 truncate max-w-[260px] mx-auto">{url}</p>
         </div>
 
@@ -60,7 +60,7 @@ export function QrCodeModal({ url, code, onClose }: QrCodeModalProps) {
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={dataUrl}
-              alt={`Local QR Code redirecting to short link ${code} (${url})`}
+              alt={`QR code for ${code} (${url})`}
               className="h-full w-full object-contain"
               loading="lazy"
               decoding="async"

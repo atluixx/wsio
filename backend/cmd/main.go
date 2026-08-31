@@ -21,34 +21,58 @@ func main() {
 
 	router := gin.Default()
 
-	db, err := gorm.Open(
-		postgres.Open(os.Getenv("DATABASE_URL")),
-		&gorm.Config{},
+	var (
+		userRepo      repositories.UserRepository
+		profileRepo   repositories.ProfileRepository
+		linkRepo      repositories.ProfileLinkRepository
+		analyticsRepo repositories.ProfileAnalyticsRepository
 	)
 
-	if err != nil {
-		log.Fatalf("failed to open database: %s", err)
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		dsn = os.Getenv("DATABASE_DSN")
 	}
 
-	_ = db.AutoMigrate(&domain.User{}, &domain.Link{}, &domain.LinkClick{}, &domain.UserSubscription{}, &domain.GuestUsageTrack{}, &domain.ApiKey{})
+	if db := openDB(dsn); db != nil {
+		_ = db.AutoMigrate(
+			&domain.User{},
+			&domain.Profile{},
+			&domain.ProfileLink{},
+			&domain.ProfileLinkClick{},
+			&domain.ProfileView{},
+		)
+		userRepo = repositories.NewUserRepository(db)
+		profileRepo = repositories.NewProfileRepository(db)
+		linkRepo = repositories.NewProfileLinkRepository(db)
+		analyticsRepo = repositories.NewProfileAnalyticsRepository(db)
+		log.Println("using PostgreSQL repositories")
+	} else {
+		userRepo = repositories.NewInMemoryUserRepository()
+		profileRepo = repositories.NewInMemoryProfileRepository()
+		linkRepo = repositories.NewInMemoryProfileLinkRepository()
+		analyticsRepo = repositories.NewInMemoryProfileAnalyticsRepository()
+		log.Println("DATABASE_URL not set / unreachable — using in-memory repositories (data is not persisted)")
+	}
 
-	linkRepository := repositories.NewLinkRepository(db)
-	userRepository := repositories.NewUserRepository(db)
-	analyticsRepository := repositories.NewAnalyticsRepository(db)
-	subscriptionRepository := repositories.NewPostgresSubscriptionRepository(db)
-	apiKeyRepository := repositories.NewPostgresApiKeyRepository(db)
+	userHandler := handlers.NewUserHandler(userRepo)
+	profileHandler := handlers.NewProfileHandler(profileRepo, linkRepo, analyticsRepo)
+	adminHandler := handlers.NewAdminHandler(userRepo, profileRepo, linkRepo)
 
-	linkHandler := handlers.NewLinkHandler(linkRepository, analyticsRepository)
-	userHandler := handlers.NewUserHandler(userRepository)
-	analyticsHandler := handlers.NewAnalyticsHandler(analyticsRepository, linkRepository)
-	stripeHandler := handlers.NewStripeHandler(subscriptionRepository, userRepository)
-	apiKeyHandler := handlers.NewApiKeyHandler(apiKeyRepository)
-	adminHandler := handlers.NewAdminHandler(apiKeyRepository, userRepository, linkRepository, subscriptionRepository)
-
-	app.SetupRoutes(router, linkHandler, userHandler, analyticsHandler, analyticsRepository, apiKeyRepository, stripeHandler, apiKeyHandler, adminHandler)
+	app.SetupRoutes(router, userHandler, profileHandler, adminHandler)
 
 	if err := router.Run(); err != nil {
 		log.Fatalf("failed to start the API: %s", err)
 	}
 }
 
+func openDB(dsn string) *gorm.DB {
+	if dsn == "" {
+		return nil
+	}
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Printf("failed to open database: %s", err)
+		return nil
+	}
+	return db
+}

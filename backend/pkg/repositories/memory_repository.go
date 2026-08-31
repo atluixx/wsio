@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"errors"
-	"strings"
+	"sort"
 	"sync"
 	"time"
 
@@ -68,79 +68,238 @@ func (r *inMemoryUserRepository) FindAll() ([]*domain.User, error) {
 	return users, nil
 }
 
-type inMemoryLinkRepository struct {
-	mu    sync.RWMutex
-	links map[string]*domain.Link
+// --- Link-in-bio in-memory repositories ---
+
+type inMemoryProfileRepository struct {
+	mu       sync.RWMutex
+	profiles map[uuid.UUID]*domain.Profile // keyed by UserID
 }
 
-func NewInMemoryLinkRepository() LinkRepository {
-	return &inMemoryLinkRepository{
-		links: make(map[string]*domain.Link),
+func NewInMemoryProfileRepository() ProfileRepository {
+	return &inMemoryProfileRepository{
+		profiles: make(map[uuid.UUID]*domain.Profile),
 	}
 }
 
-func (r *inMemoryLinkRepository) Create(link *domain.Link) error {
+func (r *inMemoryProfileRepository) Create(profile *domain.Profile) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	r.links[link.Code] = link
+	profile.Username = NormalizeUsername(profile.Username)
+	for _, p := range r.profiles {
+		if p.Username == profile.Username {
+			return errors.New("username already taken")
+		}
+	}
+	r.profiles[profile.UserID] = profile
 	return nil
 }
 
-func (r *inMemoryLinkRepository) FindByCode(code string) (*domain.Link, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+func (r *inMemoryProfileRepository) Update(profile *domain.Profile) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
-	link, ok := r.links[code]
+	profile.Username = NormalizeUsername(profile.Username)
+	existing, ok := r.profiles[profile.UserID]
 	if !ok {
-		return nil, ErrLinkNotFound
+		return ErrProfileNotFound
 	}
-	return link, nil
-}
-
-func (r *inMemoryLinkRepository) FindByCodeAndUser(code string, userID uuid.UUID) (*domain.Link, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	link, ok := r.links[code]
-	if !ok || link.UserID == nil || *link.UserID != userID {
-		return nil, ErrLinkNotFound
+	for _, p := range r.profiles {
+		if p.UserID != profile.UserID && p.Username == profile.Username {
+			return errors.New("username already taken")
+		}
 	}
-	return link, nil
-}
-
-func (r *inMemoryLinkRepository) Delete(link *domain.Link) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	delete(r.links, link.Code)
+	existing.Username = profile.Username
+	existing.DisplayName = profile.DisplayName
+	existing.Bio = profile.Bio
+	existing.AvatarURL = profile.AvatarURL
+	existing.Theme = profile.Theme
 	return nil
 }
 
-func (r *inMemoryLinkRepository) FindAll() ([]*domain.Link, error) {
+func (r *inMemoryProfileRepository) FindByUserID(userID uuid.UUID) (*domain.Profile, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	var links []*domain.Link
+
+	profile, ok := r.profiles[userID]
+	if !ok {
+		return nil, ErrProfileNotFound
+	}
+	return profile, nil
+}
+
+func (r *inMemoryProfileRepository) FindByUsername(username string) (*domain.Profile, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	username = NormalizeUsername(username)
+	for _, p := range r.profiles {
+		if p.Username == username {
+			return p, nil
+		}
+	}
+	return nil, ErrProfileNotFound
+}
+
+func (r *inMemoryProfileRepository) UsernameTaken(username string, excludeUserID uuid.UUID) (bool, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	username = NormalizeUsername(username)
+	for _, p := range r.profiles {
+		if p.Username == username && p.UserID != excludeUserID {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (r *inMemoryProfileRepository) FindAll() ([]*domain.Profile, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	var profiles []*domain.Profile
+	for _, p := range r.profiles {
+		profiles = append(profiles, p)
+	}
+	return profiles, nil
+}
+
+type inMemoryProfileLinkRepository struct {
+	mu    sync.RWMutex
+	links map[uuid.UUID]*domain.ProfileLink
+}
+
+func NewInMemoryProfileLinkRepository() ProfileLinkRepository {
+	return &inMemoryProfileLinkRepository{
+		links: make(map[uuid.UUID]*domain.ProfileLink),
+	}
+}
+
+func (r *inMemoryProfileLinkRepository) Create(link *domain.ProfileLink) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	r.links[link.ID] = link
+	return nil
+}
+
+func (r *inMemoryProfileLinkRepository) Update(link *domain.ProfileLink) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	existing, ok := r.links[link.ID]
+	if !ok {
+		return ErrProfileLinkNotFound
+	}
+	existing.Label = link.Label
+	existing.URL = link.URL
+	existing.Icon = link.Icon
+	existing.Active = link.Active
+	return nil
+}
+
+func (r *inMemoryProfileLinkRepository) Delete(id uuid.UUID) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	delete(r.links, id)
+	return nil
+}
+
+func (r *inMemoryProfileLinkRepository) FindByID(id uuid.UUID) (*domain.ProfileLink, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	link, ok := r.links[id]
+	if !ok {
+		return nil, ErrProfileLinkNotFound
+	}
+	return link, nil
+}
+
+func (r *inMemoryProfileLinkRepository) ListByProfile(profileID uuid.UUID, activeOnly bool) ([]*domain.ProfileLink, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	var links []*domain.ProfileLink
 	for _, l := range r.links {
+		if l.ProfileID != profileID {
+			continue
+		}
+		if activeOnly && !l.Active {
+			continue
+		}
 		links = append(links, l)
 	}
+	sort.SliceStable(links, func(i, j int) bool {
+		if links[i].Position != links[j].Position {
+			return links[i].Position < links[j].Position
+		}
+		return links[i].CreatedAt.Before(links[j].CreatedAt)
+	})
 	return links, nil
 }
 
-type inMemoryAnalyticsRepository struct {
-	mu         sync.RWMutex
-	clicks     []*domain.LinkClick
-	guestUsage map[string]int // key: "ident:date"
+func (r *inMemoryProfileLinkRepository) Reorder(profileID uuid.UUID, orderedIDs []uuid.UUID) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	for position, id := range orderedIDs {
+		if l, ok := r.links[id]; ok && l.ProfileID == profileID {
+			l.Position = position
+		}
+	}
+	return nil
 }
 
-func NewInMemoryAnalyticsRepository() AnalyticsRepository {
-	return &inMemoryAnalyticsRepository{
-		clicks:     make([]*domain.LinkClick, 0),
-		guestUsage: make(map[string]int),
+func (r *inMemoryProfileLinkRepository) NextPosition(profileID uuid.UUID) (int, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	next := 0
+	for _, l := range r.links {
+		if l.ProfileID == profileID && l.Position >= next {
+			next = l.Position + 1
+		}
+	}
+	return next, nil
+}
+
+func (r *inMemoryProfileLinkRepository) CountByProfile(profileID uuid.UUID) (int64, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	var count int64
+	for _, l := range r.links {
+		if l.ProfileID == profileID {
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (r *inMemoryProfileLinkRepository) CountAll() (int64, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	return int64(len(r.links)), nil
+}
+
+type inMemoryProfileAnalyticsRepository struct {
+	mu     sync.RWMutex
+	clicks []*domain.ProfileLinkClick
+	views  []*domain.ProfileView
+}
+
+func NewInMemoryProfileAnalyticsRepository() ProfileAnalyticsRepository {
+	return &inMemoryProfileAnalyticsRepository{
+		clicks: make([]*domain.ProfileLinkClick, 0),
+		views:  make([]*domain.ProfileView, 0),
 	}
 }
 
-func (r *inMemoryAnalyticsRepository) RecordClick(click *domain.LinkClick) error {
+func (r *inMemoryProfileAnalyticsRepository) RecordClick(click *domain.ProfileLinkClick) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -150,64 +309,93 @@ func (r *inMemoryAnalyticsRepository) RecordClick(click *domain.LinkClick) error
 	if click.Timestamp.IsZero() {
 		click.Timestamp = time.Now()
 	}
-
 	r.clicks = append(r.clicks, click)
 	return nil
 }
 
-func (r *inMemoryAnalyticsRepository) GetAnalyticsByCode(code string) (*domain.LinkAnalyticsSummary, error) {
+func (r *inMemoryProfileAnalyticsRepository) RecordView(view *domain.ProfileView) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if view.ID == uuid.Nil {
+		view.ID = uuid.New()
+	}
+	if view.Timestamp.IsZero() {
+		view.Timestamp = time.Now()
+	}
+	r.views = append(r.views, view)
+	return nil
+}
+
+func (r *inMemoryProfileAnalyticsRepository) GetLinkAnalytics(profileLinkID uuid.UUID) (*domain.ProfileLinkAnalytics, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-
-	var totalClicks int64
-	var clicks24h int64
-	var clicks7d int64
-	referrersMap := make(map[string]int64)
 
 	now := time.Now()
 	since24h := now.Add(-24 * time.Hour)
 	since7d := now.Add(-7 * 24 * time.Hour)
 
-	for _, c := range r.clicks {
-		if c.Code == code || strings.EqualFold(c.Code, code) {
-			totalClicks++
-			if c.Timestamp.After(since24h) {
-				clicks24h++
-			}
-			if c.Timestamp.After(since7d) {
-				clicks7d++
-			}
-
-			ref := c.Referrer
-			if ref == "" {
-				ref = "Direct / Unknown"
-			}
-			referrersMap[ref]++
-		}
+	out := &domain.ProfileLinkAnalytics{
+		ProfileLinkID: profileLinkID,
+		Referrers:     make(map[string]int64),
 	}
-
-	return &domain.LinkAnalyticsSummary{
-		Code:        code,
-		TotalClicks: totalClicks,
-		Clicks24h:   clicks24h,
-		Clicks7d:    clicks7d,
-		Referrers:   referrersMap,
-	}, nil
+	for _, c := range r.clicks {
+		if c.ProfileLinkID != profileLinkID {
+			continue
+		}
+		out.TotalClicks++
+		if c.Timestamp.After(since24h) {
+			out.Clicks24h++
+		}
+		if c.Timestamp.After(since7d) {
+			out.Clicks7d++
+		}
+		ref := c.Referrer
+		if ref == "" {
+			ref = "Direct / Unknown"
+		}
+		out.Referrers[ref]++
+	}
+	return out, nil
 }
 
-func (r *inMemoryAnalyticsRepository) GetGuestUsage(identifier string, date string) (int, error) {
+func (r *inMemoryProfileAnalyticsRepository) GetProfileSummary(profileID uuid.UUID) (*domain.ProfileAnalyticsSummary, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	key := identifier + ":" + date
-	return r.guestUsage[key], nil
-}
+	now := time.Now()
+	since24h := now.Add(-24 * time.Hour)
+	since7d := now.Add(-7 * 24 * time.Hour)
 
-func (r *inMemoryAnalyticsRepository) IncrementGuestUsage(identifier string, date string) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	summary := &domain.ProfileAnalyticsSummary{ProfileID: profileID}
+	perLink := make(map[uuid.UUID]int64)
 
-	key := identifier + ":" + date
-	r.guestUsage[key]++
-	return nil
+	for _, v := range r.views {
+		if v.ProfileID != profileID {
+			continue
+		}
+		summary.TotalViews++
+		if v.Timestamp.After(since24h) {
+			summary.Views24h++
+		}
+		if v.Timestamp.After(since7d) {
+			summary.Views7d++
+		}
+	}
+
+	for _, c := range r.clicks {
+		if c.ProfileID != profileID {
+			continue
+		}
+		summary.TotalClicks++
+		perLink[c.ProfileLinkID]++
+	}
+
+	for id, count := range perLink {
+		summary.Links = append(summary.Links, domain.ProfileLinkAnalytics{
+			ProfileLinkID: id,
+			TotalClicks:   count,
+		})
+	}
+	return summary, nil
 }

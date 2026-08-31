@@ -14,6 +14,5 @@ type User struct {
 	CreatedAt    time.Time `json:"createdAt"`
 	UpdatedAt    time.Time `json:"updatedAt"`
 
-	Links []Link `gorm:"foreignKey:UserID;references:ID" json:"links"`
+	Profile *Profile `gorm:"foreignKey:UserID;references:ID" json:"-"`
 }
-

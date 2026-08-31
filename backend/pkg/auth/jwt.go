@@ -46,7 +46,6 @@ func NewToken(userID uuid.UUID, role ...string) (string, error) {
 	return token.SignedString(getSecret())
 }
 
-
 func ParseToken(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(
 		tokenString,

@@ -2,9 +2,6 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
-import { CookieBanner } from "@/components/CookieBanner";
 import { ToastProvider } from "@/components/Toast";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -21,40 +18,35 @@ const jetbrainsMono = JetBrains_Mono({
   preload: true,
 });
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://wsio.lol";
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://wsio.lol"),
+  metadataBase: new URL(APP_URL),
   title: {
-    default: "wsio. — Precision URL Infrastructure & Link Intelligence",
+    default: "wsio. — One link for everything you do",
     template: "%s | wsio.",
   },
-  description: "Ultra-fast edge redirection engine with real-time analytics, custom brand subdomains, and developer APIs.",
-  robots: {
-    index: true,
-    follow: true,
-  },
-  alternates: {
-    canonical: "https://wsio.lol",
-  },
+  description:
+    "Build a clean, fast link-in-bio page. One link for your socials, work, and everything you share — with click analytics.",
+  robots: { index: true, follow: true },
+  alternates: { canonical: APP_URL },
   openGraph: {
-    title: "wsio. — Precision URL Infrastructure & Link Intelligence",
-    description: "Ultra-fast edge redirection engine with real-time analytics, custom brand subdomains, and developer APIs.",
-    url: "https://wsio.lol",
+    title: "wsio. — One link for everything you do",
+    description:
+      "Build a clean, fast link-in-bio page. One link for your socials, work, and everything you share.",
+    url: APP_URL,
     siteName: "wsio.",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "wsio. — Precision URL Infrastructure & Link Intelligence",
-    description: "Ultra-fast edge redirection engine with real-time analytics, custom brand subdomains, and developer APIs.",
+    title: "wsio. — One link for everything you do",
+    description: "Build a clean, fast link-in-bio page with click analytics.",
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
@@ -65,17 +57,11 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://api.wsio.lol" />
       </head>
-      <body className="flex min-h-full flex-col bg-[#070709] text-zinc-100 selection:bg-emerald-500/20 selection:text-emerald-300 grid-bg font-sans">
+      <body className="min-h-full bg-[#070709] text-zinc-100 font-sans antialiased">
         <AuthProvider>
-          <ToastProvider>
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-            <CookieBanner />
-          </ToastProvider>
+          <ToastProvider>{children}</ToastProvider>
         </AuthProvider>
       </body>
     </html>
   );
 }
-

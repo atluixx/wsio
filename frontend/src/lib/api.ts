@@ -1,37 +1,9 @@
-function getApiBaseUrl(): string {
-  if (typeof window !== "undefined") {
-    return process.env.NEXT_PUBLIC_API_URL || "https://api.wsio.lol";
-  }
-  return process.env.NEXT_PUBLIC_API_URL || "https://api.wsio.lol";
-}
-
-const API_BASE_URL = getApiBaseUrl();
-
-function getStoredUserId(): string | undefined {
-  if (typeof window === "undefined") return undefined;
-  try {
-    const raw = localStorage.getItem("wsio_user") || sessionStorage.getItem("wsio_session_user");
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return parsed?.id;
-    }
-  } catch {}
-  return undefined;
-}
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.wsio.lol";
 
 export interface User {
   id: string;
   email: string;
   role?: string;
-}
-
-export interface LinkItem {
-  id: string;
-  code: string;
-  url: string;
-  subdomain?: string;
-  userId?: string;
-  createdAt?: string;
 }
 
 export interface AuthResponse {
@@ -41,25 +13,73 @@ export interface AuthResponse {
   error?: string;
 }
 
-export interface LinkResponse {
-  id?: string;
-  code?: string;
-  url?: string;
-  subdomain?: string;
-  userId?: string;
-  error?: string;
-}
-
-export interface ApiKeyItem {
+export interface ProfileLink {
   id: string;
-  keyMasked: string;
-  name: string;
-  planType: string;
-  expiresAt: string;
-  createdAt: string;
-  lastUsedAt?: string;
+  label: string;
+  url: string;
+  icon?: string;
+  position: number;
+  active: boolean;
 }
 
+export interface OwnerProfile {
+  id: string;
+  username: string;
+  displayName: string;
+  bio: string;
+  avatarUrl: string;
+  theme: string;
+  links: ProfileLink[];
+}
+
+export interface PublicProfileLink {
+  id: string;
+  label: string;
+  url: string;
+  icon?: string;
+}
+
+export interface PublicProfile {
+  username: string;
+  displayName: string;
+  bio: string;
+  avatarUrl: string;
+  theme: string;
+  links: PublicProfileLink[];
+}
+
+export interface LinkAnalytics {
+  profileLinkId: string;
+  totalClicks: number;
+  clicks24h: number;
+  clicks7d: number;
+  referrers: Record<string, number>;
+}
+
+export interface ProfileAnalytics {
+  profileId: string;
+  totalViews: number;
+  views24h: number;
+  views7d: number;
+  totalClicks: number;
+  links: { profileLinkId: string; totalClicks: number }[];
+}
+
+export interface ProfileInput {
+  username: string;
+  displayName: string;
+  bio: string;
+  avatarUrl: string;
+  theme: string;
+}
+
+export interface LinkInput {
+  label: string;
+  url: string;
+  icon?: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function parseErrorMessage(data: any, fallback: string): string {
   if (!data) return fallback;
   if (typeof data.error === "string") return data.error;
@@ -68,293 +88,139 @@ function parseErrorMessage(data: any, fallback: string): string {
   return fallback;
 }
 
-export async function registerUser(email: string, password: string): Promise<AuthResponse> {
+async function apiFetch(path: string, init?: RequestInit): Promise<Response | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    return await fetch(`${API_BASE_URL}${path}`, {
       credentials: "include",
-      body: JSON.stringify({ email, password }),
+      ...init,
+      headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
     });
-
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      return { id: "", email: "", error: parseErrorMessage(data, "Registration failed") };
-    }
-    return data;
-  } catch (err: any) {
-    return { id: "", email: "", error: String(err?.message || "Network error") };
-  }
-}
-
-export async function loginUser(email: string, password: string): Promise<AuthResponse> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      return { id: "", email: "", error: parseErrorMessage(data, "Login failed") };
-    }
-    return data;
-  } catch (err: any) {
-    return { id: "", email: "", error: String(err?.message || "Network error") };
-  }
-}
-
-export async function fetchCurrentUser(): Promise<User | null> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
-      credentials: "include",
-    });
-    if (!res.ok) return null;
-    return await res.json();
   } catch {
     return null;
   }
 }
 
-export async function createShortLink(url: string, customAlias?: string, subdomain?: string): Promise<LinkResponse> {
-  try {
-    const userId = getStoredUserId();
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (userId) {
-      headers["X-User-ID"] = userId;
-    }
-
-    let res = await fetch(`${API_BASE_URL}/api/v1/links`, {
-      method: "POST",
-      headers: headers,
-      credentials: "include",
-      body: JSON.stringify({ url, customAlias, subdomain }),
-    }).catch(() => null);
-
-    if (!res || !res.ok) {
-      res = await fetch(`/api/v1/links`, {
-        method: "POST",
-        headers: headers,
-        credentials: "include",
-        body: JSON.stringify({ url, customAlias, subdomain }),
-      }).catch(() => null);
-    }
-
-    if (res) {
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        return { error: parseErrorMessage(data, "Failed to shorten URL") };
-      }
-
-      // Persist created link locally to guarantee visibility in dashboard
-      if (data.code && typeof window !== "undefined") {
-        try {
-          const rawSaved = localStorage.getItem("wsio_saved_links");
-          const existing: LinkItem[] = rawSaved ? JSON.parse(rawSaved) : [];
-          const newLinkItem: LinkItem = {
-            id: data.id || Math.random().toString(),
-            code: data.code,
-            url: data.url || url,
-            subdomain: data.subdomain || subdomain,
-            userId: data.userId || userId,
-            createdAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          };
-          const updated = [newLinkItem, ...existing.filter((l) => l.code !== data.code)];
-          localStorage.setItem("wsio_saved_links", JSON.stringify(updated));
-        } catch {}
-      }
-
-      return data;
-    }
-
-    return { error: "Network error" };
-  } catch (err: any) {
-    return { error: String(err?.message || "Network error") };
-  }
+/** Public URL that records a click and redirects the visitor to the link target. */
+export function clickThroughUrl(linkId: string): string {
+  return `${API_BASE_URL}/api/v1/click/${linkId}`;
 }
 
-export async function deleteShortLink(code: string): Promise<{ success: boolean; error?: string }> {
-  try {
-    if (typeof window !== "undefined") {
-      try {
-        const rawSaved = localStorage.getItem("wsio_saved_links");
-        if (rawSaved) {
-          const existing: LinkItem[] = JSON.parse(rawSaved);
-          const filtered = existing.filter((l) => l.code !== code);
-          localStorage.setItem("wsio_saved_links", JSON.stringify(filtered));
-        }
-      } catch {}
-    }
+// --- auth ---
 
-    const res = await fetch(`${API_BASE_URL}/api/v1/links/${code}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      return { success: false, error: parseErrorMessage(data, "Failed to delete link") };
-    }
-    return { success: true };
-  } catch (err: any) {
-    return { success: false, error: String(err?.message || "Network error") };
-  }
+export async function registerUser(email: string, password: string): Promise<AuthResponse> {
+  const res = await apiFetch("/api/v1/auth/register", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res) return { id: "", email: "", error: "Network error" };
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { id: "", email: "", error: parseErrorMessage(data, "Registration failed") };
+  return data;
 }
 
-export async function createCheckoutSession(planType: string): Promise<{ url?: string; error?: string }> {
-  try {
-    const res = await fetch("/api/stripe/create-checkout-session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ planType }),
-    });
+export async function loginUser(email: string, password: string): Promise<AuthResponse> {
+  const res = await apiFetch("/api/v1/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res) return { id: "", email: "", error: "Network error" };
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { id: "", email: "", error: parseErrorMessage(data, "Login failed") };
+  return data;
+}
 
+export async function fetchCurrentUser(): Promise<User | null> {
+  const res = await apiFetch("/api/v1/auth/me");
+  if (!res || !res.ok) return null;
+  return res.json().catch(() => null);
+}
+
+// --- profile (owner) ---
+
+export type MyProfileResult =
+  | { profile: OwnerProfile; missing?: false; error?: undefined }
+  | { profile?: undefined; missing: true; error?: undefined }
+  | { profile?: undefined; missing?: false; error: string };
+
+export async function fetchMyProfile(): Promise<MyProfileResult> {
+  const res = await apiFetch("/api/v1/me/profile");
+  if (!res) return { error: "Network error" };
+  if (res.status === 404) return { missing: true };
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { error: parseErrorMessage(data, "Failed to load profile") };
+  return { profile: data as OwnerProfile };
+}
+
+export async function saveMyProfile(input: ProfileInput): Promise<{ profile?: OwnerProfile; error?: string }> {
+  const res = await apiFetch("/api/v1/me/profile", { method: "PUT", body: JSON.stringify(input) });
+  if (!res) return { error: "Network error" };
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { error: parseErrorMessage(data, "Failed to save profile") };
+  return { profile: data as OwnerProfile };
+}
+
+export async function createProfileLink(input: LinkInput): Promise<{ link?: ProfileLink; error?: string }> {
+  const res = await apiFetch("/api/v1/me/profile/links", { method: "POST", body: JSON.stringify(input) });
+  if (!res) return { error: "Network error" };
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { error: parseErrorMessage(data, "Failed to add link") };
+  return { link: data as ProfileLink };
+}
+
+export async function updateProfileLink(
+  id: string,
+  patch: Partial<LinkInput> & { active?: boolean }
+): Promise<{ link?: ProfileLink; error?: string }> {
+  const res = await apiFetch(`/api/v1/me/profile/links/${id}`, { method: "PUT", body: JSON.stringify(patch) });
+  if (!res) return { error: "Network error" };
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { error: parseErrorMessage(data, "Failed to update link") };
+  return { link: data as ProfileLink };
+}
+
+export async function deleteProfileLink(id: string): Promise<{ success: boolean; error?: string }> {
+  const res = await apiFetch(`/api/v1/me/profile/links/${id}`, { method: "DELETE" });
+  if (!res) return { success: false, error: "Network error" };
+  if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    if (res.ok && data.url) {
-      return { url: data.url };
-    } else if (data.error) {
-      return { error: data.error };
-    }
-
-    const appUrl = typeof window !== "undefined" ? window.location.origin : "https://wsio.lol";
-    return { url: `${appUrl}/dashboard?payment=success&plan=${planType}` };
-  } catch (err: any) {
-    return { error: String(err?.message || "Network error") };
+    return { success: false, error: parseErrorMessage(data, "Failed to delete link") };
   }
+  return { success: true };
 }
 
-export async function fetchApiKeys(): Promise<ApiKeyItem[]> {
+export async function reorderProfileLinks(orderedIds: string[]): Promise<{ links?: ProfileLink[]; error?: string }> {
+  const res = await apiFetch("/api/v1/me/profile/links/reorder", {
+    method: "PUT",
+    body: JSON.stringify({ orderedIds }),
+  });
+  if (!res) return { error: "Network error" };
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { error: parseErrorMessage(data, "Failed to reorder links") };
+  return { links: data as ProfileLink[] };
+}
+
+export async function fetchProfileAnalytics(): Promise<ProfileAnalytics | null> {
+  const res = await apiFetch("/api/v1/me/profile/analytics");
+  if (!res || !res.ok) return null;
+  return res.json().catch(() => null);
+}
+
+export async function fetchLinkAnalytics(id: string): Promise<LinkAnalytics | null> {
+  const res = await apiFetch(`/api/v1/me/profile/links/${id}/analytics`);
+  if (!res || !res.ok) return null;
+  return res.json().catch(() => null);
+}
+
+// --- profile (public) ---
+
+export async function fetchPublicProfile(username: string): Promise<PublicProfile | null> {
   try {
-    const res = await fetch(`/api/keys`, {
-      credentials: "include",
+    const res = await fetch(`${API_BASE_URL}/api/v1/profiles/${encodeURIComponent(username)}`, {
+      cache: "no-store",
     });
-    if (!res.ok) return [];
-    return await res.json();
+    if (!res.ok) return null;
+    return (await res.json()) as PublicProfile;
   } catch {
-    return [];
+    return null;
   }
-}
-
-export async function createApiKey(name: string, planType?: string): Promise<{ key?: string; keyMasked?: string; id?: string; error?: string }> {
-  try {
-    const res = await fetch(`/api/keys`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ name, planType }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) return { error: parseErrorMessage(data, "Failed to generate API Key") };
-    return data;
-  } catch (err: any) {
-    return { error: String(err?.message || "Network error") };
-  }
-}
-
-export async function deleteApiKey(id: string): Promise<{ success: boolean; error?: string }> {
-  try {
-    const res = await fetch(`/api/keys/${id}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
-    if (!res.ok) return { success: false, error: "Failed to revoke key" };
-    return { success: true };
-  } catch (err: any) {
-    return { success: false, error: String(err?.message || "Network error") };
-  }
-}
-
-export async function fetchAdminApiKeys(): Promise<ApiKeyItem[]> {
-  try {
-    const res = await fetch(`/api/admin/keys`, {
-      credentials: "include",
-    });
-    if (!res.ok) return [];
-    return await res.json();
-  } catch {
-    return [];
-  }
-}
-
-export async function deleteAdminApiKey(id: string): Promise<{ success: boolean; error?: string }> {
-  try {
-    const res = await fetch(`/api/admin/keys/${id}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
-    if (!res.ok) return { success: false, error: "Failed to revoke admin key" };
-    return { success: true };
-  } catch (err: any) {
-    return { success: false, error: String(err?.message || "Network error") };
-  }
-}
-
-export async function fetchUserLinks(userId?: string): Promise<LinkItem[]> {
-  const activeUserId = userId || getStoredUserId();
-  let serverLinks: LinkItem[] = [];
-
-  try {
-    const headers: Record<string, string> = {};
-    if (activeUserId) headers["X-User-ID"] = activeUserId;
-
-    let res = await fetch(`${API_BASE_URL}/api/v1/links`, {
-      headers,
-      credentials: "include",
-    }).catch(() => null);
-
-    if (!res || !res.ok) {
-      res = await fetch(`/api/v1/links`, {
-        headers,
-        credentials: "include",
-      }).catch(() => null);
-    }
-
-    if (res && res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        serverLinks = data;
-      }
-    }
-  } catch {}
-
-  // Read locally saved links as fallback/supplement
-  let localSavedLinks: LinkItem[] = [];
-  if (typeof window !== "undefined") {
-    try {
-      const rawSaved = localStorage.getItem("wsio_saved_links");
-      if (rawSaved) {
-        localSavedLinks = JSON.parse(rawSaved);
-      }
-    } catch {}
-  }
-
-  // Deduplicate and merge server and local links by link code
-  const linkMap = new Map<string, LinkItem>();
-  for (const item of [...serverLinks, ...localSavedLinks]) {
-    if (item && item.code && !linkMap.has(item.code)) {
-      linkMap.set(item.code, item);
-    }
-  }
-
-  return Array.from(linkMap.values());
-}
-
-export async function fetchUserSubscription(userId?: string): Promise<{ planType?: string; status?: string } | null> {
-  try {
-    const activeUserId = userId || getStoredUserId();
-    const headers: Record<string, string> = {};
-    if (activeUserId) headers["X-User-ID"] = activeUserId;
-
-    let res = await fetch(`${API_BASE_URL}/api/v1/stripe/subscription`, {
-      headers,
-      credentials: "include",
-    }).catch(() => null);
-
-    if (res && res.ok) {
-      return await res.json();
-    }
-  } catch {}
-  return null;
 }

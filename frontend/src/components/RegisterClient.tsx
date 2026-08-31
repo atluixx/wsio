@@ -73,7 +73,7 @@ export function RegisterClient() {
             Create Your Account
           </h1>
           <p className="text-xs text-zinc-400 leading-relaxed">
-            Unlock unlimited short links, custom aliases, and live telemetry.
+            Claim your username and start adding links in seconds.
           </p>
         </div>
 

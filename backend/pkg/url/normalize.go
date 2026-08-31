@@ -1,12 +1,18 @@
 package url
 
 import (
-	"crypto/sha256"
-	"encoding/base64"
 	"errors"
 	"net/url"
 	"strings"
 )
+
+// passthroughSchemes are non-web URL schemes that link-in-bio pages legitimately
+// use (email, phone, SMS). They are returned untouched apart from trimming.
+var passthroughSchemes = []string{"mailto:", "tel:", "sms:"}
+
+// blockedSchemes are rejected outright to keep link targets from executing in a
+// visitor's browser.
+var blockedSchemes = []string{"javascript:", "data:", "vbscript:", "file:"}
 
 func Normalize(raw string) (string, error) {
 	raw = strings.TrimSpace(raw)
@@ -14,7 +20,24 @@ func Normalize(raw string) (string, error) {
 		return "", errors.New("invalid URL")
 	}
 
-	if !strings.HasPrefix(raw, "http://") && !strings.HasPrefix(raw, "https://") {
+	lower := strings.ToLower(raw)
+
+	for _, s := range blockedSchemes {
+		if strings.HasPrefix(lower, s) {
+			return "", errors.New("unsupported URL scheme")
+		}
+	}
+
+	for _, s := range passthroughSchemes {
+		if strings.HasPrefix(lower, s) {
+			if strings.TrimSpace(raw[len(s):]) == "" {
+				return "", errors.New("invalid URL")
+			}
+			return raw, nil
+		}
+	}
+
+	if !strings.HasPrefix(lower, "http://") && !strings.HasPrefix(lower, "https://") {
 		raw = "https://" + raw
 	}
 
@@ -32,13 +55,4 @@ func Normalize(raw string) (string, error) {
 	u.Fragment = ""
 
 	return u.String(), nil
-}
-
-func Hash(normalizedURL string) string {
-	hash := sha256.Sum256([]byte(normalizedURL))
-	encoded := base64.RawURLEncoding.EncodeToString(hash[:])
-	if len(encoded) > 12 {
-		return encoded[:12]
-	}
-	return encoded
 }

@@ -72,6 +72,58 @@ body {
   outline: none;
 }
 
+/* ---------------------------------------------------------------------------
+   Link-in-bio public profile themes
+   Each preset defines the token set consumed by .profile-surface.
+--------------------------------------------------------------------------- */
+.profile-surface {
+  --profile-bg: #09090b;
+  --profile-fg: #fafafa;
+  --profile-muted: #a1a1aa;
+  --profile-card: rgba(255, 255, 255, 0.04);
+  --profile-card-hover: rgba(255, 255, 255, 0.08);
+  --profile-border: rgba(255, 255, 255, 0.1);
+  --profile-accent: #fafafa;
+  --profile-accent-fg: #09090b;
+  --profile-radius: 0.9rem;
+
+  background: var(--profile-bg);
+  color: var(--profile-fg);
+}
+
+.profile-surface[data-theme="midnight"] {
+  --profile-bg: #0b1220;
+  --profile-fg: #e8eefc;
+  --profile-muted: #8ea3c7;
+  --profile-card: rgba(120, 160, 255, 0.08);
+  --profile-card-hover: rgba(120, 160, 255, 0.16);
+  --profile-border: rgba(120, 160, 255, 0.22);
+  --profile-accent: #6ea8ff;
+  --profile-accent-fg: #0b1220;
+}
+
+.profile-surface[data-theme="paper"] {
+  --profile-bg: #f5f4f0;
+  --profile-fg: #1c1b19;
+  --profile-muted: #6b6862;
+  --profile-card: #ffffff;
+  --profile-card-hover: #ffffff;
+  --profile-border: rgba(28, 27, 25, 0.14);
+  --profile-accent: #1c1b19;
+  --profile-accent-fg: #f5f4f0;
+}
+
+.profile-surface[data-theme="sunset"] {
+  --profile-bg: #1a0f1e;
+  --profile-fg: #ffece4;
+  --profile-muted: #d5a08f;
+  --profile-card: rgba(255, 138, 91, 0.1);
+  --profile-card-hover: rgba(255, 138, 91, 0.2);
+  --profile-border: rgba(255, 138, 91, 0.28);
+  --profile-accent: #ff8a5b;
+  --profile-accent-fg: #1a0f1e;
+}
+
 /* Clean Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 5px;

@@ -35,6 +35,28 @@ func TestNormalize(t *testing.T) {
 			expected: "https://example.com/page",
 			wantErr:  false,
 		},
+		{
+			name:     "mailto passthrough",
+			input:    "mailto:hi@example.com",
+			expected: "mailto:hi@example.com",
+			wantErr:  false,
+		},
+		{
+			name:     "tel passthrough",
+			input:    "tel:+15551234567",
+			expected: "tel:+15551234567",
+			wantErr:  false,
+		},
+		{
+			name:    "empty mailto rejected",
+			input:   "mailto:",
+			wantErr: true,
+		},
+		{
+			name:    "javascript scheme rejected",
+			input:   "javascript:alert(1)",
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -47,21 +69,5 @@ func TestNormalize(t *testing.T) {
 				t.Errorf("Normalize() = %v, want %v", got, tt.expected)
 			}
 		})
-	}
-}
-
-func TestHash(t *testing.T) {
-	h1 := Hash("https://example.com")
-	h2 := Hash("https://example.com")
-	h3 := Hash("https://other.com")
-
-	if h1 != h2 {
-		t.Errorf("Hash() deterministic mismatch: %v != %v", h1, h2)
-	}
-	if h1 == h3 {
-		t.Errorf("Hash() expected collision avoidance: %v == %v", h1, h3)
-	}
-	if len(h1) > 12 {
-		t.Errorf("Hash() length = %d; expected <= 12", len(h1))
 	}
 }

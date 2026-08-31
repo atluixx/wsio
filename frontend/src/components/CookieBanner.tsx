@@ -50,7 +50,7 @@ export function CookieBanner() {
                 </span>
               </div>
               <p className="text-xs text-zinc-400 leading-relaxed max-w-2xl">
-                We use essential session tokens to process link redirection and user authentication. Zero third-party ad tracking. Read our{" "}
+                We use an essential session cookie for authentication and first-party analytics for page views and link clicks. Zero third-party ad tracking. Read our{" "}
                 <Link href="/privacy" className="text-emerald-400 underline underline-offset-4 hover:text-emerald-300 font-medium">
                   Privacy Policy
                 </Link>{" "}

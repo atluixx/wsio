@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { LogOut, Menu, X, ShieldCheck, User } from "lucide-react";
+import { LogOut, Menu, X, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Navbar() {
@@ -34,16 +34,7 @@ export function Navbar() {
               pathname === "/dashboard" ? "text-white font-medium" : ""
             }`}
           >
-            Dashboard
-          </Link>
-
-          <Link
-            href="/pricing"
-            className={`transition-colors hover:text-white ${
-              pathname === "/pricing" ? "text-white font-medium" : ""
-            }`}
-          >
-            Pricing
+            My page
           </Link>
 
           {isAuthenticated && user?.role === "admin" && (
@@ -111,16 +102,18 @@ export function Navbar() {
               onClick={closeMobileMenu}
               className={`p-2 rounded-lg ${pathname === "/dashboard" ? "bg-zinc-800 text-white" : ""}`}
             >
-              Dashboard
+              My page
             </Link>
 
-            <Link
-              href="/pricing"
-              onClick={closeMobileMenu}
-              className={`p-2 rounded-lg ${pathname === "/pricing" ? "bg-zinc-800 text-white" : ""}`}
-            >
-              Pricing
-            </Link>
+            {isAuthenticated && user?.role === "admin" && (
+              <Link
+                href="/admin"
+                onClick={closeMobileMenu}
+                className={`p-2 rounded-lg ${pathname.startsWith("/admin") ? "bg-zinc-800 text-white" : ""}`}
+              >
+                Admin
+              </Link>
+            )}
           </nav>
 
           <div className="border-t border-white/10 pt-3">

@@ -204,8 +204,6 @@ func (h *UserHandler) Me(c *gin.Context) {
 	})
 }
 
-
-
 func setSessionCookie(c *gin.Context, token string) {
 	domain := os.Getenv("COOKIE_DOMAIN")
 	if domain == "" {
