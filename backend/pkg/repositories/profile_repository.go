@@ -45,7 +45,12 @@ func (r *profileRepository) Create(profile *domain.Profile) error {
 func (r *profileRepository) Update(profile *domain.Profile) error {
 	profile.Username = NormalizeUsername(profile.Username)
 	return r.db.Model(profile).
-		Select("username", "display_name", "bio", "avatar_url", "theme").
+		Select(
+			"username", "display_name", "bio", "avatar_url", "theme",
+			"music_url", "music_kind", "music_source_url", "music_title",
+			"music_artwork_url", "music_stream_url",
+			"discord_user_id", "use_discord_avatar",
+		).
 		Updates(profile).Error
 }
 

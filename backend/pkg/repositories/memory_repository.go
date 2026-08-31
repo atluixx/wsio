@@ -114,6 +114,14 @@ func (r *inMemoryProfileRepository) Update(profile *domain.Profile) error {
 	existing.Bio = profile.Bio
 	existing.AvatarURL = profile.AvatarURL
 	existing.Theme = profile.Theme
+	existing.MusicURL = profile.MusicURL
+	existing.MusicKind = profile.MusicKind
+	existing.MusicSourceURL = profile.MusicSourceURL
+	existing.MusicTitle = profile.MusicTitle
+	existing.MusicArtworkURL = profile.MusicArtworkURL
+	existing.MusicStreamURL = profile.MusicStreamURL
+	existing.DiscordUserID = profile.DiscordUserID
+	existing.UseDiscordAvatar = profile.UseDiscordAvatar
 	return nil
 }
 

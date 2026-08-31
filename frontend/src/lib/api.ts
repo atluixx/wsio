@@ -22,6 +22,16 @@ export interface ProfileLink {
   active: boolean;
 }
 
+export type MusicKind = "youtube" | "spotify" | "soundcloud" | "audio";
+
+export interface ProfileMusic {
+  kind: MusicKind;
+  sourceUrl?: string;
+  title?: string;
+  artworkUrl?: string;
+  streamUrl?: string;
+}
+
 export interface OwnerProfile {
   id: string;
   username: string;
@@ -29,6 +39,10 @@ export interface OwnerProfile {
   bio: string;
   avatarUrl: string;
   theme: string;
+  musicUrl: string;
+  music: ProfileMusic | null;
+  discordUserId: string;
+  useDiscordAvatar: boolean;
   links: ProfileLink[];
 }
 
@@ -45,6 +59,9 @@ export interface PublicProfile {
   bio: string;
   avatarUrl: string;
   theme: string;
+  music: ProfileMusic | null;
+  discordUserId: string;
+  useDiscordAvatar: boolean;
   links: PublicProfileLink[];
 }
 
@@ -71,6 +88,9 @@ export interface ProfileInput {
   bio: string;
   avatarUrl: string;
   theme: string;
+  musicUrl?: string;
+  discordUserId?: string;
+  useDiscordAvatar?: boolean;
 }
 
 export interface LinkInput {

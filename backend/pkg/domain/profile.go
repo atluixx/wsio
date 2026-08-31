@@ -15,8 +15,23 @@ type Profile struct {
 	Bio         string    `gorm:"type:varchar(500)" json:"bio"`
 	AvatarURL   string    `gorm:"type:text" json:"avatarUrl"`
 	Theme       string    `gorm:"type:varchar(32);not null;default:'minimal'" json:"theme"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+
+	// Featured track. MusicURL is the raw string the owner saved; the rest is
+	// resolved by pkg/music on save.
+	MusicURL        string `gorm:"type:text" json:"musicUrl"`
+	MusicKind       string `gorm:"type:varchar(16)" json:"musicKind"`
+	MusicSourceURL  string `gorm:"type:text" json:"musicSourceUrl"`
+	MusicTitle      string `gorm:"type:varchar(200)" json:"musicTitle"`
+	MusicArtworkURL string `gorm:"type:text" json:"musicArtworkUrl"`
+	MusicStreamURL  string `gorm:"type:text" json:"musicStreamUrl"`
+
+	// Discord: live status/username/avatar are fetched client-side from Lanyard
+	// using this ID.
+	DiscordUserID    string `gorm:"type:varchar(32)" json:"discordUserId"`
+	UseDiscordAvatar bool   `gorm:"not null;default:false" json:"useDiscordAvatar"`
+
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 
 	Links []ProfileLink `gorm:"foreignKey:ProfileID;references:ID" json:"links"`
 }
@@ -37,11 +52,14 @@ type ProfileLink struct {
 // UpsertProfileRequest is the payload for creating or editing the current
 // user's profile.
 type UpsertProfileRequest struct {
-	Username    string `json:"username" binding:"required,min=2,max=32"`
-	DisplayName string `json:"displayName" binding:"max=80"`
-	Bio         string `json:"bio" binding:"max=500"`
-	AvatarURL   string `json:"avatarUrl"`
-	Theme       string `json:"theme" binding:"max=32"`
+	Username         string `json:"username" binding:"required,min=2,max=32"`
+	DisplayName      string `json:"displayName" binding:"max=80"`
+	Bio              string `json:"bio" binding:"max=500"`
+	AvatarURL        string `json:"avatarUrl"`
+	Theme            string `json:"theme" binding:"max=32"`
+	MusicURL         string `json:"musicUrl" binding:"max=400"`
+	DiscordUserID    string `json:"discordUserId" binding:"max=32"`
+	UseDiscordAvatar *bool  `json:"useDiscordAvatar"`
 }
 
 // CreateProfileLinkRequest is the payload for appending a link to a profile.
