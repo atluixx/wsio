@@ -88,7 +88,7 @@ export function QrCodeModal({ url, code, onClose }: QrCodeModalProps) {
               PNG
             </a>
           ) : (
-            <span className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-pill)] bg-raised px-4 text-sm text-faint">
+            <span className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-pill)] bg-raised px-4 text-sm text-muted opacity-60">
               <Download className="h-4 w-4" />
               PNG
             </span>

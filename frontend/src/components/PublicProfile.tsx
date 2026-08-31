@@ -64,7 +64,6 @@ export function PublicProfile({ profile }: { profile: PublicProfileData }) {
         style={{
           color: "var(--p-muted)",
           border: "1px solid var(--p-border)",
-          opacity: 0.75,
         }}
       >
         <span style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>wsio</span>
