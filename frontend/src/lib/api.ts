@@ -100,9 +100,31 @@ async function apiFetch(path: string, init?: RequestInit): Promise<Response | nu
   }
 }
 
-/** Public URL that records a click and redirects the visitor to the link target. */
+/**
+ * No-JavaScript / QR fallback: this URL records a click server-side and then
+ * 302s the visitor to the link target.
+ */
 export function clickThroughUrl(linkId: string): string {
   return `${API_BASE_URL}/api/v1/click/${linkId}`;
+}
+
+/**
+ * Fire-and-forget click record for the public page. The link itself points at
+ * the real destination; this just tells the backend it was opened. Uses
+ * `sendBeacon` when available (survives navigation), falling back to a
+ * keepalive fetch. Both are CORS "simple" requests, so no preflight.
+ */
+export function recordClick(linkId: string): void {
+  const url = `${API_BASE_URL}/api/v1/click/${linkId}`;
+  try {
+    if (typeof navigator !== "undefined" && navigator.sendBeacon) {
+      navigator.sendBeacon(url);
+      return;
+    }
+    void fetch(url, { method: "POST", keepalive: true, credentials: "omit" });
+  } catch {
+    /* a missed click count is not worth interrupting the visitor */
+  }
 }
 
 // --- auth ---

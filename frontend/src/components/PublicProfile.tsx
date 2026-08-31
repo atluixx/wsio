@@ -1,37 +1,6 @@
 import Link from "next/link";
-import {
-  Globe,
-  Mail,
-  AtSign,
-  Video,
-  Camera,
-  Music,
-  ShoppingBag,
-  PenLine,
-  Podcast,
-  MessageCircle,
-  Coffee,
-  Gamepad2,
-  Link as LinkIcon,
-  ArrowUpRight,
-} from "lucide-react";
 import type { PublicProfile as PublicProfileData } from "@/lib/api";
-import { clickThroughUrl } from "@/lib/api";
-
-const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  website: Globe,
-  email: Mail,
-  social: AtSign,
-  video: Video,
-  photos: Camera,
-  music: Music,
-  shop: ShoppingBag,
-  writing: PenLine,
-  podcast: Podcast,
-  chat: MessageCircle,
-  tip: Coffee,
-  games: Gamepad2,
-};
+import { ProfileLinks } from "@/components/ProfileLinks";
 
 function initials(name: string, username: string): string {
   const source = (name || username).trim();
@@ -86,36 +55,7 @@ export function PublicProfile({ profile }: { profile: PublicProfileData }) {
           </p>
         )}
 
-        <div className="mt-9 flex w-full flex-col gap-3">
-          {profile.links.map((link) => {
-            const Icon = (link.icon && ICONS[link.icon.toLowerCase()]) || LinkIcon;
-            return (
-              <a
-                key={link.id}
-                href={clickThroughUrl(link.id)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-3.5 px-4 py-4 text-[0.95rem] font-medium transition-transform duration-150 hover:-translate-y-0.5"
-                style={{
-                  background: "var(--p-card)",
-                  border: "1px solid var(--p-border)",
-                  borderRadius: "var(--p-radius)",
-                  boxShadow: "var(--p-shadow)",
-                }}
-              >
-                <Icon className="h-[18px] w-[18px] shrink-0" />
-                <span className="flex-1 truncate text-center">{link.label}</span>
-                <ArrowUpRight className="h-4 w-4 shrink-0 opacity-30 transition-opacity group-hover:opacity-70" />
-              </a>
-            );
-          })}
-
-          {profile.links.length === 0 && (
-            <p className="text-center text-[0.95rem]" style={{ color: "var(--p-muted)" }}>
-              No links yet.
-            </p>
-          )}
-        </div>
+        <ProfileLinks links={profile.links} />
       </div>
 
       <Link

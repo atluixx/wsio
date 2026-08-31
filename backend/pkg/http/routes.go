@@ -55,6 +55,7 @@ func SetupRoutes(
 
 	// Public profile surface
 	base.GET("/profiles/:username", profileHandler.GetPublicProfile)
+	base.POST("/click/:id", profileHandler.RecordClick)
 	base.GET("/click/:id", profileHandler.TrackAndRedirect)
 
 	// Current user's profile management

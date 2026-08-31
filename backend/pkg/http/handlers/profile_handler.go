@@ -148,19 +148,20 @@ func (h *ProfileHandler) GetPublicProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
-// TrackAndRedirect records a click on a profile link and 302s the visitor to
-// its destination.
-func (h *ProfileHandler) TrackAndRedirect(c *gin.Context) {
+// recordClick looks up an active link by the :id path param and stores a click
+// event for it. It returns the link (for callers that need the destination) and
+// ok=false after writing an error response.
+func (h *ProfileHandler) recordClick(c *gin.Context) (*domain.ProfileLink, bool) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid link id"})
-		return
+		return nil, false
 	}
 
 	link, err := h.links.FindByID(id)
 	if err != nil || !link.Active {
 		c.JSON(http.StatusNotFound, gin.H{"error": "link not found"})
-		return
+		return nil, false
 	}
 
 	_ = h.analytics.RecordClick(&domain.ProfileLinkClick{
@@ -172,6 +173,25 @@ func (h *ProfileHandler) TrackAndRedirect(c *gin.Context) {
 		IP:            c.ClientIP(),
 		Timestamp:     time.Now(),
 	})
+	return link, true
+}
+
+// RecordClick stores a click and returns 204. Used by the public page's
+// fire-and-forget beacon, so the link itself can point straight at its target.
+func (h *ProfileHandler) RecordClick(c *gin.Context) {
+	if _, ok := h.recordClick(c); !ok {
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
+// TrackAndRedirect records a click and 302s to the destination. Kept as the
+// no-JavaScript / QR-code fallback path.
+func (h *ProfileHandler) TrackAndRedirect(c *gin.Context) {
+	link, ok := h.recordClick(c)
+	if !ok {
+		return
+	}
 
 	target := link.URL
 	if target == "" {
