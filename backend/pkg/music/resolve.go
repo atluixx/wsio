@@ -37,8 +37,9 @@ type Track struct {
 var (
 	client         = &http.Client{Timeout: 5 * time.Second}
 	audioExtRe     = regexp.MustCompile(`(?i)\.(mp3|m4a|aac|ogg|oga|opus|wav|flac)(\?.*)?$`)
-	appleTrackIDRe = regexp.MustCompile(`i=(\d+)`)
+	appleTrackIDRe = regexp.MustCompile(`[?&]i=(\d+)`)
 	appleAlbumIDRe = regexp.MustCompile(`/(?:album|song)/[^/]+/(\d+)`)
+	appleSlugRe    = regexp.MustCompile(`/(?:album|song)/([^/?]+)`)
 )
 
 // Resolve classifies raw and enriches it with a title and artwork. It never
@@ -110,38 +111,55 @@ type itunesResponse struct {
 }
 
 func appleLookup(raw string) Track {
-	id := ""
+	// A song id (?i=…) from the modern catalog often isn't in the iTunes Store,
+	// so also try the album id from the path, then fall back to searching the
+	// human-readable slug.
+	var ids []string
 	if m := appleTrackIDRe.FindStringSubmatch(raw); m != nil {
-		id = m[1]
-	} else if m := appleAlbumIDRe.FindStringSubmatch(raw); m != nil {
-		id = m[1]
+		ids = append(ids, m[1])
 	}
-	if id == "" {
-		return Track{Kind: KindAudio, SourceURL: raw}
+	if m := appleAlbumIDRe.FindStringSubmatch(raw); m != nil {
+		ids = append(ids, m[1])
 	}
-	return itunesResult("https://itunes.apple.com/lookup?id=" + id)
+	for _, id := range ids {
+		if t := itunesResult("https://itunes.apple.com/lookup?id=" + id + "&entity=song&limit=5"); t.Kind != "" {
+			return t
+		}
+	}
+	if m := appleSlugRe.FindStringSubmatch(raw); m != nil {
+		slug := strings.ReplaceAll(m[1], "-", " ")
+		if t := appleSearch(slug); t.Kind != "" {
+			return t
+		}
+	}
+	return Track{Kind: KindAudio, SourceURL: raw}
 }
 
 func appleSearch(term string) Track {
-	return itunesResult("https://itunes.apple.com/search?media=music&entity=song&limit=1&term=" + url.QueryEscape(term))
+	return itunesResult("https://itunes.apple.com/search?media=music&entity=song&limit=5&term=" + url.QueryEscape(term))
 }
 
 func itunesResult(endpoint string) Track {
 	var r itunesResponse
-	if getJSON(endpoint, &r) != nil || len(r.Results) == 0 {
+	if getJSON(endpoint, &r) != nil {
 		return Track{}
 	}
-	res := r.Results[0]
-	title := strings.TrimSpace(res.TrackName)
-	if res.ArtistName != "" {
-		title = strings.TrimSpace(res.ArtistName + " – " + res.TrackName)
+	for _, res := range r.Results {
+		if res.PreviewURL == "" {
+			continue // album rows and anything unplayable
+		}
+		title := strings.TrimSpace(res.TrackName)
+		if res.ArtistName != "" {
+			title = strings.TrimSpace(res.ArtistName + " – " + res.TrackName)
+		}
+		return Track{
+			Kind:       KindAudio,
+			Title:      title,
+			StreamURL:  res.PreviewURL,
+			ArtworkURL: strings.Replace(res.ArtworkURL100, "100x100bb", "300x300bb", 1),
+		}
 	}
-	return Track{
-		Kind:       KindAudio,
-		Title:      title,
-		StreamURL:  res.PreviewURL,
-		ArtworkURL: strings.Replace(res.ArtworkURL100, "100x100bb", "300x300bb", 1),
-	}
+	return Track{}
 }
 
 func getJSON(endpoint string, out any) error {
