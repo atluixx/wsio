@@ -28,57 +28,53 @@ export function ProfileOnboarding({ onCreated }: Props) {
     });
     setSaving(false);
     if (res.error || !res.profile) {
-      showToast(res.error || "Failed to create profile", "error");
+      showToast(res.error || "Couldn't create your page", "error");
       return;
     }
     onCreated(res.profile);
-    showToast("Profile created", "success");
+    showToast("Page created", "success");
   };
 
   return (
-    <div className="mx-auto max-w-md px-4 py-20 font-sans">
-      <div className="minimal-card space-y-5 p-6 sm:p-8">
-        <div className="space-y-1.5">
-          <h1 className="text-lg font-bold text-white">Claim your page</h1>
-          <p className="text-xs text-zinc-400">
-            Pick a username. Your page will live at{" "}
-            <span className="font-mono text-zinc-300">wsio.lol/{username || "you"}</span>.
-          </p>
+    <div className="mx-auto max-w-[26rem] px-5 py-20 sm:py-28">
+      <h1 className="font-display text-2xl font-semibold tracking-tight">Claim your page</h1>
+      <p className="mt-2 text-sm text-muted">
+        Pick a username. Your page will live at{" "}
+        <span className="text-ink">wsio.lol/{username || "you"}</span>.
+      </p>
+
+      <form onSubmit={handleSubmit} className="mt-6 space-y-3">
+        <div className="flex h-12 items-center gap-1 rounded-[var(--radius-sm)] border border-line-strong bg-surface px-3.5">
+          <span className="text-sm text-faint">wsio.lol/</span>
+          <input
+            autoFocus
+            value={username}
+            onChange={(e) => setUsername(e.target.value.toLowerCase())}
+            placeholder="username"
+            className="h-full flex-1 bg-transparent text-[0.95rem] text-ink outline-none placeholder:text-faint"
+            minLength={2}
+            maxLength={32}
+            pattern="[a-z0-9_-]+"
+            required
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-zinc-900/80 px-3">
-            <span className="text-xs text-zinc-500">wsio.lol/</span>
-            <input
-              autoFocus
-              value={username}
-              onChange={(e) => setUsername(e.target.value.toLowerCase())}
-              placeholder="username"
-              className="h-10 flex-1 bg-transparent text-sm text-white outline-none"
-              minLength={2}
-              maxLength={32}
-              pattern="[a-z0-9_-]+"
-              required
-            />
-          </div>
+        <input
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          placeholder="Display name (optional)"
+          maxLength={80}
+          className="h-12 w-full rounded-[var(--radius-sm)] border border-line-strong bg-surface px-3.5 text-[0.95rem] text-ink outline-none placeholder:text-faint focus:border-ink focus:shadow-[0_0_0_3px_rgba(23,21,15,0.06)]"
+        />
 
-          <input
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="Display name (optional)"
-            maxLength={80}
-            className="h-10 w-full rounded-lg border border-white/10 bg-zinc-900/80 px-3 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-white/30"
-          />
+        <Button type="submit" disabled={saving} className="w-full">
+          {saving ? "Creating…" : "Create my page"}
+        </Button>
+      </form>
 
-          <Button type="submit" disabled={saving} className="h-10 w-full text-xs">
-            {saving ? "Creating..." : "Create my page"}
-          </Button>
-        </form>
-
-        <p className="text-[11px] text-zinc-500">
-          Lowercase letters, numbers, hyphen and underscore. 2–32 characters.
-        </p>
-      </div>
+      <p className="mt-4 text-sm text-faint">
+        Lowercase letters, numbers, hyphen and underscore. 2–32 characters.
+      </p>
     </div>
   );
 }

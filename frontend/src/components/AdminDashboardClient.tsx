@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { RefreshCw, Search, Users, LinkIcon, IdCard } from "lucide-react";
+import { RefreshCw, Search } from "lucide-react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.wsio.lol";
 
@@ -51,7 +51,7 @@ export function AdminDashboardClient() {
       ]);
       if (statsRes?.ok) setStats(await statsRes.json());
       if (usersRes?.ok) setUsers(await usersRes.json());
-      if (!statsRes?.ok && !usersRes?.ok) showToast("Failed to load admin data", "error");
+      if (!statsRes?.ok && !usersRes?.ok) showToast("Couldn't load admin data", "error");
     } finally {
       setLoading(false);
     }
@@ -70,66 +70,67 @@ export function AdminDashboardClient() {
   );
 
   if (authLoading || loading) {
-    return <div className="mx-auto max-w-3xl px-4 py-20 text-center text-sm text-zinc-500">Loading…</div>;
+    return <div className="mx-auto max-w-3xl px-5 py-24 text-center text-sm text-faint">Loading…</div>;
   }
 
   const cards = [
-    { label: "Users", value: stats?.totalUsers ?? 0, Icon: Users },
-    { label: "Profiles", value: stats?.totalProfiles ?? 0, Icon: IdCard },
-    { label: "Links", value: stats?.totalLinks ?? 0, Icon: LinkIcon },
+    { label: "Users", value: stats?.totalUsers ?? 0 },
+    { label: "Profiles", value: stats?.totalProfiles ?? 0 },
+    { label: "Links", value: stats?.totalLinks ?? 0 },
   ];
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8 font-sans sm:py-12">
-      <div className="flex items-center justify-between border-b border-white/10 pb-6">
+    <div className="mx-auto max-w-3xl space-y-8 px-5 py-10 sm:py-14">
+      <div className="flex items-end justify-between border-b border-line pb-7">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">Admin</h1>
-          <p className="text-xs text-zinc-400">
-            {stats?.systemStatus ?? "—"} · DB {stats?.dbStatus ?? "—"}
+          <h1 className="font-display text-2xl font-semibold tracking-tight">Admin</h1>
+          <p className="mt-1 text-sm text-muted">
+            {stats?.systemStatus ?? "—"} · database {stats?.dbStatus ?? "—"}
           </p>
         </div>
-        <Button size="sm" variant="outline" className="h-9 text-xs" onClick={load}>
-          <RefreshCw className="h-3.5 w-3.5" />
+        <Button size="sm" variant="outline" onClick={load}>
+          <RefreshCw className="h-4 w-4" />
           Refresh
         </Button>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        {cards.map(({ label, value, Icon }) => (
-          <div key={label} className="minimal-card p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">{label}</span>
-              <Icon className="h-4 w-4 text-zinc-500" />
-            </div>
-            <div className="mt-1 text-2xl font-bold text-white">{value}</div>
+        {cards.map(({ label, value }) => (
+          <div key={label} className="surface-card p-5">
+            <div className="text-sm text-muted">{label}</div>
+            <div className="mt-1.5 font-display text-3xl font-semibold tracking-tight">{value}</div>
           </div>
         ))}
       </div>
 
-      <div className="minimal-card p-5 sm:p-6">
+      <div className="surface-card p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="text-sm font-bold text-white">Users ({users.length})</h2>
-          <div className="relative w-48">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-500" />
+          <h2 className="font-display text-lg font-semibold tracking-tight">
+            Users ({users.length})
+          </h2>
+          <div className="relative w-52">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Filter email…"
-              className="minimal-input h-8 pl-8 text-xs"
+              placeholder="Filter by email…"
+              className="h-10 pl-9 text-sm"
             />
           </div>
         </div>
-        <ul className="divide-y divide-white/5">
+        <ul className="divide-y divide-line">
           {filtered.map((u) => (
-            <li key={u.id} className="flex items-center justify-between py-2.5 text-xs">
-              <span className="truncate text-zinc-200">{u.email}</span>
-              <span className="flex items-center gap-3 text-zinc-500">
-                <span className={u.role === "admin" ? "text-emerald-400" : ""}>{u.role}</span>
-                <span>{new Date(u.createdAt).toLocaleDateString()}</span>
+            <li key={u.id} className="flex items-center justify-between gap-3 py-3 text-sm">
+              <span className="truncate text-ink">{u.email}</span>
+              <span className="flex shrink-0 items-center gap-4 text-muted">
+                <span className={u.role === "admin" ? "font-medium text-accent" : ""}>{u.role}</span>
+                <span className="text-faint">{new Date(u.createdAt).toLocaleDateString()}</span>
               </span>
             </li>
           ))}
-          {filtered.length === 0 && <li className="py-6 text-center text-xs text-zinc-500">No users.</li>}
+          {filtered.length === 0 && (
+            <li className="py-8 text-center text-sm text-faint">No users.</li>
+          )}
         </ul>
       </div>
     </div>

@@ -4,9 +4,9 @@ import { HomeClient } from "@/components/HomeClient";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://wsio.lol";
 
 export const metadata: Metadata = {
-  title: { absolute: "wsio. — One link for everything you do" },
+  title: { absolute: "wsio — your links, one calm page" },
   description:
-    "Build a clean, fast link-in-bio page. One link for your socials, work, and everything you share — with real click analytics.",
+    "A calm, fast link-in-bio page. Put every link you share in one place, arrange it with a drag, and see what gets clicked.",
   alternates: { canonical: APP_URL },
 };
 
@@ -14,9 +14,9 @@ export default function Home() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "wsio.",
+    name: "wsio",
     url: APP_URL,
-    description: "Link-in-bio pages with click analytics.",
+    description: "A calm link-in-bio page with honest click analytics.",
   };
 
   return (

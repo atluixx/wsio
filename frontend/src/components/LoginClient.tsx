@@ -7,8 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { loginUser } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Lock, Mail, ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
-import { ScrollReveal } from "@/components/ScrollReveal";
+import { ArrowRight, AlertCircle } from "lucide-react";
 
 export function LoginClient() {
   const router = useRouter();
@@ -18,134 +17,98 @@ export function LoginClient() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [done, setDone] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setSuccess(false);
-
     if (!email || !password) {
-      setError("Please enter your email and password.");
+      setError("Enter your email and password.");
       return;
     }
-
     setLoading(true);
     const res = await loginUser(email, password);
     setLoading(false);
-
     if (res.error) {
       setError(res.error);
       return;
     }
-
-    setSuccess(true);
+    setDone(true);
     setUser({ id: res.id, email: res.email });
-
-    setTimeout(() => {
-      router.push("/dashboard");
-    }, 800);
+    setTimeout(() => router.push("/dashboard"), 500);
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center px-4 py-12 font-sans">
-      <ScrollReveal className="w-full max-w-md">
-        {/* Card Header */}
-        <div className="mb-6 text-center space-y-2">
-          <Link href="/" className="inline-flex items-center gap-2 text-2xl font-bold text-white tracking-tight">
-            <div className="flex h-7 w-7 items-center justify-center rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-xs">
-              &gt;
-            </div>
-            <span>wsio<span className="text-emerald-400">.</span></span>
-          </Link>
-          <h1 className="text-2xl sm:text-3xl text-white font-extrabold tracking-tight">
-            Sign In to Your Account
-          </h1>
-          <p className="text-xs text-zinc-400">
-            Access your page, links, and click analytics.
+    <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-5 py-16">
+      <div className="w-full max-w-[24rem]">
+        <div className="text-center">
+          <h1 className="font-display text-2xl font-semibold tracking-tight">Welcome back</h1>
+          <p className="mt-2 text-sm text-muted">
+            Sign in to edit your page and check your clicks.
           </p>
         </div>
 
-        {/* Card Body */}
-        <div className="craft-panel p-6 sm:p-8 rounded-2xl space-y-4 border-white/10">
+        <div className="mt-7 surface-card p-6 sm:p-7">
           {error && (
-            <div className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-300 font-mono">
-              <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
+            <div className="mb-4 flex items-center gap-2 rounded-[var(--radius-sm)] bg-[#f7e4e1] px-3.5 py-2.5 text-sm text-[var(--color-negative)]">
+              <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
-          {success && (
-            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-xs text-emerald-300 font-mono">
-              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
-              <span>Authentication verified. Opening dashboard...</span>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4 font-mono">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">
-                Email Address
+              <label htmlFor="email" className="text-sm font-medium text-ink">
+                Email
               </label>
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-zinc-500">
-                  <Mail className="h-4 w-4" />
-                </div>
-                <Input
-                  type="email"
-                  placeholder="developer@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 h-11 text-xs craft-input text-white rounded-xl"
-                  required
-                />
-              </div>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">
+              <label htmlFor="password" className="text-sm font-medium text-ink">
                 Password
               </label>
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-zinc-500">
-                  <Lock className="h-4 w-4" />
-                </div>
-                <Input
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 h-11 text-xs craft-input text-white rounded-xl"
-                  required
-                />
-              </div>
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
             </div>
 
-            <Button
-              type="submit"
-              disabled={loading || success}
-              className="w-full mt-2 h-11 text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-emerald-950 rounded-xl gap-1.5 font-sans"
-            >
+            <Button type="submit" disabled={loading || done} className="mt-1 w-full">
               {loading ? (
-                <span className="h-4 w-4 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin" />
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-canvas border-t-transparent" />
+              ) : done ? (
+                "One moment…"
               ) : (
                 <>
-                  <span>Sign In</span>
+                  Sign in
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
             </Button>
           </form>
-
-          <div className="border-t border-white/10 pt-4 text-center text-xs text-zinc-400 font-sans">
-            Don&apos;t have an account yet?{" "}
-            <Link href="/register" className="text-emerald-400 hover:underline font-semibold">
-              Create free account
-            </Link>
-          </div>
         </div>
-      </ScrollReveal>
+
+        <p className="mt-5 text-center text-sm text-muted">
+          New here?{" "}
+          <Link href="/register" className="font-medium text-accent hover:underline">
+            Create an account
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }
-

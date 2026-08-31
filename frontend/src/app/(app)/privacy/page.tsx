@@ -1,123 +1,99 @@
 import type { Metadata } from "next";
-import { ScrollReveal } from "@/components/ScrollReveal";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — wsio.",
-  description: "Learn about wsio zero-tracking policy, LGPD and GDPR compliance, and minimal data processing model.",
-  alternates: {
-    canonical: "https://wsio.lol/privacy",
-  },
+  title: "Privacy",
+  description:
+    "How wsio handles data: a minimal, first-party processing model with no third-party ad tracking. GDPR and LGPD aligned.",
+  alternates: { canonical: "https://wsio.lol/privacy" },
   openGraph: {
-    title: "Privacy Policy — wsio.",
-    description: "Learn about wsio zero-tracking policy, LGPD and GDPR compliance, and minimal data processing model.",
+    title: "Privacy · wsio",
+    description: "A minimal, first-party data model. No third-party ad tracking.",
     url: "https://wsio.lol/privacy",
-    siteName: "wsio.",
+    siteName: "wsio",
     locale: "en_US",
     type: "website",
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "Privacy Policy — wsio.",
-    description: "Learn about wsio zero-tracking policy, LGPD and GDPR compliance, and minimal data processing model.",
-  },
 };
 
+const sections = [
+  {
+    h: "No third-party ad tracking",
+    p: "There are no cross-site ad trackers, behavioural cookies, or fingerprinting scripts on wsio. Link clicks are counted first-party and forward visitors straight to the destination.",
+  },
+  {
+    h: "What we process",
+    list: [
+      "Profile content — username, display name, bio, avatar URL, theme, and the links you add.",
+      "Account — your email address and a hashed password.",
+      "Aggregate telemetry — page views and per-link click counts with referrers, for your own dashboard.",
+    ],
+  },
+  {
+    h: "Cookies and local storage",
+    p: "One essential HTTP-only cookie keeps you signed in. A few lightweight UI preferences may sit in your browser's local storage and are never uploaded.",
+  },
+  {
+    h: "Your rights",
+    p: "Under GDPR and LGPD you can inspect, export, or permanently delete your account, profile, and links at any time from your dashboard.",
+  },
+];
+
 export default function PrivacyPage() {
-  const jsonLdBreadcrumbs = {
+  const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    "itemListElement": [
-      {
-        "@type": "ListItem",
-        "position": 1,
-        "name": "Home",
-        "item": "https://wsio.lol"
-      },
-      {
-        "@type": "ListItem",
-        "position": 2,
-        "name": "Privacy Policy",
-        "item": "https://wsio.lol/privacy"
-      }
-    ]
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://wsio.lol" },
+      { "@type": "ListItem", position: 2, name: "Privacy", item: "https://wsio.lol/privacy" },
+    ],
   };
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 sm:py-16 space-y-8 font-sans">
+    <article className="mx-auto max-w-2xl px-5 py-16 sm:py-24">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumbs) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      
-      <ScrollReveal>
-        <div className="space-y-4 border-b border-white/10 pb-8">
-          <Button asChild variant="ghost" size="sm" className="text-xs h-7 -ml-2 text-zinc-400 hover:text-white">
-            <Link href="/">
-              <ArrowLeft className="h-3.5 w-3.5 mr-1" />
-              <span>Home</span>
-            </Link>
-          </Button>
-          <h1 className="text-3xl sm:text-4xl text-white font-bold tracking-tight">
-            Privacy Policy
-          </h1>
-          <p className="text-xs text-zinc-400 font-mono">
-            Last updated: August 17, 2026 &bull; Compliant with GDPR &amp; LGPD
-          </p>
-        </div>
-      </ScrollReveal>
 
-      <ScrollReveal delayMs={50}>
-        <div className="prose prose-invert prose-zinc max-w-none text-xs sm:text-sm leading-relaxed space-y-8 text-zinc-300">
-          <p>
-            At <strong>wsio.</strong>, privacy is a core structural guarantee. We process only the minimum operational data necessary to host your public profile page and manage your session. We do not track users across the web or monetize behavioral data.
-          </p>
+      <Link
+        href="/"
+        className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Home
+      </Link>
 
-          <section className="space-y-3 pt-2">
-            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight border-b border-white/10 pb-2">
-              1. Zero Third-Party Ad Tracking
-            </h2>
-            <p className="text-zinc-400">
-              We operate zero cross-site ad trackers, behavioral cookies, or commercial fingerprinting scripts. Link clicks are counted first-party and forward visitors straight to the destination.
-            </p>
+      <h1 className="mt-6 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+        Privacy
+      </h1>
+      <p className="mt-2 text-sm text-faint">Last updated 17 August 2026 · GDPR &amp; LGPD aligned</p>
+
+      <p className="mt-8 leading-relaxed text-muted">
+        Privacy on wsio is structural, not a setting. We process the minimum
+        needed to host your page and keep you signed in, and we don&apos;t track
+        people across the web or sell behavioural data.
+      </p>
+
+      <div className="mt-10 space-y-10">
+        {sections.map((s) => (
+          <section key={s.h}>
+            <h2 className="font-display text-lg font-semibold tracking-tight">{s.h}</h2>
+            {s.p && <p className="mt-2.5 leading-relaxed text-muted">{s.p}</p>}
+            {s.list && (
+              <ul className="mt-3 space-y-2">
+                {s.list.map((item) => (
+                  <li key={item} className="flex gap-2.5 leading-relaxed text-muted">
+                    <span className="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-faint" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
-
-          <section className="space-y-3">
-            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight border-b border-white/10 pb-2">
-              2. Data We Process
-            </h2>
-            <p className="text-zinc-400">
-              We process minimal data strictly required to run your page:
-            </p>
-            <ul className="list-disc pl-5 space-y-1.5 text-zinc-400">
-              <li><strong className="text-white">Profile content:</strong> Username, display name, bio, avatar URL, theme, and the links you add.</li>
-              <li><strong className="text-white">Account information:</strong> Email address and hashed password.</li>
-              <li><strong className="text-white">Aggregate telemetry:</strong> Page views and per-link click counts with referrers, for your dashboard statistics.</li>
-            </ul>
-          </section>
-
-          <section className="space-y-3" id="cookies">
-            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight border-b border-white/10 pb-2">
-              3. Cookies &amp; Local Storage
-            </h2>
-            <p className="text-zinc-400">
-              We use one essential HTTP-only cookie solely for maintaining your login session. Lightweight UI preferences may be stored locally in your browser and are never uploaded.
-            </p>
-          </section>
-
-          <section className="space-y-3" id="security">
-            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight border-b border-white/10 pb-2">
-              4. Security &amp; Data Subject Rights
-            </h2>
-            <p className="text-zinc-400">
-              Under GDPR and LGPD regulations, you maintain the right to inspect, export, or permanently delete your account, profile, and links at any time directly through your dashboard.
-            </p>
-          </section>
-        </div>
-      </ScrollReveal>
-    </div>
+        ))}
+      </div>
+    </article>
   );
 }
-

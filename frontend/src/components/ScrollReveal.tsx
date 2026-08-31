@@ -1,61 +1,18 @@
-"use client";
-
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 
 interface ScrollRevealProps {
   children: React.ReactNode;
   delayMs?: number;
   className?: string;
-  /** When true, content is immediately visible on SSR/initial render to avoid LCP paint delay */
   priority?: boolean;
 }
 
-export function ScrollReveal({
-  children,
-  delayMs = 0,
-  className = "",
-  priority = false,
-}: ScrollRevealProps) {
-  // If priority is true or delayMs is 0, start as visible to prevent LCP render delays
-  const [isVisible, setIsVisible] = useState(priority || delayMs === 0);
-  const domRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // Already visible from initial state; no observer needed.
-    if (priority || delayMs === 0) return;
-
-    const currentRef = domRef.current;
-    if (!currentRef) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setTimeout(() => {
-              setIsVisible(true);
-            }, delayMs);
-            if (currentRef) observer.unobserve(currentRef);
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    observer.observe(currentRef);
-
-    return () => {
-      if (currentRef) observer.unobserve(currentRef);
-    };
-  }, [delayMs, priority]);
-
-  return (
-    <div
-      ref={domRef}
-      className={`${className} transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
-      }`}
-    >
-      {children}
-    </div>
-  );
+/**
+ * Previously a fade-and-rise-on-scroll wrapper. The redesign favours content
+ * that is simply present, so this is now a plain layout passthrough kept only
+ * so existing call sites don't need to change.
+ */
+export function ScrollReveal({ children, className }: ScrollRevealProps) {
+  if (!className) return <>{children}</>;
+  return <div className={className}>{children}</div>;
 }

@@ -41,52 +41,52 @@ function initials(name: string, username: string): string {
 }
 
 export function PublicProfile({ profile }: { profile: PublicProfileData }) {
+  const name = profile.displayName || `@${profile.username}`;
+
   return (
     <div
-      className="profile-surface min-h-screen w-full"
+      className="profile-surface flex min-h-screen w-full flex-col items-center px-5 py-16 sm:py-20"
       data-theme={profile.theme || "minimal"}
     >
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center px-5 py-16">
-        {/* Avatar */}
+      <div className="flex w-full max-w-[26rem] flex-1 flex-col items-center">
         {profile.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={profile.avatarUrl}
-            alt={profile.displayName || profile.username}
+            alt={name}
             className="h-24 w-24 rounded-full object-cover"
-            style={{ border: "1px solid var(--profile-border)" }}
+            style={{ border: "1px solid var(--p-border)" }}
           />
         ) : (
           <div
-            className="flex h-24 w-24 items-center justify-center rounded-full text-2xl font-bold"
-            style={{
-              background: "var(--profile-card)",
-              border: "1px solid var(--profile-border)",
-            }}
+            className="flex h-24 w-24 items-center justify-center rounded-full text-2xl font-semibold"
+            style={{ background: "var(--p-card)", border: "1px solid var(--p-border)" }}
           >
             {initials(profile.displayName, profile.username)}
           </div>
         )}
 
-        <h1 className="mt-5 text-center text-xl font-bold tracking-tight">
-          {profile.displayName || `@${profile.username}`}
+        <h1
+          className="mt-6 text-center text-[1.55rem] font-semibold tracking-[-0.02em]"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          {name}
         </h1>
         {profile.displayName && (
-          <p className="mt-0.5 text-sm" style={{ color: "var(--profile-muted)" }}>
+          <p className="mt-1 text-[0.95rem]" style={{ color: "var(--p-muted)" }}>
             @{profile.username}
           </p>
         )}
         {profile.bio && (
           <p
-            className="mt-3 max-w-sm text-center text-sm leading-relaxed"
-            style={{ color: "var(--profile-muted)" }}
+            className="mt-4 max-w-[22rem] text-center text-[0.95rem] leading-relaxed"
+            style={{ color: "var(--p-muted)" }}
           >
             {profile.bio}
           </p>
         )}
 
-        {/* Links */}
-        <div className="mt-8 flex w-full flex-col gap-3">
+        <div className="mt-9 flex w-full flex-col gap-3">
           {profile.links.map((link) => {
             const Icon = (link.icon && ICONS[link.icon.toLowerCase()]) || LinkIcon;
             return (
@@ -95,39 +95,41 @@ export function PublicProfile({ profile }: { profile: PublicProfileData }) {
                 href={clickThroughUrl(link.id)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-colors"
+                className="group flex items-center gap-3.5 px-4 py-4 text-[0.95rem] font-medium transition-transform duration-150 hover:-translate-y-0.5"
                 style={{
-                  background: "var(--profile-card)",
-                  border: "1px solid var(--profile-border)",
-                  borderRadius: "var(--profile-radius)",
+                  background: "var(--p-card)",
+                  border: "1px solid var(--p-border)",
+                  borderRadius: "var(--p-radius)",
+                  boxShadow: "var(--p-shadow)",
                 }}
               >
-                <Icon className="h-4 w-4 shrink-0" />
-                <span className="flex-1 truncate">{link.label}</span>
-                <ArrowUpRight
-                  className="h-4 w-4 shrink-0 opacity-40 transition-opacity group-hover:opacity-100"
-                />
+                <Icon className="h-[18px] w-[18px] shrink-0" />
+                <span className="flex-1 truncate text-center">{link.label}</span>
+                <ArrowUpRight className="h-4 w-4 shrink-0 opacity-30 transition-opacity group-hover:opacity-70" />
               </a>
             );
           })}
 
           {profile.links.length === 0 && (
-            <p className="text-center text-sm" style={{ color: "var(--profile-muted)" }}>
+            <p className="text-center text-[0.95rem]" style={{ color: "var(--p-muted)" }}>
               No links yet.
             </p>
           )}
         </div>
-
-        <div className="flex-1" />
-
-        <Link
-          href="/"
-          className="mt-12 text-xs transition-opacity hover:opacity-100"
-          style={{ color: "var(--profile-muted)", opacity: 0.7 }}
-        >
-          made with wsio<span>.</span>
-        </Link>
       </div>
+
+      <Link
+        href="/"
+        className="mt-14 inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] px-3.5 py-1.5 text-[0.8rem] transition-opacity hover:opacity-100"
+        style={{
+          color: "var(--p-muted)",
+          border: "1px solid var(--p-border)",
+          opacity: 0.75,
+        }}
+      >
+        <span style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>wsio</span>
+        <span>— make your own</span>
+      </Link>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { CookieBanner } from "@/components/CookieBanner";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grid-bg flex min-h-screen flex-col selection:bg-emerald-500/20 selection:text-emerald-300">
+    <div className="flex min-h-screen flex-col bg-canvas">
       <Navbar />
       <main className="flex-1">{children}</main>
       <Footer />

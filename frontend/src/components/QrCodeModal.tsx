@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
-import { X, Download, Copy, Check, QrCode } from "lucide-react";
+import { X, Download, Copy, Check } from "lucide-react";
 
 interface QrCodeModalProps {
   url: string;
@@ -16,93 +16,96 @@ export function QrCodeModal({ url, code, onClose }: QrCodeModalProps) {
 
   useEffect(() => {
     QRCode.toDataURL(url, {
-      width: 300,
-      margin: 2,
-      color: {
-        dark: "#000000",
-        light: "#ffffff",
-      },
+      width: 320,
+      margin: 1,
+      color: { dark: "#17150f", light: "#ffffff" },
     })
-      .then((data) => setDataUrl(data))
-      .catch((err) => console.error("Local QR generation error:", err));
+      .then(setDataUrl)
+      .catch((err) => console.error("QR generation error:", err));
   }, [url]);
 
-  const copyImage = async () => {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const copyUrl = async () => {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {}
+    } catch {
+      /* ignore */
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in-50 duration-200">
-      <div className="relative w-full max-w-sm rounded-2xl border border-white/10 bg-zinc-950 p-6 space-y-5 shadow-2xl font-mono text-center">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(23,21,15,0.4)] p-4"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-sm rounded-[var(--radius-lg)] border border-line bg-surface p-7 text-center shadow-[0_24px_60px_rgba(23,21,15,0.22)]"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 rounded-lg border border-white/10 bg-zinc-900 p-1.5 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+          className="absolute right-4 top-4 rounded-[var(--radius-xs)] p-1.5 text-faint transition-colors hover:bg-raised hover:text-ink"
+          aria-label="Close"
         >
           <X className="h-4 w-4" />
         </button>
 
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
-            <QrCode className="h-4 w-4" />
-            <span>Vector QR Code</span>
-          </div>
-          <h3 className="font-serif text-xl text-white">Scan &amp; Share</h3>
-          <p className="text-[11px] text-zinc-400 truncate max-w-[260px] mx-auto">{url}</p>
-        </div>
+        <h3 className="font-display text-lg font-semibold tracking-tight">Scan to open</h3>
+        <p className="mx-auto mt-1 max-w-[16rem] truncate text-sm text-faint">
+          {url.replace(/^https?:\/\//, "")}
+        </p>
 
-        {/* QR Code Container */}
-        <div className="mx-auto flex h-60 w-60 items-center justify-center rounded-2xl border-4 border-white bg-white p-3 shadow-xl">
+        <div className="mx-auto mt-5 flex h-56 w-56 items-center justify-center rounded-[var(--radius-md)] border border-line bg-white p-3">
           {dataUrl ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={dataUrl}
-              alt={`QR code for ${code} (${url})`}
+              alt={`QR code for ${code}`}
               className="h-full w-full object-contain"
               loading="lazy"
               decoding="async"
             />
           ) : (
-            <div className="h-full w-full flex items-center justify-center text-xs text-zinc-400 animate-pulse">
-              Generating QR...
-            </div>
+            <span className="text-sm text-faint">Generating…</span>
           )}
         </div>
 
-        {/* Actions */}
-        <div className="grid grid-cols-2 gap-2 pt-2">
+        <div className="mt-5 grid grid-cols-2 gap-2">
           {dataUrl ? (
             <a
               href={dataUrl}
-              download={`wsio-qr-${code}.png`}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-semibold text-zinc-950 transition-colors hover:bg-zinc-200"
+              download={`wsio-${code}.png`}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-pill)] bg-ink px-4 text-sm font-medium text-canvas"
             >
               <Download className="h-4 w-4" />
-              <span>Download PNG</span>
+              PNG
             </a>
           ) : (
-            <div className="inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-800 px-4 py-2.5 text-xs font-semibold text-zinc-500 cursor-not-allowed">
+            <span className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-pill)] bg-raised px-4 text-sm text-faint">
               <Download className="h-4 w-4" />
-              <span>Download PNG</span>
-            </div>
+              PNG
+            </span>
           )}
-
           <button
-            onClick={copyImage}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-zinc-900 px-4 py-2.5 text-xs font-semibold text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white cursor-pointer"
+            onClick={copyUrl}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-pill)] border border-line-strong px-4 text-sm font-medium text-ink transition-colors hover:bg-raised"
           >
             {copied ? (
               <>
-                <Check className="h-4 w-4 text-emerald-400" />
-                <span className="text-emerald-400">Copied!</span>
+                <Check className="h-4 w-4 text-[var(--color-positive)]" />
+                Copied
               </>
             ) : (
               <>
                 <Copy className="h-4 w-4" />
-                <span>Copy URL</span>
+                Copy link
               </>
             )}
           </button>

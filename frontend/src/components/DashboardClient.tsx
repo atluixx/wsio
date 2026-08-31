@@ -16,10 +16,11 @@ import { ProfileEditor } from "@/components/dashboard/ProfileEditor";
 import { LinkManager } from "@/components/dashboard/LinkManager";
 import { QrCodeModal } from "@/components/QrCodeModal";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, ExternalLink, QrCode, Eye, MousePointerClick, TrendingUp } from "lucide-react";
+import { Copy, Check, ExternalLink, QrCode } from "lucide-react";
 
 const APP_ORIGIN =
-  process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "https://wsio.lol");
+  process.env.NEXT_PUBLIC_APP_URL ||
+  (typeof window !== "undefined" ? window.location.origin : "https://wsio.lol");
 
 export function DashboardClient() {
   const router = useRouter();
@@ -84,9 +85,7 @@ export function DashboardClient() {
   };
 
   if (authLoading || loading) {
-    return (
-      <div className="mx-auto max-w-3xl px-4 py-20 text-center text-sm text-zinc-500">Loading…</div>
-    );
+    return <div className="mx-auto max-w-3xl px-5 py-24 text-center text-sm text-faint">Loading…</div>;
   }
 
   if (needsProfile && !profile) {
@@ -103,68 +102,64 @@ export function DashboardClient() {
 
   if (!profile) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-20 text-center text-sm text-zinc-500">
-        Could not load your profile.
+      <div className="mx-auto max-w-3xl px-5 py-24 text-center text-sm text-faint">
+        Couldn&apos;t load your profile.
       </div>
     );
   }
 
   const stats = [
-    { label: "Page views", value: analytics?.totalViews ?? 0, sub: `${analytics?.views24h ?? 0} in 24h`, Icon: Eye },
-    { label: "Link clicks", value: analytics?.totalClicks ?? 0, sub: "all time", Icon: MousePointerClick },
+    { label: "Page views", value: analytics?.totalViews ?? 0, sub: `${analytics?.views24h ?? 0} in the last 24h` },
+    { label: "Link clicks", value: analytics?.totalClicks ?? 0, sub: "all time" },
     {
       label: "Active links",
       value: profile.links.filter((l) => l.active).length,
       sub: `${profile.links.length} total`,
-      Icon: TrendingUp,
     },
   ];
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8 font-sans sm:py-12">
-      {showQr && <QrCodeModal url={publicUrl} code={profile.username} onClose={() => setShowQr(false)} />}
+    <div className="mx-auto max-w-3xl space-y-8 px-5 py-10 sm:py-14">
+      {showQr && (
+        <QrCodeModal url={publicUrl} code={profile.username} onClose={() => setShowQr(false)} />
+      )}
 
-      {/* Header */}
-      <div className="flex flex-col gap-3 border-b border-white/10 pb-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-xl font-bold tracking-tight text-white">Your page</h1>
+      <div className="flex flex-col gap-4 border-b border-line pb-7 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-semibold tracking-tight">Your page</h1>
           <a
             href={publicUrl}
             target="_blank"
             rel="noreferrer"
-            className="font-mono text-xs text-zinc-400 hover:text-white"
+            className="mt-1 inline-block text-sm text-muted hover:text-ink"
           >
             {publicUrl.replace(/^https?:\/\//, "")}
           </a>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" className="h-9 text-xs" onClick={copyUrl}>
-            {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+          <Button size="sm" variant="outline" onClick={copyUrl}>
+            {copied ? <Check className="h-4 w-4 text-[var(--color-positive)]" /> : <Copy className="h-4 w-4" />}
             Copy
           </Button>
-          <Button size="sm" variant="outline" className="h-9 text-xs" onClick={() => setShowQr(true)}>
-            <QrCode className="h-3.5 w-3.5" />
+          <Button size="sm" variant="outline" onClick={() => setShowQr(true)}>
+            <QrCode className="h-4 w-4" />
             QR
           </Button>
-          <Button asChild size="sm" className="h-9 text-xs">
+          <Button asChild size="sm">
             <a href={publicUrl} target="_blank" rel="noreferrer">
-              <ExternalLink className="h-3.5 w-3.5" />
+              <ExternalLink className="h-4 w-4" />
               View
             </a>
           </Button>
         </div>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {stats.map(({ label, value, sub, Icon }) => (
-          <div key={label} className="minimal-card p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">{label}</span>
-              <Icon className="h-4 w-4 text-zinc-500" />
-            </div>
-            <div className="mt-1 text-2xl font-bold text-white">{value}</div>
-            <div className="text-[11px] text-zinc-500">{sub}</div>
+        {stats.map(({ label, value, sub }) => (
+          <div key={label} className="surface-card p-5">
+            <div className="text-sm text-muted">{label}</div>
+            <div className="mt-1.5 font-display text-3xl font-semibold tracking-tight">{value}</div>
+            <div className="mt-0.5 text-sm text-faint">{sub}</div>
           </div>
         ))}
       </div>

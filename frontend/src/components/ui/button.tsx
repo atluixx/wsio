@@ -4,27 +4,29 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.98] cursor-pointer",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-pill)] font-medium transition-[background-color,color,border-color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-canvas)] disabled:pointer-events-none disabled:opacity-45 [&_svg]:pointer-events-none [&_svg]:shrink-0 active:scale-[0.985] cursor-pointer",
   {
     variants: {
       variant: {
         default:
-          "bg-white text-zinc-950 font-semibold shadow-sm hover:bg-zinc-100 hover:shadow",
-        destructive:
-          "bg-red-600 text-white shadow-sm hover:bg-red-700",
+          "bg-ink text-canvas hover:bg-[#322d20]",
+        accent:
+          "bg-accent text-[var(--color-accent-ink)] hover:brightness-110",
         outline:
-          "border border-white/15 bg-zinc-900/60 text-zinc-200 shadow-sm hover:bg-zinc-800 hover:text-white hover:border-white/25",
+          "border border-line-strong bg-surface text-ink hover:bg-raised",
         secondary:
-          "bg-zinc-800 text-zinc-100 shadow-sm hover:bg-zinc-700",
+          "bg-raised text-ink hover:bg-[#ece9e0]",
         ghost:
-          "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-100",
-        link: "text-zinc-300 underline-offset-4 hover:underline hover:text-white",
+          "text-muted hover:bg-raised hover:text-ink",
+        destructive:
+          "bg-[var(--color-negative)] text-white hover:brightness-95",
+        link: "text-accent underline-offset-4 hover:underline rounded-none",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3 text-xs",
-        lg: "h-11 rounded-lg px-6 text-base",
-        icon: "h-9 w-9 rounded-md",
+        default: "h-11 px-5 text-[0.9rem]",
+        sm: "h-9 px-4 text-[0.83rem]",
+        lg: "h-13 px-7 text-base [&_svg]:size-[18px]",
+        icon: "h-10 w-10 [&_svg]:size-[18px]",
       },
     },
     defaultVariants: {
@@ -45,7 +47,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : "button";
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn("[&_svg]:size-4", buttonVariants({ variant, size, className }))}
         ref={ref}
         {...props}
       />

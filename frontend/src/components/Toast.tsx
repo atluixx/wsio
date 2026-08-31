@@ -23,7 +23,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const showToast = useCallback((message: string, type: ToastType = "info") => {
     const id = Math.random().toString(36).substring(2, 9);
     setToasts((prev) => [...prev, { id, message, type }]);
-
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 4000);
@@ -36,29 +35,28 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full px-4 pointer-events-none">
+      <div className="pointer-events-none fixed bottom-5 right-5 z-50 flex w-full max-w-sm flex-col gap-2 px-4">
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-center justify-between gap-3 p-3.5 rounded-xl border backdrop-blur-2xl shadow-2xl transition-all duration-300 animate-in slide-in-from-bottom-5 text-xs font-sans ${
-              t.type === "success"
-                ? "bg-zinc-950/90 border-emerald-500/40 text-emerald-300"
-                : t.type === "error"
-                ? "bg-zinc-950/90 border-red-500/40 text-red-300"
-                : "bg-zinc-950/90 border-white/20 text-zinc-200"
-            }`}
+            className="pointer-events-auto flex items-center justify-between gap-3 rounded-[var(--radius-sm)] border border-line-strong bg-surface px-4 py-3 text-sm text-ink shadow-[0_8px_30px_rgba(23,21,15,0.12)]"
           >
-            <div className="flex items-center gap-2.5 min-w-0">
-              {t.type === "success" && <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />}
-              {t.type === "error" && <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />}
-              {t.type === "info" && <Info className="h-4 w-4 text-sky-400 shrink-0" />}
-              <span className="truncate font-medium">{t.message}</span>
+            <div className="flex min-w-0 items-center gap-2.5">
+              {t.type === "success" && (
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--color-positive)]" />
+              )}
+              {t.type === "error" && (
+                <AlertCircle className="h-4 w-4 shrink-0 text-[var(--color-negative)]" />
+              )}
+              {t.type === "info" && <Info className="h-4 w-4 shrink-0 text-accent" />}
+              <span className="truncate">{t.message}</span>
             </div>
             <button
               onClick={() => removeToast(t.id)}
-              className="text-zinc-400 hover:text-white transition-colors p-0.5"
+              className="text-faint transition-colors hover:text-ink"
+              aria-label="Dismiss"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-4 w-4" />
             </button>
           </div>
         ))}

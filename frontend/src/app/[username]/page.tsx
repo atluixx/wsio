@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: name,
       description,
       url,
-      siteName: "wsio.",
+      siteName: "wsio",
       type: "profile",
       images: profile.avatarUrl ? [{ url: profile.avatarUrl }] : undefined,
     },

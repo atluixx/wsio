@@ -1,23 +1,20 @@
 import Link from "next/link";
 
 export function Footer() {
-  const currentYear = new Date().getFullYear();
+  const year = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-white/[0.08] bg-[#09090b] text-zinc-500 font-sans text-xs">
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2 text-white font-bold">
-          <span>wsio<span className="text-zinc-500">.</span></span>
-          <span className="text-zinc-500 font-normal text-[11px] ml-2">
-            &copy; {currentYear} wsio. All rights reserved.
-          </span>
+    <footer className="border-t border-line bg-canvas">
+      <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-5 py-10 text-sm text-muted sm:flex-row sm:px-8">
+        <div className="flex items-center gap-3">
+          <span className="font-display text-base font-semibold text-ink">wsio</span>
+          <span className="text-faint">© {year}</span>
         </div>
-
-        <div className="flex items-center gap-5 text-zinc-400">
-          <Link href="/privacy" className="hover:text-white transition-colors">
+        <div className="flex items-center gap-6">
+          <Link href="/privacy" className="transition-colors hover:text-ink">
             Privacy
           </Link>
-          <Link href="/terms" className="hover:text-white transition-colors">
+          <Link href="/terms" className="transition-colors hover:text-ink">
             Terms
           </Link>
         </div>
@@ -25,5 +22,3 @@ export function Footer() {
     </footer>
   );
 }
-
-
