@@ -400,7 +400,7 @@ function SortableLinkRow({
             type="button"
             onClick={onDelete}
             disabled={busy}
-            className="rounded-[var(--radius-xs)] bg-[var(--color-negative)] px-2.5 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+            className="rounded-[var(--radius-xs)] bg-[var(--color-negative)] px-2.5 py-1.5 text-xs font-medium text-canvas disabled:opacity-50"
           >
             Delete
           </button>

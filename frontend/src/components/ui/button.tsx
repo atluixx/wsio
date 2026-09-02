@@ -9,17 +9,17 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-ink text-canvas hover:bg-[#2c2619]",
+          "bg-ink text-canvas hover:opacity-85",
         accent:
-          "bg-accent text-[var(--color-accent-ink)] hover:bg-[#8c3018]",
+          "bg-accent text-[var(--color-accent-ink)] hover:opacity-85",
         outline:
           "border border-[var(--color-control-border)] bg-surface text-ink hover:bg-raised hover:border-ink/45",
         secondary:
-          "border border-[var(--color-line-strong)] bg-raised text-ink hover:bg-[#e8e5da] hover:border-[var(--color-control-border)]",
+          "border border-[var(--color-line-strong)] bg-raised text-ink hover:border-[var(--color-control-border)] hover:brightness-95",
         ghost:
           "text-muted hover:bg-raised hover:text-ink",
         destructive:
-          "bg-[var(--color-negative)] text-white hover:brightness-95",
+          "bg-[var(--color-negative)] text-canvas hover:brightness-95",
         link: "text-accent underline underline-offset-4 decoration-[var(--color-accent)]/35 hover:decoration-[var(--color-accent)] rounded-none px-0",
       },
       size: {

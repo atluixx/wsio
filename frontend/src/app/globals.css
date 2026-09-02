@@ -22,13 +22,58 @@
   --color-accent: #a13a1e;
   --color-accent-ink: #ffffff;
   --color-positive: #3c6a39;
+  --color-positive-soft: #e6efe4;
   --color-negative: #a3372a;
+  --color-negative-soft: #f7e4e1;
 
   --radius-xs: 6px;
   --radius-sm: 9px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-pill: 999px;
+}
+
+/* ---------------------------------------------------------------------------
+   Dark mode — the app chrome only. A public profile keeps its own theme,
+   so `.profile-surface` tokens are never touched here.
+--------------------------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-canvas: #16130d;
+    --color-surface: #1e1a13;
+    --color-raised: #262117;
+    --color-ink: #f3efe4;
+    --color-muted: #a8a091;
+    --color-faint: #7b7365;
+    --color-line: #2b2619;
+    --color-line-strong: #3b3524;
+    --color-control-border: #514a37;
+    --color-accent: #d9754d;
+    --color-accent-ink: #1c1913;
+    --color-positive: #6bbd6a;
+    --color-positive-soft: #1f3a24;
+    --color-negative: #e0806a;
+    --color-negative-soft: #3a211c;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-canvas: #16130d;
+  --color-surface: #1e1a13;
+  --color-raised: #262117;
+  --color-ink: #f3efe4;
+  --color-muted: #a8a091;
+  --color-faint: #7b7365;
+  --color-line: #2b2619;
+  --color-line-strong: #3b3524;
+  --color-control-border: #514a37;
+  --color-accent: #d9754d;
+  --color-accent-ink: #1c1913;
+  --color-positive: #6bbd6a;
+  --color-positive-soft: #1f3a24;
+  --color-negative: #e0806a;
+  --color-negative-soft: #3a211c;
 }
 
 /* ---------------------------------------------------------------------------

@@ -28,7 +28,7 @@ export function ProfilePreview({ profile, publicUrl }: Props) {
   return (
     <div className="w-full">
       <div className="mx-auto max-w-[340px] rounded-[2.2rem] border border-[var(--color-control-border)] bg-[#211d16] p-2.5 shadow-[0_28px_60px_-24px_rgba(28,25,19,0.4)]">
-        <div className="overflow-hidden rounded-[1.7rem] bg-white">
+        <div className="overflow-hidden rounded-[1.7rem] bg-surface">
           <div className="flex items-center gap-2 border-b border-line bg-canvas px-3.5 py-2">
             <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-line-strong" />
             <span className="truncate text-[11px] text-faint">{host}</span>

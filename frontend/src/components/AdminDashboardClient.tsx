@@ -23,10 +23,10 @@ const REASON_LABEL: Record<string, string> = Object.fromEntries(
 );
 
 const STATUS_STYLE: Record<ReportStatus, string> = {
-  open: "bg-[#f7e4e1] text-[var(--color-negative)]",
+  open: "bg-[var(--color-negative-soft)] text-[var(--color-negative)]",
   reviewed: "bg-raised text-muted",
   dismissed: "bg-raised text-faint",
-  actioned: "bg-[#e6efe4] text-[var(--color-positive)]",
+  actioned: "bg-[var(--color-positive-soft)] text-[var(--color-positive)]",
 };
 
 interface SystemStats {
@@ -268,7 +268,7 @@ function MiniButton({
       onClick={onClick}
       className={`rounded-[var(--radius-xs)] border px-2.5 py-1 text-xs font-medium transition-colors ${
         danger
-          ? "border-[var(--color-negative)]/40 text-[var(--color-negative)] hover:bg-[#f7e4e1]"
+          ? "border-[var(--color-negative)]/40 text-[var(--color-negative)] hover:bg-[var(--color-negative-soft)]"
           : "border-line-strong text-muted hover:border-ink hover:text-ink"
       }`}
     >

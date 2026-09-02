@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { LogOut, Menu, X, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 function Wordmark({ onClick }: { onClick?: () => void }) {
   return (
@@ -63,8 +64,9 @@ export function Navbar() {
           )}
         </div>
 
-        {/* Right cluster: account */}
-        <div className="hidden items-center md:flex">
+        {/* Right cluster: theme + account */}
+        <div className="hidden items-center gap-4 md:flex">
+          <ThemeToggle className="-mr-1" />
           {isAuthenticated ? (
             <button
               onClick={logout}
@@ -85,14 +87,17 @@ export function Navbar() {
           )}
         </div>
 
-        <button
-          onClick={() => setOpen(!open)}
-          className="-mr-2 flex h-10 w-10 items-center justify-center text-ink md:hidden"
-          aria-label="Toggle menu"
-          aria-expanded={open}
-        >
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="flex items-center gap-1 md:hidden">
+          <ThemeToggle />
+          <button
+            onClick={() => setOpen(!open)}
+            className="-mr-2 flex h-10 w-10 items-center justify-center text-ink"
+            aria-label="Toggle menu"
+            aria-expanded={open}
+          >
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
 
       {open && (

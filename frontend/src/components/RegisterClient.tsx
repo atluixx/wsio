@@ -61,7 +61,7 @@ export function RegisterClient() {
 
         <div className="mt-7 surface-card p-6 sm:p-7">
           {error && (
-            <div className="mb-4 flex items-center gap-2 rounded-[var(--radius-sm)] bg-[#f7e4e1] px-3.5 py-2.5 text-sm text-[var(--color-negative)]">
+            <div className="mb-4 flex items-center gap-2 rounded-[var(--radius-sm)] bg-[var(--color-negative-soft)] px-3.5 py-2.5 text-sm text-[var(--color-negative)]">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>

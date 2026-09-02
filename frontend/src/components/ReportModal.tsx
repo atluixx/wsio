@@ -51,7 +51,7 @@ export function ReportModal({ username, onClose }: Props) {
 
         {state === "done" ? (
           <div className="py-6 text-center">
-            <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-[#e6efe4] text-[var(--color-positive)]">
+            <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-[var(--color-positive-soft)] text-[var(--color-positive)]">
               <Check className="h-5 w-5" />
             </div>
             <h3 className="mt-3 font-display text-lg font-medium tracking-tight">Report received</h3>
@@ -114,7 +114,7 @@ export function ReportModal({ username, onClose }: Props) {
               <button
                 type="submit"
                 disabled={!reason || state === "sending"}
-                className="inline-flex h-10 items-center gap-2 rounded-[var(--radius-sm)] bg-ink px-4 text-sm font-medium text-canvas transition-colors hover:bg-[#2c2619] disabled:opacity-45"
+                className="inline-flex h-10 items-center gap-2 rounded-[var(--radius-sm)] bg-ink px-4 text-sm font-medium text-canvas transition-opacity hover:opacity-85 disabled:opacity-45"
               >
                 {state === "sending" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Submit report

@@ -124,7 +124,7 @@ export function QrCodeModal({ url, code, onClose }: QrCodeModalProps) {
           {canShare && (
             <button
               onClick={share}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-sm)] bg-ink px-4 text-sm font-medium text-canvas transition-colors hover:bg-[#2c2619]"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-sm)] bg-ink px-4 text-sm font-medium text-canvas transition-opacity hover:opacity-85"
             >
               <Share2 className="h-4 w-4" />
               Share…
