@@ -67,6 +67,7 @@ type publicProfileDTO struct {
 	Bio              string          `json:"bio"`
 	AvatarURL        string          `json:"avatarUrl"`
 	Theme            string          `json:"theme"`
+	BackgroundColor  string          `json:"backgroundColor,omitempty"`
 	DiscordUserID    string          `json:"discordUserId"`
 	UseDiscordAvatar bool            `json:"useDiscordAvatar"`
 	Links            []publicLinkDTO `json:"links"`
@@ -89,6 +90,7 @@ type ownerProfileDTO struct {
 	Bio              string         `json:"bio"`
 	AvatarURL        string         `json:"avatarUrl"`
 	Theme            string         `json:"theme"`
+	BackgroundColor  string         `json:"backgroundColor,omitempty"`
 	DiscordUserID    string         `json:"discordUserId"`
 	UseDiscordAvatar bool           `json:"useDiscordAvatar"`
 	Links            []ownerLinkDTO `json:"links"`
@@ -173,6 +175,7 @@ func (h *ProfileHandler) GetPublicProfile(c *gin.Context) {
 		Bio:              profile.Bio,
 		AvatarURL:        profile.AvatarURL,
 		Theme:            profile.Theme,
+		BackgroundColor:  profile.BackgroundColor,
 		DiscordUserID:    profile.DiscordUserID,
 		UseDiscordAvatar: profile.UseDiscordAvatar,
 		Links:            make([]publicLinkDTO, 0, len(links)),
@@ -307,6 +310,8 @@ func (h *ProfileHandler) UpsertMyProfile(c *gin.Context) {
 		return
 	}
 
+	bgColor := sanitizeHexColor(req.BackgroundColor)
+
 	existing, err := h.profiles.FindByUserID(userID)
 	switch {
 	case errors.Is(err, repositories.ErrProfileNotFound):
@@ -318,6 +323,7 @@ func (h *ProfileHandler) UpsertMyProfile(c *gin.Context) {
 			Bio:              strings.TrimSpace(req.Bio),
 			AvatarURL:        avatarURL,
 			Theme:            theme,
+			BackgroundColor:  bgColor,
 			DiscordUserID:    discordID,
 			UseDiscordAvatar: req.UseDiscordAvatar != nil && *req.UseDiscordAvatar,
 		}
@@ -334,6 +340,7 @@ func (h *ProfileHandler) UpsertMyProfile(c *gin.Context) {
 		existing.Bio = strings.TrimSpace(req.Bio)
 		existing.AvatarURL = avatarURL
 		existing.Theme = theme
+		existing.BackgroundColor = bgColor
 		existing.DiscordUserID = discordID
 		if req.UseDiscordAvatar != nil {
 			existing.UseDiscordAvatar = *req.UseDiscordAvatar
@@ -347,6 +354,16 @@ func (h *ProfileHandler) UpsertMyProfile(c *gin.Context) {
 }
 
 var discordIDRe = regexp.MustCompile(`\d{15,25}`)
+var hexColorRe = regexp.MustCompile(`^#?[0-9a-fA-F]{6}$`)
+
+// sanitizeHexColor returns "#rrggbb" (lowercased) or "" for anything unparseable.
+func sanitizeHexColor(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" || !hexColorRe.MatchString(raw) {
+		return ""
+	}
+	return "#" + strings.ToLower(strings.TrimPrefix(raw, "#"))
+}
 
 // sanitizeDiscordID accepts a raw ID, an <@id> mention, or empty.
 func sanitizeDiscordID(raw string) string {
@@ -566,6 +583,7 @@ func (h *ProfileHandler) respondOwnerProfile(c *gin.Context, status int, profile
 		Bio:              profile.Bio,
 		AvatarURL:        profile.AvatarURL,
 		Theme:            profile.Theme,
+		BackgroundColor:  profile.BackgroundColor,
 		DiscordUserID:    profile.DiscordUserID,
 		UseDiscordAvatar: profile.UseDiscordAvatar,
 		Links:            make([]ownerLinkDTO, 0, len(links)),

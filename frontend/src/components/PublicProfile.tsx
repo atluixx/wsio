@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { PublicProfile as PublicProfileData } from "@/lib/api";
+import { surfaceStyle } from "@/lib/profileSurface";
 import { ProfileLinks } from "@/components/ProfileLinks";
 import { ProfileDiscord } from "@/components/ProfileDiscord";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
@@ -8,11 +9,14 @@ import { ProfileReportLink } from "@/components/ProfileReportLink";
 
 export function PublicProfile({ profile }: { profile: PublicProfileData }) {
   const name = profile.displayName || `@${profile.username}`;
+  const { style, textured } = surfaceStyle(profile.backgroundColor);
 
   return (
     <div
       className="profile-surface flex min-h-screen w-full flex-col items-center px-5 py-16 sm:py-20"
       data-theme={profile.theme || "minimal"}
+      data-textured={textured}
+      style={style}
     >
       <ProfileShare username={profile.username} />
 

@@ -47,7 +47,7 @@ func (r *profileRepository) Update(profile *domain.Profile) error {
 	return r.db.Model(profile).
 		Select(
 			"username", "display_name", "bio", "avatar_url", "theme",
-			"discord_user_id", "use_discord_avatar",
+			"background_color", "discord_user_id", "use_discord_avatar",
 		).
 		Updates(profile).Error
 }

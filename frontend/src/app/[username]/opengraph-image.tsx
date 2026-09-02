@@ -15,6 +15,16 @@ const THEMES: Record<
   sunset: { bg: "#1b1016", fg: "#ffece2", muted: "#e0b3a2", card: "#271820", border: "#432c38", accent: "#ff9d6b" },
 };
 
+function customTheme(hex: string): (typeof THEMES)[string] | null {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return null;
+  const n = parseInt(hex.slice(1), 16);
+  const lum =
+    (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255;
+  return lum > 0.5
+    ? { bg: hex, fg: "#1c1913", muted: "rgba(28,25,19,0.64)", card: "rgba(255,255,255,0.72)", border: "rgba(28,25,19,0.14)", accent: "#a13a1e" }
+    : { bg: hex, fg: "#f5f2ec", muted: "rgba(245,242,236,0.68)", card: "rgba(255,255,255,0.1)", border: "rgba(255,255,255,0.18)", accent: "#ff9d6b" };
+}
+
 function initials(source: string): string {
   const parts = source.trim().split(/\s+/).filter(Boolean);
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
@@ -36,7 +46,10 @@ async function loadFont(family: string, weight: number, text: string): Promise<A
 export default async function Image({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
   const profile = await fetchPublicProfile(username);
-  const t = THEMES[profile?.theme ?? "minimal"] ?? THEMES.minimal;
+  const t =
+    customTheme(profile?.backgroundColor ?? "") ??
+    THEMES[profile?.theme ?? "minimal"] ??
+    THEMES.minimal;
 
   const name = profile?.displayName || `@${username}`;
   const handle = `@${profile?.username ?? username}`;

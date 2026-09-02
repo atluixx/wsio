@@ -30,6 +30,7 @@ export interface OwnerProfile {
   bio: string;
   avatarUrl: string;
   theme: string;
+  backgroundColor?: string;
   discordUserId: string;
   useDiscordAvatar: boolean;
   links: ProfileLink[];
@@ -49,6 +50,7 @@ export interface PublicProfile {
   bio: string;
   avatarUrl: string;
   theme: string;
+  backgroundColor?: string;
   discordUserId: string;
   useDiscordAvatar: boolean;
   links: PublicProfileLink[];
@@ -77,6 +79,7 @@ export interface ProfileInput {
   bio: string;
   avatarUrl: string;
   theme: string;
+  backgroundColor?: string;
   discordUserId?: string;
   useDiscordAvatar?: boolean;
 }

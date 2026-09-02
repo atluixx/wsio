@@ -22,6 +22,7 @@ export interface ProfileDraft {
   bio: string;
   avatarUrl: string;
   theme: string;
+  backgroundColor: string;
   discordUserId: string;
   useDiscordAvatar: boolean;
 }
@@ -33,6 +34,7 @@ function toFields(p: OwnerProfile): ProfileDraft {
     bio: p.bio,
     avatarUrl: p.avatarUrl,
     theme: p.theme || "minimal",
+    backgroundColor: p.backgroundColor || "",
     discordUserId: p.discordUserId || "",
     useDiscordAvatar: p.useDiscordAvatar,
   };
@@ -66,6 +68,7 @@ export function ProfileEditor({ profile, onSaved, onDraftChange }: Props) {
     fields.bio !== profile.bio ||
     fields.avatarUrl !== profile.avatarUrl ||
     fields.theme !== profile.theme ||
+    fields.backgroundColor !== (profile.backgroundColor || "") ||
     fields.discordUserId !== (profile.discordUserId || "") ||
     fields.useDiscordAvatar !== profile.useDiscordAvatar;
 
@@ -78,6 +81,7 @@ export function ProfileEditor({ profile, onSaved, onDraftChange }: Props) {
       bio: fields.bio,
       avatarUrl: fields.avatarUrl,
       theme: fields.theme,
+      backgroundColor: fields.backgroundColor,
       discordUserId: fields.discordUserId,
       useDiscordAvatar: fields.useDiscordAvatar,
     });
@@ -200,6 +204,45 @@ export function ProfileEditor({ profile, onSaved, onDraftChange }: Props) {
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <span className={labelClass}>Background colour</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <label
+            className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-[var(--radius-sm)] border border-[var(--color-control-border)]"
+            style={{ background: fields.backgroundColor || "var(--color-raised)" }}
+          >
+            <input
+              type="color"
+              value={/^#[0-9a-fA-F]{6}$/.test(fields.backgroundColor) ? fields.backgroundColor : "#f4efe6"}
+              onChange={(e) => update({ backgroundColor: e.target.value })}
+              className="h-12 w-12 cursor-pointer opacity-0"
+              aria-label="Background colour"
+            />
+          </label>
+          <Input
+            value={fields.backgroundColor}
+            onChange={(e) => update({ backgroundColor: e.target.value.trim() })}
+            placeholder="#f4efe6 — leave blank for the theme"
+            maxLength={9}
+            className="flex-1 sm:max-w-[16rem]"
+          />
+          {fields.backgroundColor && (
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => update({ backgroundColor: "" })}
+            >
+              Use theme colour
+            </Button>
+          )}
+        </div>
+        <p className={hintClass}>
+          A custom colour gets a subtle paper texture, and the text switches to
+          stay readable.
+        </p>
       </div>
 
       <div className="flex justify-end">

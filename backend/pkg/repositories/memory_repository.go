@@ -114,6 +114,7 @@ func (r *inMemoryProfileRepository) Update(profile *domain.Profile) error {
 	existing.Bio = profile.Bio
 	existing.AvatarURL = profile.AvatarURL
 	existing.Theme = profile.Theme
+	existing.BackgroundColor = profile.BackgroundColor
 	existing.DiscordUserID = profile.DiscordUserID
 	existing.UseDiscordAvatar = profile.UseDiscordAvatar
 	return nil

@@ -15,6 +15,8 @@ type Profile struct {
 	Bio         string    `gorm:"type:varchar(500)" json:"bio"`
 	AvatarURL   string    `gorm:"type:text" json:"avatarUrl"`
 	Theme       string    `gorm:"type:varchar(32);not null;default:'minimal'" json:"theme"`
+	// BackgroundColor overrides the theme's page colour (a #rrggbb hex, or "").
+	BackgroundColor string `gorm:"type:varchar(9)" json:"backgroundColor,omitempty"`
 
 	// Discord: live status/username/avatar are fetched client-side from Lanyard
 	// using this ID.
@@ -49,6 +51,7 @@ type UpsertProfileRequest struct {
 	Bio              string `json:"bio" binding:"max=500"`
 	AvatarURL        string `json:"avatarUrl"`
 	Theme            string `json:"theme" binding:"max=32"`
+	BackgroundColor  string `json:"backgroundColor" binding:"max=9"`
 	DiscordUserID    string `json:"discordUserId" binding:"max=32"`
 	UseDiscordAvatar *bool  `json:"useDiscordAvatar"`
 }

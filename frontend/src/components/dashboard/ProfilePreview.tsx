@@ -2,6 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import type { OwnerProfile } from "@/lib/api";
 import { resolveLinkIcon } from "@/lib/socialIcons";
 import { groupLinks } from "@/lib/linkSections";
+import { surfaceStyle } from "@/lib/profileSurface";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
 import { ProfileDiscord } from "@/components/ProfileDiscord";
 
@@ -22,6 +23,7 @@ export function ProfilePreview({ profile, publicUrl }: Props) {
   // Only wire up Lanyard once the id looks like a real snowflake, so we don't
   // open a socket for every keystroke while it's being typed.
   const discordId = /^\d{17,20}$/.test(profile.discordUserId) ? profile.discordUserId : "";
+  const { style: surface, textured } = surfaceStyle(profile.backgroundColor);
 
   return (
     <div className="w-full">
@@ -36,6 +38,8 @@ export function ProfilePreview({ profile, publicUrl }: Props) {
             <div
               className="profile-surface flex min-h-full flex-col items-center px-5 py-10"
               data-theme={profile.theme || "minimal"}
+              data-textured={textured}
+              style={surface}
             >
               <ProfileAvatar
                 avatarUrl={profile.avatarUrl}
