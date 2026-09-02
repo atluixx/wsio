@@ -158,9 +158,8 @@ export function HomeClient() {
           ))}
         </div>
         <p className="mt-12 max-w-xl text-[0.95rem] leading-relaxed text-faint">
-          Four themes to choose from — minimal, midnight, paper, sunset. Pin a
-          track from YouTube, Spotify or SoundCloud, or show your live Discord
-          status, if that&apos;s your thing.
+          Four themes to choose from — minimal, midnight, paper, sunset. Show
+          your live Discord status, if that&apos;s your thing.
         </p>
       </section>
 

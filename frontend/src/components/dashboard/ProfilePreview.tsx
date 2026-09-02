@@ -1,4 +1,4 @@
-import { ArrowUpRight, Music2 } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import type { OwnerProfile } from "@/lib/api";
 import { linkIcon } from "@/lib/linkIcons";
 
@@ -74,46 +74,6 @@ export function ProfilePreview({ profile, publicUrl }: Props) {
                 >
                   {profile.bio}
                 </p>
-              )}
-
-              {profile.music && (
-                <div
-                  className="mt-6 flex w-full items-center gap-2.5 rounded-[var(--p-radius)] px-2.5 py-2.5"
-                  style={{
-                    background: "var(--p-card)",
-                    border: "1px solid var(--p-border)",
-                    boxShadow: "var(--p-shadow)",
-                  }}
-                >
-                  <div
-                    className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-[calc(var(--p-radius)-6px)]"
-                    style={{ background: "var(--p-card-hover)" }}
-                  >
-                    {profile.music.artworkUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={profile.music.artworkUrl} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <Music2 className="h-4 w-4" style={{ color: "var(--p-muted)" }} />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-[0.8rem] font-medium">
-                      {profile.music.title || "Featured track"}
-                    </div>
-                    <div
-                      className="text-[0.62rem] uppercase tracking-[0.1em]"
-                      style={{ color: "var(--p-muted)" }}
-                    >
-                      {profile.music.kind}
-                    </div>
-                  </div>
-                  <div
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                    style={{ background: "var(--p-fg)", color: "var(--p-bg)" }}
-                  >
-                    <span className="ml-0.5 block h-0 w-0 border-y-[5px] border-l-[8px] border-y-transparent" style={{ borderLeftColor: "var(--p-bg)" }} />
-                  </div>
-                </div>
               )}
 
               <div className="mt-7 flex w-full flex-col gap-2.5">

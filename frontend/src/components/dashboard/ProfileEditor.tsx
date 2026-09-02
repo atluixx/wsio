@@ -5,7 +5,6 @@ import { saveMyProfile, type OwnerProfile } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Music2 } from "lucide-react";
 
 const THEMES: { key: string; bg: string; card: string; fg: string }[] = [
   { key: "minimal", bg: "#faf9f5", card: "#fffdf8", fg: "#1c1913" },
@@ -26,16 +25,13 @@ export interface ProfileDraft {
   useDiscordAvatar: boolean;
 }
 
-type Fields = ProfileDraft & { musicUrl: string };
-
-function toFields(p: OwnerProfile): Fields {
+function toFields(p: OwnerProfile): ProfileDraft {
   return {
     username: p.username,
     displayName: p.displayName,
     bio: p.bio,
     avatarUrl: p.avatarUrl,
     theme: p.theme || "minimal",
-    musicUrl: p.musicUrl || "",
     discordUserId: p.discordUserId || "",
     useDiscordAvatar: p.useDiscordAvatar,
   };
@@ -49,14 +45,14 @@ interface Props {
 
 export function ProfileEditor({ profile, onSaved, onDraftChange }: Props) {
   const { showToast } = useToast();
-  const [fields, setFields] = useState<Fields>(() => toFields(profile));
+  const [fields, setFields] = useState<ProfileDraft>(() => toFields(profile));
   const [saving, setSaving] = useState(false);
 
   // Kept in sync by `update` so we can build the next value without an effect —
   // the preview then updates in the same render as the keystroke, no cascade.
   const fieldsRef = useRef(fields);
 
-  const update = (patch: Partial<Fields>) => {
+  const update = (patch: Partial<ProfileDraft>) => {
     const next = { ...fieldsRef.current, ...patch };
     fieldsRef.current = next;
     setFields(next);
@@ -69,7 +65,6 @@ export function ProfileEditor({ profile, onSaved, onDraftChange }: Props) {
     fields.bio !== profile.bio ||
     fields.avatarUrl !== profile.avatarUrl ||
     fields.theme !== profile.theme ||
-    fields.musicUrl !== (profile.musicUrl || "") ||
     fields.discordUserId !== (profile.discordUserId || "") ||
     fields.useDiscordAvatar !== profile.useDiscordAvatar;
 
@@ -82,7 +77,6 @@ export function ProfileEditor({ profile, onSaved, onDraftChange }: Props) {
       bio: fields.bio,
       avatarUrl: fields.avatarUrl,
       theme: fields.theme,
-      musicUrl: fields.musicUrl,
       discordUserId: fields.discordUserId,
       useDiscordAvatar: fields.useDiscordAvatar,
     });
@@ -92,7 +86,6 @@ export function ProfileEditor({ profile, onSaved, onDraftChange }: Props) {
       return;
     }
     onSaved(res.profile);
-    update({ musicUrl: res.profile.musicUrl || "" });
     showToast("Profile saved", "success");
   };
 
@@ -146,29 +139,6 @@ export function ProfileEditor({ profile, onSaved, onDraftChange }: Props) {
           placeholder="https://…"
         />
       </label>
-
-      {/* Music */}
-      <div className="space-y-1.5">
-        <span className={labelClass}>Featured track</span>
-        <Input
-          value={fields.musicUrl}
-          onChange={(e) => update({ musicUrl: e.target.value })}
-          placeholder="YouTube / Spotify / SoundCloud link, an mp3 URL, or a song name"
-          maxLength={400}
-        />
-        {profile.music && fields.musicUrl === (profile.musicUrl || "") && (
-          <div className="flex items-center gap-2 pt-1 text-sm text-muted">
-            <Music2 className="h-4 w-4 shrink-0" />
-            <span className="truncate">
-              {profile.music.title || profile.music.kind}
-              <span className="text-faint"> · {profile.music.kind}</span>
-            </span>
-          </div>
-        )}
-        <p className={hintClass}>
-          Visitors get a play button — nothing loads or plays until they press it.
-        </p>
-      </div>
 
       {/* Discord */}
       <div className="space-y-1.5">

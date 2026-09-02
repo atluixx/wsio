@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { PublicProfile as PublicProfileData } from "@/lib/api";
 import { ProfileLinks } from "@/components/ProfileLinks";
-import { ProfileMusic } from "@/components/ProfileMusic";
 import { ProfileDiscord } from "@/components/ProfileDiscord";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
 import { ProfileShare } from "@/components/ProfileShare";
@@ -47,8 +46,6 @@ export function PublicProfile({ profile }: { profile: PublicProfileData }) {
             {profile.bio}
           </p>
         )}
-
-        {profile.music && <ProfileMusic music={profile.music} />}
 
         <ProfileLinks links={profile.links} />
       </div>

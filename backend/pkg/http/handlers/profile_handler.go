@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/atluixx/wsio/pkg/domain"
-	"github.com/atluixx/wsio/pkg/music"
 	"github.com/atluixx/wsio/pkg/repositories"
 	urlutil "github.com/atluixx/wsio/pkg/url"
 	"github.com/gin-gonic/gin"
@@ -61,34 +60,12 @@ type publicLinkDTO struct {
 	Icon  string    `json:"icon,omitempty"`
 }
 
-type musicDTO struct {
-	Kind       string `json:"kind"`
-	SourceURL  string `json:"sourceUrl,omitempty"`
-	Title      string `json:"title,omitempty"`
-	ArtworkURL string `json:"artworkUrl,omitempty"`
-	StreamURL  string `json:"streamUrl,omitempty"`
-}
-
-func toMusicDTO(p *domain.Profile) *musicDTO {
-	if p.MusicKind == "" {
-		return nil
-	}
-	return &musicDTO{
-		Kind:       p.MusicKind,
-		SourceURL:  p.MusicSourceURL,
-		Title:      p.MusicTitle,
-		ArtworkURL: p.MusicArtworkURL,
-		StreamURL:  p.MusicStreamURL,
-	}
-}
-
 type publicProfileDTO struct {
 	Username         string          `json:"username"`
 	DisplayName      string          `json:"displayName"`
 	Bio              string          `json:"bio"`
 	AvatarURL        string          `json:"avatarUrl"`
 	Theme            string          `json:"theme"`
-	Music            *musicDTO       `json:"music"`
 	DiscordUserID    string          `json:"discordUserId"`
 	UseDiscordAvatar bool            `json:"useDiscordAvatar"`
 	Links            []publicLinkDTO `json:"links"`
@@ -110,8 +87,6 @@ type ownerProfileDTO struct {
 	Bio              string         `json:"bio"`
 	AvatarURL        string         `json:"avatarUrl"`
 	Theme            string         `json:"theme"`
-	MusicURL         string         `json:"musicUrl"`
-	Music            *musicDTO      `json:"music"`
 	DiscordUserID    string         `json:"discordUserId"`
 	UseDiscordAvatar bool           `json:"useDiscordAvatar"`
 	Links            []ownerLinkDTO `json:"links"`
@@ -168,7 +143,6 @@ func (h *ProfileHandler) GetPublicProfile(c *gin.Context) {
 		Bio:              profile.Bio,
 		AvatarURL:        profile.AvatarURL,
 		Theme:            profile.Theme,
-		Music:            toMusicDTO(profile),
 		DiscordUserID:    profile.DiscordUserID,
 		UseDiscordAvatar: profile.UseDiscordAvatar,
 		Links:            make([]publicLinkDTO, 0, len(links)),
@@ -311,7 +285,6 @@ func (h *ProfileHandler) UpsertMyProfile(c *gin.Context) {
 			DiscordUserID:    discordID,
 			UseDiscordAvatar: req.UseDiscordAvatar != nil && *req.UseDiscordAvatar,
 		}
-		applyMusic(profile, strings.TrimSpace(req.MusicURL))
 		if err := h.profiles.Create(profile); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create profile"})
 			return
@@ -329,10 +302,6 @@ func (h *ProfileHandler) UpsertMyProfile(c *gin.Context) {
 		if req.UseDiscordAvatar != nil {
 			existing.UseDiscordAvatar = *req.UseDiscordAvatar
 		}
-		// Only re-hit the music providers when the source actually changed.
-		if newURL := strings.TrimSpace(req.MusicURL); newURL != existing.MusicURL {
-			applyMusic(existing, newURL)
-		}
 		if err := h.profiles.Update(existing); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update profile"})
 			return
@@ -346,18 +315,6 @@ var discordIDRe = regexp.MustCompile(`\d{15,25}`)
 // sanitizeDiscordID accepts a raw ID, an <@id> mention, or empty.
 func sanitizeDiscordID(raw string) string {
 	return discordIDRe.FindString(raw)
-}
-
-// applyMusic resolves rawURL and writes every music_* field on p (clearing them
-// when rawURL is empty).
-func applyMusic(p *domain.Profile, rawURL string) {
-	p.MusicURL = rawURL
-	t := music.Resolve(rawURL)
-	p.MusicKind = t.Kind
-	p.MusicSourceURL = t.SourceURL
-	p.MusicTitle = t.Title
-	p.MusicArtworkURL = t.ArtworkURL
-	p.MusicStreamURL = t.StreamURL
 }
 
 // CreateMyProfileLink appends a link to the current user's profile.
@@ -542,8 +499,6 @@ func (h *ProfileHandler) respondOwnerProfile(c *gin.Context, status int, profile
 		Bio:              profile.Bio,
 		AvatarURL:        profile.AvatarURL,
 		Theme:            profile.Theme,
-		MusicURL:         profile.MusicURL,
-		Music:            toMusicDTO(profile),
 		DiscordUserID:    profile.DiscordUserID,
 		UseDiscordAvatar: profile.UseDiscordAvatar,
 		Links:            make([]ownerLinkDTO, 0, len(links)),
