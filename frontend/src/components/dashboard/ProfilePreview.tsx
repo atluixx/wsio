@@ -1,13 +1,8 @@
 import { ArrowUpRight } from "lucide-react";
 import type { OwnerProfile } from "@/lib/api";
 import { resolveLinkIcon } from "@/lib/socialIcons";
-
-function initials(name: string, username: string): string {
-  const source = (name || username).trim();
-  const parts = source.split(/\s+/).filter(Boolean);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return source.slice(0, 2).toUpperCase();
-}
+import { ProfileAvatar } from "@/components/ProfileAvatar";
+import { ProfileDiscord } from "@/components/ProfileDiscord";
 
 interface Props {
   profile: OwnerProfile;
@@ -23,6 +18,9 @@ export function ProfilePreview({ profile, publicUrl }: Props) {
   const name = profile.displayName || `@${profile.username}`;
   const links = profile.links.filter((l) => l.active);
   const host = publicUrl.replace(/^https?:\/\//, "");
+  // Only wire up Lanyard once the id looks like a real snowflake, so we don't
+  // open a socket for every keystroke while it's being typed.
+  const discordId = /^\d{17,20}$/.test(profile.discordUserId) ? profile.discordUserId : "";
 
   return (
     <div className="w-full">
@@ -38,22 +36,14 @@ export function ProfilePreview({ profile, publicUrl }: Props) {
               className="profile-surface flex min-h-full flex-col items-center px-5 py-10"
               data-theme={profile.theme || "minimal"}
             >
-              {profile.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={profile.avatarUrl}
-                  alt=""
-                  className="h-20 w-20 rounded-full object-cover"
-                  style={{ border: "1px solid var(--p-border)" }}
-                />
-              ) : (
-                <div
-                  className="flex h-20 w-20 items-center justify-center rounded-full text-xl font-medium"
-                  style={{ background: "var(--p-card)", border: "1px solid var(--p-border)" }}
-                >
-                  {initials(profile.displayName, profile.username)}
-                </div>
-              )}
+              <ProfileAvatar
+                avatarUrl={profile.avatarUrl}
+                displayName={profile.displayName}
+                username={profile.username}
+                discordUserId={discordId}
+                useDiscordAvatar={profile.useDiscordAvatar}
+                size="sm"
+              />
 
               <h2
                 className="mt-5 text-center text-[1.35rem] font-medium tracking-[-0.01em]"
@@ -66,6 +56,8 @@ export function ProfilePreview({ profile, publicUrl }: Props) {
                   @{profile.username}
                 </p>
               )}
+
+              {discordId && <ProfileDiscord userId={discordId} />}
 
               {profile.bio && (
                 <p

@@ -134,15 +134,20 @@ export function discordAvatarUrl(
   return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${ext}?size=256`;
 }
 
-export function customStatus(data: LanyardData | null): {
-  emoji: string | null;
+export interface CustomStatus {
+  /** A unicode emoji is `{ id: null, name: "🇨" }`; a server emoji has an id. */
+  emoji: { id: string | null; name: string; animated: boolean } | null;
   text: string;
-} | null {
+}
+
+export function customStatus(data: LanyardData | null): CustomStatus | null {
   const custom = data?.activities?.find((a) => a.type === 4);
   if (!custom) return null;
-  const emoji =
-    custom.emoji && !custom.emoji.id ? custom.emoji.name : null;
   const text = custom.state ?? "";
+  const e = custom.emoji;
+  const emoji = e?.name
+    ? { id: e.id ?? null, name: e.name, animated: !!e.animated }
+    : null;
   if (!emoji && !text) return null;
   return { emoji, text };
 }

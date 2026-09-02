@@ -29,9 +29,25 @@ export function ProfileDiscord({ userId }: { userId: string }) {
         title={status.label}
       />
       {custom ? (
-        <span className="truncate" style={{ color: "var(--p-fg)" }}>
-          {custom.emoji ? `${custom.emoji} ` : ""}
-          {custom.text || status.label}
+        <span
+          className="inline-flex min-w-0 items-center gap-1"
+          style={{ color: "var(--p-fg)" }}
+        >
+          {custom.emoji?.id ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={`https://cdn.discordapp.com/emojis/${custom.emoji.id}.${
+                custom.emoji.animated ? "gif" : "webp"
+              }?size=48`}
+              alt={custom.emoji.name}
+              className="h-[1.15em] w-[1.15em] shrink-0"
+            />
+          ) : custom.emoji ? (
+            <span aria-hidden className="shrink-0">
+              {custom.emoji.name}
+            </span>
+          ) : null}
+          <span className="truncate">{custom.text || status.label}</span>
         </span>
       ) : (
         <span className="truncate" style={{ color: "var(--p-muted)" }}>

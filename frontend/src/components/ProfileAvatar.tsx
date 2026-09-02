@@ -16,6 +16,7 @@ interface Props {
   username: string;
   discordUserId?: string;
   useDiscordAvatar?: boolean;
+  size?: "md" | "sm";
 }
 
 export function ProfileAvatar({
@@ -24,6 +25,7 @@ export function ProfileAvatar({
   username,
   discordUserId,
   useDiscordAvatar,
+  size = "md",
 }: Props) {
   const lanyard = useLanyard(
     useDiscordAvatar && discordUserId ? discordUserId : undefined
@@ -33,6 +35,7 @@ export function ProfileAvatar({
   const discordSrc =
     useDiscordAvatar && !failed ? discordAvatarUrl(lanyard?.discord_user) : null;
   const src = discordSrc || (!failed ? avatarUrl : "") || "";
+  const box = size === "sm" ? "h-20 w-20 text-xl" : "h-24 w-24 text-2xl";
 
   if (src) {
     return (
@@ -41,7 +44,7 @@ export function ProfileAvatar({
         src={src}
         alt={displayName || username}
         onError={() => setFailed(true)}
-        className="h-24 w-24 rounded-full object-cover"
+        className={`${box} rounded-full object-cover`}
         style={{ border: "1px solid var(--p-border)" }}
       />
     );
@@ -49,7 +52,7 @@ export function ProfileAvatar({
 
   return (
     <div
-      className="flex h-24 w-24 items-center justify-center rounded-full text-2xl font-medium"
+      className={`flex ${box} items-center justify-center rounded-full font-medium`}
       style={{ background: "var(--p-card)", border: "1px solid var(--p-border)" }}
     >
       {initials(displayName, username)}
