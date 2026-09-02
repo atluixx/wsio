@@ -256,3 +256,77 @@ export async function fetchPublicProfile(username: string): Promise<PublicProfil
     return null;
   }
 }
+
+export async function fetchProfileIndex(): Promise<{ username: string; updatedAt: string }[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/v1/profiles`, { next: { revalidate: 3600 } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data?.profiles) ? data.profiles : [];
+  } catch {
+    return [];
+  }
+}
+
+// --- reports ---
+
+export const REPORT_REASONS = [
+  { value: "impersonation", label: "Pretending to be someone else" },
+  { value: "spam", label: "Spam or scam" },
+  { value: "harassment", label: "Harassment or bullying" },
+  { value: "hate", label: "Hate speech" },
+  { value: "adult", label: "Adult or explicit content" },
+  { value: "malware", label: "Malware or phishing links" },
+  { value: "other", label: "Something else" },
+] as const;
+
+export type ReportStatus = "open" | "reviewed" | "dismissed" | "actioned";
+
+export interface ProfileReport {
+  id: string;
+  profileId: string;
+  username: string;
+  reason: string;
+  details: string;
+  status: ReportStatus;
+  createdAt: string;
+  reviewedAt?: string;
+}
+
+export async function reportProfile(
+  username: string,
+  reason: string,
+  details: string
+): Promise<{ ok: boolean; error?: string }> {
+  const res = await apiFetch(`/api/v1/profiles/${encodeURIComponent(username)}/report`, {
+    method: "POST",
+    body: JSON.stringify({ reason, details }),
+  });
+  if (!res) return { ok: false, error: "Network error" };
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    return { ok: false, error: parseErrorMessage(data, "Couldn't submit the report") };
+  }
+  return { ok: true };
+}
+
+export async function fetchReports(
+  status?: ReportStatus | ""
+): Promise<{ reports: ProfileReport[]; openCount: number }> {
+  const qs = status ? `?status=${status}` : "";
+  const res = await apiFetch(`/api/v1/admin/reports${qs}`);
+  if (!res || !res.ok) return { reports: [], openCount: 0 };
+  const data = await res.json().catch(() => ({}));
+  return { reports: data.reports ?? [], openCount: data.openCount ?? 0 };
+}
+
+export async function updateReport(
+  id: string,
+  status: ReportStatus
+): Promise<{ ok: boolean }> {
+  const res = await apiFetch(`/api/v1/admin/reports/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ status }),
+  });
+  return { ok: !!res && res.ok };
+}

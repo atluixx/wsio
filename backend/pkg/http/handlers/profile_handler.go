@@ -105,6 +105,33 @@ func toOwnerLinkDTO(l *domain.ProfileLink) ownerLinkDTO {
 
 // --- public endpoints ---
 
+// ListPublicProfiles returns a lightweight index of every profile — username and
+// last-updated — for the sitemap. Public data by design.
+func (h *ProfileHandler) ListPublicProfiles(c *gin.Context) {
+	profiles, err := h.profiles.FindAll()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list profiles"})
+		return
+	}
+	type entry struct {
+		Username  string `json:"username"`
+		UpdatedAt string `json:"updatedAt"`
+	}
+	const maxEntries = 5000
+	out := make([]entry, 0, len(profiles))
+	for _, p := range profiles {
+		if len(out) >= maxEntries {
+			break
+		}
+		updated := ""
+		if !p.UpdatedAt.IsZero() {
+			updated = p.UpdatedAt.UTC().Format(time.RFC3339)
+		}
+		out = append(out, entry{Username: p.Username, UpdatedAt: updated})
+	}
+	c.JSON(http.StatusOK, gin.H{"profiles": out})
+}
+
 // GetPublicProfile serves a profile and its visible links for the public page,
 // and records a page view.
 func (h *ProfileHandler) GetPublicProfile(c *gin.Context) {

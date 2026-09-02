@@ -4,6 +4,7 @@ import { ProfileLinks } from "@/components/ProfileLinks";
 import { ProfileDiscord } from "@/components/ProfileDiscord";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
 import { ProfileShare } from "@/components/ProfileShare";
+import { ProfileReportLink } from "@/components/ProfileReportLink";
 
 export function PublicProfile({ profile }: { profile: PublicProfileData }) {
   const name = profile.displayName || `@${profile.username}`;
@@ -50,14 +51,17 @@ export function PublicProfile({ profile }: { profile: PublicProfileData }) {
         <ProfileLinks links={profile.links} />
       </div>
 
-      <Link
-        href="/"
-        className="mt-16 inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] px-3.5 py-1.5 text-[0.8rem] transition-opacity hover:opacity-70"
-        style={{ color: "var(--p-muted)", border: "1px solid var(--p-border)" }}
-      >
-        <span style={{ fontFamily: "var(--font-display)", fontWeight: 500 }}>wsio</span>
-        <span>— make your own</span>
-      </Link>
+      <div className="mt-16 flex flex-col items-center">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] px-3.5 py-1.5 text-[0.8rem] transition-opacity hover:opacity-70"
+          style={{ color: "var(--p-muted)", border: "1px solid var(--p-border)" }}
+        >
+          <span style={{ fontFamily: "var(--font-display)", fontWeight: 500 }}>wsio</span>
+          <span>— make your own</span>
+        </Link>
+        <ProfileReportLink username={profile.username} />
+      </div>
     </div>
   );
 }

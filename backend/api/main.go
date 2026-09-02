@@ -20,6 +20,7 @@ var (
 	profileRepo          repositories.ProfileRepository
 	profileLinkRepo      repositories.ProfileLinkRepository
 	profileAnalyticsRepo repositories.ProfileAnalyticsRepository
+	profileReportRepo    repositories.ProfileReportRepository
 )
 
 func init() {
@@ -37,11 +38,13 @@ func init() {
 				&domain.ProfileLink{},
 				&domain.ProfileLinkClick{},
 				&domain.ProfileView{},
+				&domain.ProfileReport{},
 			)
 			userRepo = repositories.NewUserRepository(db)
 			profileRepo = repositories.NewProfileRepository(db)
 			profileLinkRepo = repositories.NewProfileLinkRepository(db)
 			profileAnalyticsRepo = repositories.NewProfileAnalyticsRepository(db)
+			profileReportRepo = repositories.NewProfileReportRepository(db)
 			log.Println("Initialized PostgreSQL database repositories")
 			return
 		}
@@ -52,6 +55,7 @@ func init() {
 	profileRepo = repositories.NewInMemoryProfileRepository()
 	profileLinkRepo = repositories.NewInMemoryProfileLinkRepository()
 	profileAnalyticsRepo = repositories.NewInMemoryProfileAnalyticsRepository()
+	profileReportRepo = repositories.NewInMemoryProfileReportRepository()
 	log.Println("Initialized In-Memory repositories fallback")
 }
 
@@ -71,8 +75,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	userHandler := handlers.NewUserHandler(userRepo)
 	profileHandler := handlers.NewProfileHandler(profileRepo, profileLinkRepo, profileAnalyticsRepo)
 	adminHandler := handlers.NewAdminHandler(userRepo, profileRepo, profileLinkRepo)
+	reportHandler := handlers.NewReportHandler(profileReportRepo, profileRepo)
 
-	app.SetupRoutes(router, userHandler, profileHandler, adminHandler)
+	app.SetupRoutes(router, userHandler, profileHandler, adminHandler, reportHandler)
 
 	router.ServeHTTP(w, r)
 }

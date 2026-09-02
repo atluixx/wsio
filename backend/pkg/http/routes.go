@@ -11,6 +11,7 @@ func SetupRoutes(
 	userHandler *handlers.UserHandler,
 	profileHandler *handlers.ProfileHandler,
 	adminHandler *handlers.AdminHandler,
+	reportHandler *handlers.ReportHandler,
 ) {
 	r.HandleMethodNotAllowed = true
 
@@ -55,9 +56,13 @@ func SetupRoutes(
 	}
 
 	// Public profile surface
+	base.GET("/profiles", profileHandler.ListPublicProfiles)
 	base.GET("/profiles/:username", profileHandler.GetPublicProfile)
 	base.POST("/click/:id", profileHandler.RecordClick)
 	base.GET("/click/:id", profileHandler.TrackAndRedirect)
+	if reportHandler != nil {
+		base.POST("/profiles/:username/report", reportHandler.Submit)
+	}
 
 	// Current user's profile management
 	me := base.Group("/me")
@@ -80,6 +85,10 @@ func SetupRoutes(
 		{
 			admin.GET("/stats", adminHandler.GetSystemStats)
 			admin.GET("/users", adminHandler.ListUsers)
+			if reportHandler != nil {
+				admin.GET("/reports", reportHandler.List)
+				admin.PUT("/reports/:id", reportHandler.Update)
+			}
 		}
 	}
 }

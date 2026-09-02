@@ -22,12 +22,14 @@ func newTestRouter() *gin.Engine {
 	profileRepo := repositories.NewInMemoryProfileRepository()
 	linkRepo := repositories.NewInMemoryProfileLinkRepository()
 	analyticsRepo := repositories.NewInMemoryProfileAnalyticsRepository()
+	reportRepo := repositories.NewInMemoryProfileReportRepository()
 
 	app.SetupRoutes(
 		r,
 		handlers.NewUserHandler(userRepo),
 		handlers.NewProfileHandler(profileRepo, linkRepo, analyticsRepo),
 		handlers.NewAdminHandler(userRepo, profileRepo, linkRepo),
+		handlers.NewReportHandler(reportRepo, profileRepo),
 	)
 	return r
 }
@@ -222,4 +224,83 @@ func TestLogout(t *testing.T) {
 		}
 	}
 	assertClears(do(t, r, http.MethodPost, "/api/v1/auth/logout", session, nil))
+}
+
+func TestReports(t *testing.T) {
+	r := newTestRouter()
+
+	// a regular user with a profile
+	w := do(t, r, http.MethodPost, "/api/v1/auth/register", "", map[string]string{
+		"email": "target@example.com", "password": "supersecret",
+	})
+	var target string
+	for _, c := range w.Result().Cookies() {
+		if c.Name == "session" {
+			target = c.Value
+		}
+	}
+	if w := do(t, r, http.MethodPut, "/api/v1/me/profile", target, map[string]string{
+		"username": "target", "displayName": "Target",
+	}); w.Code != http.StatusCreated {
+		t.Fatalf("create profile: %d %s", w.Code, w.Body)
+	}
+
+	// public report — unknown reason rejected
+	if w := do(t, r, http.MethodPost, "/api/v1/profiles/target/report", "", map[string]string{
+		"reason": "banana",
+	}); w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for bad reason, got %d", w.Code)
+	}
+	// valid report accepted; unknown username also accepted (no existence leak)
+	for _, name := range []string{"target", "nobody-here"} {
+		if w := do(t, r, http.MethodPost, "/api/v1/profiles/"+name+"/report", "", map[string]string{
+			"reason": "spam", "details": "buying followers",
+		}); w.Code != http.StatusAccepted {
+			t.Fatalf("report %s: expected 202, got %d %s", name, w.Code, w.Body)
+		}
+	}
+
+	// non-admin can't read the queue
+	if w := do(t, r, http.MethodGet, "/api/v1/admin/reports", target, nil); w.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 for non-admin reports, got %d", w.Code)
+	}
+
+	// admin sees the one real report and can triage it
+	w = do(t, r, http.MethodPost, "/api/v1/auth/register", "", map[string]string{
+		"email": "admin@wsio.lol", "password": "supersecret",
+	})
+	var admin string
+	for _, c := range w.Result().Cookies() {
+		if c.Name == "session" {
+			admin = c.Value
+		}
+	}
+	w = do(t, r, http.MethodGet, "/api/v1/admin/reports", admin, nil)
+	if w.Code != http.StatusOK {
+		t.Fatalf("admin reports: %d %s", w.Code, w.Body)
+	}
+	var list struct {
+		OpenCount int `json:"openCount"`
+		Reports   []struct {
+			ID       string `json:"id"`
+			Username string `json:"username"`
+			Reason   string `json:"reason"`
+			Status   string `json:"status"`
+		} `json:"reports"`
+	}
+	json.Unmarshal(w.Body.Bytes(), &list)
+	if len(list.Reports) != 1 || list.OpenCount != 1 || list.Reports[0].Username != "target" || list.Reports[0].Reason != "spam" {
+		t.Fatalf("unexpected report list: %+v", list)
+	}
+
+	if w := do(t, r, http.MethodPut, "/api/v1/admin/reports/"+list.Reports[0].ID, admin, map[string]string{
+		"status": "dismissed",
+	}); w.Code != http.StatusOK {
+		t.Fatalf("triage report: %d %s", w.Code, w.Body)
+	}
+	w = do(t, r, http.MethodGet, "/api/v1/admin/reports?status=open", admin, nil)
+	json.Unmarshal(w.Body.Bytes(), &list)
+	if len(list.Reports) != 0 {
+		t.Fatalf("expected no open reports after triage, got %d", len(list.Reports))
+	}
 }

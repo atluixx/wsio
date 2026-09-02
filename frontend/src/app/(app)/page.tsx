@@ -13,10 +13,30 @@ export const metadata: Metadata = {
 export default function Home() {
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: "wsio",
-    url: APP_URL,
-    description: "A calm link-in-bio page with honest click analytics.",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${APP_URL}/#org`,
+        name: "wsio",
+        url: APP_URL,
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${APP_URL}/#website`,
+        name: "wsio",
+        url: APP_URL,
+        publisher: { "@id": `${APP_URL}/#org` },
+        description: "A link-in-bio page made with some care.",
+      },
+      {
+        "@type": "SoftwareApplication",
+        name: "wsio",
+        applicationCategory: "WebApplication",
+        operatingSystem: "Web",
+        url: APP_URL,
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      },
+    ],
   };
 
   return (

@@ -401,3 +401,88 @@ func (r *inMemoryProfileAnalyticsRepository) GetProfileSummary(profileID uuid.UU
 	}
 	return summary, nil
 }
+
+type inMemoryProfileReportRepository struct {
+	mu      sync.RWMutex
+	reports []*domain.ProfileReport
+}
+
+func NewInMemoryProfileReportRepository() ProfileReportRepository {
+	return &inMemoryProfileReportRepository{reports: make([]*domain.ProfileReport, 0)}
+}
+
+func (r *inMemoryProfileReportRepository) Create(rep *domain.ProfileReport) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if rep.ID == uuid.Nil {
+		rep.ID = uuid.New()
+	}
+	if rep.CreatedAt.IsZero() {
+		rep.CreatedAt = time.Now()
+	}
+	r.reports = append(r.reports, rep)
+	return nil
+}
+
+func (r *inMemoryProfileReportRepository) CountRecentByReporter(profileID uuid.UUID, ip string, since time.Time) (int64, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	var count int64
+	for _, rep := range r.reports {
+		if rep.ProfileID == profileID && rep.ReporterIP == ip && rep.CreatedAt.After(since) {
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (r *inMemoryProfileReportRepository) List(status string, limit int) ([]*domain.ProfileReport, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	if limit <= 0 || limit > 500 {
+		limit = 200
+	}
+	sorted := append([]*domain.ProfileReport(nil), r.reports...)
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i].CreatedAt.After(sorted[j].CreatedAt) })
+	out := make([]*domain.ProfileReport, 0, limit)
+	for _, rep := range sorted {
+		if status != "" && rep.Status != status {
+			continue
+		}
+		out = append(out, rep)
+		if len(out) >= limit {
+			break
+		}
+	}
+	return out, nil
+}
+
+func (r *inMemoryProfileReportRepository) CountByStatus(status string) (int64, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	var count int64
+	for _, rep := range r.reports {
+		if status == "" || rep.Status == status {
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (r *inMemoryProfileReportRepository) UpdateStatus(id uuid.UUID, status string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for _, rep := range r.reports {
+		if rep.ID == id {
+			rep.Status = status
+			if status != "open" {
+				now := time.Now()
+				rep.ReviewedAt = &now
+			} else {
+				rep.ReviewedAt = nil
+			}
+			return nil
+		}
+	}
+	return nil
+}

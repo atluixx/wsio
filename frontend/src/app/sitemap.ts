@@ -1,14 +1,29 @@
 import type { MetadataRoute } from "next";
+import { fetchProfileIndex } from "@/lib/api";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+// Revalidate the sitemap hourly so newly claimed pages get indexed without a
+// deploy.
+export const revalidate = 3600;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://wsio.lol").replace(/\/$/, "");
-  const currentDate = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0];
 
-  return [
-    { url: `${baseUrl}/`, lastModified: currentDate, changeFrequency: "weekly", priority: 1.0 },
-    { url: `${baseUrl}/login`, lastModified: currentDate, changeFrequency: "monthly", priority: 0.4 },
-    { url: `${baseUrl}/register`, lastModified: currentDate, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${baseUrl}/terms`, lastModified: currentDate, changeFrequency: "yearly", priority: 0.2 },
-    { url: `${baseUrl}/privacy`, lastModified: currentDate, changeFrequency: "yearly", priority: 0.2 },
+  const staticRoutes: MetadataRoute.Sitemap = [
+    { url: `${baseUrl}/`, lastModified: today, changeFrequency: "weekly", priority: 1.0 },
+    { url: `${baseUrl}/register`, lastModified: today, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${baseUrl}/login`, lastModified: today, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${baseUrl}/privacy`, lastModified: today, changeFrequency: "yearly", priority: 0.2 },
+    { url: `${baseUrl}/terms`, lastModified: today, changeFrequency: "yearly", priority: 0.2 },
   ];
+
+  const profiles = await fetchProfileIndex();
+  const profileRoutes: MetadataRoute.Sitemap = profiles.map((p) => ({
+    url: `${baseUrl}/${encodeURIComponent(p.username)}`,
+    lastModified: p.updatedAt || today,
+    changeFrequency: "weekly",
+    priority: 0.7,
+  }));
+
+  return [...staticRoutes, ...profileRoutes];
 }

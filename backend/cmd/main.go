@@ -26,6 +26,7 @@ func main() {
 		profileRepo   repositories.ProfileRepository
 		linkRepo      repositories.ProfileLinkRepository
 		analyticsRepo repositories.ProfileAnalyticsRepository
+		reportRepo    repositories.ProfileReportRepository
 	)
 
 	dsn := os.Getenv("DATABASE_URL")
@@ -40,25 +41,29 @@ func main() {
 			&domain.ProfileLink{},
 			&domain.ProfileLinkClick{},
 			&domain.ProfileView{},
+			&domain.ProfileReport{},
 		)
 		userRepo = repositories.NewUserRepository(db)
 		profileRepo = repositories.NewProfileRepository(db)
 		linkRepo = repositories.NewProfileLinkRepository(db)
 		analyticsRepo = repositories.NewProfileAnalyticsRepository(db)
+		reportRepo = repositories.NewProfileReportRepository(db)
 		log.Println("using PostgreSQL repositories")
 	} else {
 		userRepo = repositories.NewInMemoryUserRepository()
 		profileRepo = repositories.NewInMemoryProfileRepository()
 		linkRepo = repositories.NewInMemoryProfileLinkRepository()
 		analyticsRepo = repositories.NewInMemoryProfileAnalyticsRepository()
+		reportRepo = repositories.NewInMemoryProfileReportRepository()
 		log.Println("DATABASE_URL not set / unreachable — using in-memory repositories (data is not persisted)")
 	}
 
 	userHandler := handlers.NewUserHandler(userRepo)
 	profileHandler := handlers.NewProfileHandler(profileRepo, linkRepo, analyticsRepo)
 	adminHandler := handlers.NewAdminHandler(userRepo, profileRepo, linkRepo)
+	reportHandler := handlers.NewReportHandler(reportRepo, profileRepo)
 
-	app.SetupRoutes(router, userHandler, profileHandler, adminHandler)
+	app.SetupRoutes(router, userHandler, profileHandler, adminHandler, reportHandler)
 
 	if err := router.Run(); err != nil {
 		log.Fatalf("failed to start the API: %s", err)

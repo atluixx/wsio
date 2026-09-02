@@ -1,14 +1,33 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { RefreshCw, Search } from "lucide-react";
+import { RefreshCw, Search, ExternalLink } from "lucide-react";
+import {
+  fetchReports,
+  updateReport,
+  REPORT_REASONS,
+  type ProfileReport,
+  type ReportStatus,
+} from "@/lib/api";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.wsio.lol";
+
+const REASON_LABEL: Record<string, string> = Object.fromEntries(
+  REPORT_REASONS.map((r) => [r.value, r.label])
+);
+
+const STATUS_STYLE: Record<ReportStatus, string> = {
+  open: "bg-[#f7e4e1] text-[var(--color-negative)]",
+  reviewed: "bg-raised text-muted",
+  dismissed: "bg-raised text-faint",
+  actioned: "bg-[#e6efe4] text-[var(--color-positive)]",
+};
 
 interface SystemStats {
   systemStatus: string;
@@ -33,6 +52,9 @@ export function AdminDashboardClient() {
 
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [users, setUsers] = useState<UserAccount[]>([]);
+  const [reports, setReports] = useState<ProfileReport[]>([]);
+  const [openCount, setOpenCount] = useState(0);
+  const [reportFilter, setReportFilter] = useState<"open" | "">("open");
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
 
@@ -41,6 +63,12 @@ export function AdminDashboardClient() {
       router.replace("/dashboard");
     }
   }, [authLoading, isAuthenticated, user?.role, router]);
+
+  const loadReports = useCallback(async (filter: "open" | "") => {
+    const { reports, openCount } = await fetchReports(filter);
+    setReports(reports);
+    setOpenCount(openCount);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -51,18 +79,34 @@ export function AdminDashboardClient() {
       ]);
       if (statsRes?.ok) setStats(await statsRes.json());
       if (usersRes?.ok) setUsers(await usersRes.json());
+      await loadReports(reportFilter);
       if (!statsRes?.ok && !usersRes?.ok) showToast("Couldn't load admin data", "error");
     } finally {
       setLoading(false);
     }
-  }, [showToast]);
+  }, [showToast, loadReports, reportFilter]);
 
   useEffect(() => {
     if (authLoading || !isAuthenticated || user?.role !== "admin") return;
     void (async () => {
       await load();
     })();
-  }, [authLoading, isAuthenticated, user?.role, load]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, isAuthenticated, user?.role]);
+
+  const triage = async (id: string, status: ReportStatus) => {
+    const { ok } = await updateReport(id, status);
+    if (!ok) {
+      showToast("Couldn't update the report", "error");
+      return;
+    }
+    await loadReports(reportFilter);
+  };
+
+  const switchFilter = async (filter: "open" | "") => {
+    setReportFilter(filter);
+    await loadReports(filter);
+  };
 
   const filtered = useMemo(
     () => users.filter((u) => u.email.toLowerCase().includes(query.toLowerCase())),
@@ -77,6 +121,7 @@ export function AdminDashboardClient() {
     { label: "Users", value: stats?.totalUsers ?? 0 },
     { label: "Profiles", value: stats?.totalProfiles ?? 0 },
     { label: "Links", value: stats?.totalLinks ?? 0 },
+    { label: "Open reports", value: openCount },
   ];
 
   return (
@@ -94,7 +139,7 @@ export function AdminDashboardClient() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {cards.map(({ label, value }) => (
           <div key={label} className="surface-card p-5">
             <div className="text-sm text-muted">{label}</div>
@@ -103,6 +148,77 @@ export function AdminDashboardClient() {
         ))}
       </div>
 
+      {/* Reports */}
+      <div className="surface-card p-6">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="font-display text-lg font-medium tracking-tight">Reports</h2>
+          <div className="flex gap-1 rounded-[var(--radius-sm)] border border-line p-0.5 text-xs">
+            {(["open", ""] as const).map((f) => (
+              <button
+                key={f || "all"}
+                onClick={() => switchFilter(f)}
+                className={`rounded-[var(--radius-xs)] px-2.5 py-1 transition-colors ${
+                  reportFilter === f ? "bg-ink text-canvas" : "text-muted hover:text-ink"
+                }`}
+              >
+                {f === "open" ? "Open" : "All"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {reports.length === 0 ? (
+          <p className="py-8 text-center text-sm text-faint">
+            {reportFilter === "open" ? "No open reports." : "No reports yet."}
+          </p>
+        ) : (
+          <ul className="divide-y divide-line">
+            {reports.map((r) => (
+              <li key={r.id} className="py-4">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span className="text-sm font-medium text-ink">
+                    {REASON_LABEL[r.reason] ?? r.reason}
+                  </span>
+                  <Link
+                    href={`/${r.username}`}
+                    target="_blank"
+                    className="inline-flex items-center gap-1 text-sm text-accent hover:underline"
+                  >
+                    wsio.lol/{r.username}
+                    <ExternalLink className="h-3 w-3" />
+                  </Link>
+                  <span
+                    className={`rounded-[var(--radius-pill)] px-2 py-0.5 text-xs font-medium capitalize ${STATUS_STYLE[r.status]}`}
+                  >
+                    {r.status}
+                  </span>
+                  <span className="ml-auto text-xs text-faint">
+                    {new Date(r.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+                {r.details && (
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted">{r.details}</p>
+                )}
+                <div className="mt-2.5 flex flex-wrap gap-2">
+                  {r.status === "open" ? (
+                    <>
+                      <MiniButton onClick={() => triage(r.id, "reviewed")}>Reviewed</MiniButton>
+                      <MiniButton onClick={() => triage(r.id, "dismissed")}>Dismiss</MiniButton>
+                      <MiniButton danger onClick={() => triage(r.id, "actioned")}>
+                        Actioned
+                      </MiniButton>
+                    </>
+                  ) : (
+                    <MiniButton onClick={() => triage(r.id, "open")}>Reopen</MiniButton>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Users */}
       <div className="surface-card p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="font-display text-lg font-medium tracking-tight">
@@ -134,5 +250,29 @@ export function AdminDashboardClient() {
         </ul>
       </div>
     </div>
+  );
+}
+
+function MiniButton({
+  children,
+  onClick,
+  danger,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  danger?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-[var(--radius-xs)] border px-2.5 py-1 text-xs font-medium transition-colors ${
+        danger
+          ? "border-[var(--color-negative)]/40 text-[var(--color-negative)] hover:bg-[#f7e4e1]"
+          : "border-line-strong text-muted hover:border-ink hover:text-ink"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
