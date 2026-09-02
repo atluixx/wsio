@@ -204,24 +204,31 @@ func (h *UserHandler) Me(c *gin.Context) {
 	})
 }
 
-func setSessionCookie(c *gin.Context, token string) {
-	domain := os.Getenv("COOKIE_DOMAIN")
-	if domain == "" {
-		host := c.Request.Host
-		if strings.Contains(host, "wsio.lol") {
-			domain = ".wsio.lol"
-		}
+// Logout clears the session cookie. It is intentionally unauthenticated and
+// idempotent — calling it without (or with an expired) session still succeeds.
+func (h *UserHandler) Logout(c *gin.Context) {
+	clearSessionCookie(c)
+	c.JSON(http.StatusOK, gin.H{"ok": true})
+}
+
+func sessionCookieDomain(c *gin.Context) string {
+	if domain := os.Getenv("COOKIE_DOMAIN"); domain != "" {
+		return domain
 	}
+	if strings.Contains(c.Request.Host, "wsio.lol") {
+		return ".wsio.lol"
+	}
+	return ""
+}
 
+func setSessionCookie(c *gin.Context, token string) {
 	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie("session", token, 60*60*24, "/", sessionCookieDomain(c), true, true)
+}
 
-	c.SetCookie(
-		"session",
-		token,
-		60*60*24,
-		"/",
-		domain,
-		true,
-		true,
-	)
+// clearSessionCookie writes an already-expired cookie with the same attributes
+// setSessionCookie uses, so the browser drops it.
+func clearSessionCookie(c *gin.Context) {
+	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie("session", "", -1, "/", sessionCookieDomain(c), true, true)
 }

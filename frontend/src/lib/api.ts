@@ -177,6 +177,10 @@ export async function fetchCurrentUser(): Promise<User | null> {
   return res.json().catch(() => null);
 }
 
+export async function logoutUser(): Promise<void> {
+  await apiFetch("/api/v1/auth/logout", { method: "POST" });
+}
+
 // --- profile (owner) ---
 
 export type MyProfileResult =

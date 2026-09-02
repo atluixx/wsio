@@ -166,3 +166,40 @@ func TestProfileLifecycle(t *testing.T) {
 		t.Fatalf("unexpected analytics summary: %+v", summary)
 	}
 }
+
+// TestLogout: the endpoint is unauthenticated, idempotent, and expires the
+// session cookie so the browser drops it.
+func TestLogout(t *testing.T) {
+	r := newTestRouter()
+
+	assertClears := func(w *httptest.ResponseRecorder) {
+		t.Helper()
+		if w.Code != http.StatusOK {
+			t.Fatalf("logout: got %d body %s", w.Code, w.Body)
+		}
+		var cleared bool
+		for _, c := range w.Result().Cookies() {
+			if c.Name == "session" && c.Value == "" && c.MaxAge <= 0 {
+				cleared = true
+			}
+		}
+		if !cleared {
+			t.Fatalf("logout did not expire the session cookie: %v", w.Result().Cookies())
+		}
+	}
+
+	// works with no session at all
+	assertClears(do(t, r, http.MethodPost, "/api/v1/auth/logout", "", nil))
+
+	// and with a real one
+	w := do(t, r, http.MethodPost, "/api/v1/auth/register", "", map[string]string{
+		"email": "bye@example.com", "password": "supersecret",
+	})
+	var session string
+	for _, c := range w.Result().Cookies() {
+		if c.Name == "session" {
+			session = c.Value
+		}
+	}
+	assertClears(do(t, r, http.MethodPost, "/api/v1/auth/logout", session, nil))
+}
