@@ -3,7 +3,7 @@
 import { ArrowUpRight } from "lucide-react";
 import type { PublicProfileLink } from "@/lib/api";
 import { recordClick } from "@/lib/api";
-import { linkIcon } from "@/lib/linkIcons";
+import { resolveLinkIcon } from "@/lib/socialIcons";
 
 export function ProfileLinks({ links }: { links: PublicProfileLink[] }) {
   if (links.length === 0) {
@@ -17,7 +17,7 @@ export function ProfileLinks({ links }: { links: PublicProfileLink[] }) {
   return (
     <div className="mt-9 flex w-full flex-col gap-3">
       {links.map((link) => {
-        const Icon = linkIcon(link.icon);
+        const Icon = resolveLinkIcon(link);
         const track = () => recordClick(link.id);
         return (
           <a

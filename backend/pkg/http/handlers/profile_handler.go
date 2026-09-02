@@ -271,6 +271,12 @@ func (h *ProfileHandler) UpsertMyProfile(c *gin.Context) {
 
 	discordID := sanitizeDiscordID(req.DiscordUserID)
 
+	avatarURL, err := sanitizeAvatarURL(req.AvatarURL)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	existing, err := h.profiles.FindByUserID(userID)
 	switch {
 	case errors.Is(err, repositories.ErrProfileNotFound):
@@ -280,7 +286,7 @@ func (h *ProfileHandler) UpsertMyProfile(c *gin.Context) {
 			Username:         username,
 			DisplayName:      strings.TrimSpace(req.DisplayName),
 			Bio:              strings.TrimSpace(req.Bio),
-			AvatarURL:        strings.TrimSpace(req.AvatarURL),
+			AvatarURL:        avatarURL,
 			Theme:            theme,
 			DiscordUserID:    discordID,
 			UseDiscordAvatar: req.UseDiscordAvatar != nil && *req.UseDiscordAvatar,
@@ -296,7 +302,7 @@ func (h *ProfileHandler) UpsertMyProfile(c *gin.Context) {
 		existing.Username = username
 		existing.DisplayName = strings.TrimSpace(req.DisplayName)
 		existing.Bio = strings.TrimSpace(req.Bio)
-		existing.AvatarURL = strings.TrimSpace(req.AvatarURL)
+		existing.AvatarURL = avatarURL
 		existing.Theme = theme
 		existing.DiscordUserID = discordID
 		if req.UseDiscordAvatar != nil {
@@ -315,6 +321,33 @@ var discordIDRe = regexp.MustCompile(`\d{15,25}`)
 // sanitizeDiscordID accepts a raw ID, an <@id> mention, or empty.
 func sanitizeDiscordID(raw string) string {
 	return discordIDRe.FindString(raw)
+}
+
+// maxAvatarLen bounds an inline (data:) avatar — a ~400px square encodes well
+// under this even before we account for base64's 4/3 overhead.
+const maxAvatarLen = 700_000
+
+var avatarDataRe = regexp.MustCompile(`^data:image/(?:png|jpe?g|gif|webp);base64,[A-Za-z0-9+/=\s]+$`)
+
+// sanitizeAvatarURL accepts an empty value, an http(s) URL, or an inline
+// base64 image data URI within the size cap. Anything else is rejected so a
+// hostile value can't reach an <img src>.
+func sanitizeAvatarURL(raw string) (string, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return "", nil
+	}
+	if len(raw) > maxAvatarLen {
+		return "", errors.New("avatar image is too large — use a smaller one")
+	}
+	low := strings.ToLower(raw)
+	if strings.HasPrefix(low, "http://") || strings.HasPrefix(low, "https://") {
+		return raw, nil
+	}
+	if avatarDataRe.MatchString(raw) {
+		return raw, nil
+	}
+	return "", errors.New("avatar must be an image file or an https link")
 }
 
 // CreateMyProfileLink appends a link to the current user's profile.

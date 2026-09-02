@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import {
   Globe,
   Mail,
+  Phone,
   AtSign,
   Video,
   Camera,
@@ -21,6 +22,7 @@ export type IconComponent = ComponentType<{ className?: string }>;
 export const LINK_ICON_KEYS = [
   "website",
   "email",
+  "phone",
   "social",
   "video",
   "photos",
@@ -38,6 +40,7 @@ export type LinkIconKey = (typeof LINK_ICON_KEYS)[number];
 const ICONS: Record<string, IconComponent> = {
   website: Globe,
   email: Mail,
+  phone: Phone,
   social: AtSign,
   video: Video,
   photos: Camera,

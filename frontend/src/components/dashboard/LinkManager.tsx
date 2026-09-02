@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { createElement, useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -39,8 +39,17 @@ import { useToast } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LINK_ICON_KEYS } from "@/lib/linkIcons";
+import { resolveLinkIcon } from "@/lib/socialIcons";
 
 const ICON_OPTIONS = ["", ...LINK_ICON_KEYS];
+
+function IconPreview({ url, icon }: { url: string; icon: string }) {
+  return (
+    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-sm)] border border-line bg-raised text-muted">
+      {createElement(resolveLinkIcon({ url, icon }), { className: "h-4 w-4" })}
+    </span>
+  );
+}
 
 const selectClass =
   "h-11 rounded-[var(--radius-sm)] border border-[var(--color-control-border)] bg-surface px-2.5 text-[0.95rem] text-ink outline-none focus:border-ink";
@@ -160,6 +169,7 @@ export function LinkManager({ links, onChange, clicksByLink }: Props) {
           required
         />
         <div className="flex gap-2">
+          <IconPreview url={url} icon={icon} />
           <select
             value={icon}
             onChange={(e) => setIcon(e.target.value)}
@@ -168,7 +178,7 @@ export function LinkManager({ links, onChange, clicksByLink }: Props) {
           >
             {ICON_OPTIONS.map((o) => (
               <option key={o} value={o}>
-                {o === "" ? "No icon" : o}
+                {o === "" ? "Auto" : o}
               </option>
             ))}
           </select>
@@ -256,18 +266,21 @@ function SortableLinkRow({
         <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
           <Input value={label} onChange={(e) => setLabel(e.target.value)} maxLength={80} />
           <Input value={url} onChange={(e) => setUrl(e.target.value)} />
-          <select
-            value={icon}
-            onChange={(e) => setIcon(e.target.value)}
-            className={selectClass}
-            aria-label="Link icon"
-          >
-            {ICON_OPTIONS.map((o) => (
-              <option key={o} value={o}>
-                {o === "" ? "No icon" : o}
-              </option>
-            ))}
-          </select>
+          <div className="flex gap-2">
+            <IconPreview url={url} icon={icon} />
+            <select
+              value={icon}
+              onChange={(e) => setIcon(e.target.value)}
+              className={selectClass}
+              aria-label="Link icon"
+            >
+              {ICON_OPTIONS.map((o) => (
+                <option key={o} value={o}>
+                  {o === "" ? "Auto" : o}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div className="flex justify-end gap-2">
           <Button size="sm" variant="ghost" onClick={onCancelEdit}>
@@ -302,6 +315,8 @@ function SortableLinkRow({
       >
         <GripVertical className="h-4 w-4" />
       </button>
+
+      {createElement(resolveLinkIcon(link), { className: "h-4 w-4 shrink-0 text-muted" })}
 
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-medium text-ink">{link.label}</div>

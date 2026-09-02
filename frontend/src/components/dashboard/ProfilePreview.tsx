@@ -1,6 +1,6 @@
 import { ArrowUpRight } from "lucide-react";
 import type { OwnerProfile } from "@/lib/api";
-import { linkIcon } from "@/lib/linkIcons";
+import { resolveLinkIcon } from "@/lib/socialIcons";
 
 function initials(name: string, username: string): string {
   const source = (name || username).trim();
@@ -83,7 +83,7 @@ export function ProfilePreview({ profile, publicUrl }: Props) {
                   </p>
                 ) : (
                   links.map((link) => {
-                    const Icon = linkIcon(link.icon);
+                    const Icon = resolveLinkIcon(link);
                     return (
                       <div
                         key={link.id}

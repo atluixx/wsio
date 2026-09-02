@@ -5,6 +5,7 @@ import { saveMyProfile, type OwnerProfile } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AvatarField } from "@/components/dashboard/AvatarField";
 
 const THEMES: { key: string; bg: string; card: string; fg: string }[] = [
   { key: "minimal", bg: "#faf9f5", card: "#fffdf8", fg: "#1c1913" },
@@ -131,14 +132,12 @@ export function ProfileEditor({ profile, onSaved, onDraftChange }: Props) {
         />
       </label>
 
-      <label className="block space-y-1.5">
-        <span className={labelClass}>Avatar URL</span>
-        <Input
-          value={fields.avatarUrl}
-          onChange={(e) => update({ avatarUrl: e.target.value })}
-          placeholder="https://…"
-        />
-      </label>
+      <AvatarField
+        value={fields.avatarUrl}
+        onChange={(v) => update({ avatarUrl: v })}
+        displayName={fields.displayName}
+        username={fields.username}
+      />
 
       {/* Discord */}
       <div className="space-y-1.5">

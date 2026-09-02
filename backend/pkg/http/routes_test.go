@@ -94,6 +94,26 @@ func TestProfileLifecycle(t *testing.T) {
 		t.Fatalf("expected 409 for reserved username, got %d", w.Code)
 	}
 
+	// avatar: a hostile scheme is rejected, an image data URI and an https URL are kept
+	if w := do(t, r, http.MethodPut, "/api/v1/me/profile", session, map[string]string{
+		"username": "creator", "avatarUrl": "javascript:alert(1)",
+	}); w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for javascript: avatar, got %d body %s", w.Code, w.Body)
+	}
+	w = do(t, r, http.MethodPut, "/api/v1/me/profile", session, map[string]string{
+		"username": "creator", "avatarUrl": "data:image/webp;base64,UklGRhoAAABXRUJQ",
+	})
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200 for data-uri avatar, got %d body %s", w.Code, w.Body)
+	}
+	var withAvatar struct {
+		AvatarURL string `json:"avatarUrl"`
+	}
+	json.Unmarshal(w.Body.Bytes(), &withAvatar)
+	if withAvatar.AvatarURL != "data:image/webp;base64,UklGRhoAAABXRUJQ" {
+		t.Fatalf("data-uri avatar not stored: %q", withAvatar.AvatarURL)
+	}
+
 	// add two links
 	var link1 struct {
 		ID string `json:"id"`
