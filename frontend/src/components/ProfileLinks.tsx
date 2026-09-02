@@ -1,38 +1,9 @@
 "use client";
 
-import {
-  Globe,
-  Mail,
-  AtSign,
-  Video,
-  Camera,
-  Music,
-  ShoppingBag,
-  PenLine,
-  Podcast,
-  MessageCircle,
-  Coffee,
-  Gamepad2,
-  Link as LinkIcon,
-  ArrowUpRight,
-} from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import type { PublicProfileLink } from "@/lib/api";
 import { recordClick } from "@/lib/api";
-
-const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  website: Globe,
-  email: Mail,
-  social: AtSign,
-  video: Video,
-  photos: Camera,
-  music: Music,
-  shop: ShoppingBag,
-  writing: PenLine,
-  podcast: Podcast,
-  chat: MessageCircle,
-  tip: Coffee,
-  games: Gamepad2,
-};
+import { linkIcon } from "@/lib/linkIcons";
 
 export function ProfileLinks({ links }: { links: PublicProfileLink[] }) {
   if (links.length === 0) {
@@ -46,7 +17,7 @@ export function ProfileLinks({ links }: { links: PublicProfileLink[] }) {
   return (
     <div className="mt-9 flex w-full flex-col gap-3">
       {links.map((link) => {
-        const Icon = (link.icon && ICONS[link.icon.toLowerCase()]) || LinkIcon;
+        const Icon = linkIcon(link.icon);
         const track = () => recordClick(link.id);
         return (
           <a

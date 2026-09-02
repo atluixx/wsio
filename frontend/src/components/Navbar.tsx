@@ -37,7 +37,7 @@ export function Navbar() {
               pathname === "/dashboard" ? "text-ink" : ""
             }`}
           >
-            My page
+            Dashboard
           </Link>
 
           {isAuthenticated && user?.role === "admin" && (
@@ -74,7 +74,7 @@ export function Navbar() {
 
         <button
           onClick={() => setOpen(!open)}
-          className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-xs)] border border-line-strong text-ink md:hidden"
+          className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-xs)] border border-[var(--color-control-border)] text-ink md:hidden"
           aria-label="Toggle menu"
         >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -88,7 +88,7 @@ export function Navbar() {
             onClick={close}
             className="block rounded-[var(--radius-xs)] px-3 py-2.5 text-sm text-muted hover:bg-raised hover:text-ink"
           >
-            My page
+            Dashboard
           </Link>
           {isAuthenticated && user?.role === "admin" && (
             <Link

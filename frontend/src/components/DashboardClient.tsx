@@ -12,11 +12,11 @@ import {
   type ProfileLink,
 } from "@/lib/api";
 import { ProfileOnboarding } from "@/components/dashboard/ProfileOnboarding";
-import { ProfileEditor } from "@/components/dashboard/ProfileEditor";
+import { ProfileEditor, type ProfileDraft } from "@/components/dashboard/ProfileEditor";
 import { LinkManager } from "@/components/dashboard/LinkManager";
-import { QrCodeModal } from "@/components/QrCodeModal";
+import { ProfilePreview } from "@/components/dashboard/ProfilePreview";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, ExternalLink, QrCode } from "lucide-react";
+import { Copy, Check, ExternalLink, ChevronDown } from "lucide-react";
 
 const APP_ORIGIN =
   process.env.NEXT_PUBLIC_APP_URL ||
@@ -30,9 +30,10 @@ export function DashboardClient() {
   const [loading, setLoading] = useState(true);
   const [needsProfile, setNeedsProfile] = useState(false);
   const [profile, setProfile] = useState<OwnerProfile | null>(null);
+  const [draft, setDraft] = useState<ProfileDraft | null>(null);
   const [analytics, setAnalytics] = useState<ProfileAnalytics | null>(null);
   const [copied, setCopied] = useState(false);
-  const [showQr, setShowQr] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) router.replace("/login");
@@ -63,19 +64,45 @@ export function DashboardClient() {
     };
   }, [authLoading, isAuthenticated, loadAnalytics, showToast]);
 
-  const publicUrl = profile ? `${APP_ORIGIN.replace(/\/$/, "")}/${profile.username}` : "";
+  // Profile shown in the preview: saved profile with the editor's unsaved edits
+  // layered on top, so the preview tracks what you type.
+  const previewProfile = useMemo<OwnerProfile | null>(() => {
+    if (!profile) return null;
+    return draft ? { ...profile, ...draft } : profile;
+  }, [profile, draft]);
+
+  const publicUrl = previewProfile
+    ? `${APP_ORIGIN.replace(/\/$/, "")}/${previewProfile.username}`
+    : "";
 
   const clicksByLink = useMemo(() => {
     const map: Record<string, number> = {};
-    analytics?.links.forEach((l) => {
+    analytics?.links?.forEach((l) => {
       map[l.profileLinkId] = l.totalClicks;
     });
     return map;
   }, [analytics]);
 
-  const handleLinksChange = (links: ProfileLink[]) => {
+  const handleLinksChange = useCallback((links: ProfileLink[]) => {
     setProfile((p) => (p ? { ...p, links } : p));
-  };
+  }, []);
+
+  // Stable setter: only replace `draft` when a field actually changed, so a
+  // no-op emit from the editor can't cascade into another render.
+  const handleDraftChange = useCallback((d: ProfileDraft) => {
+    setDraft((prev) =>
+      prev &&
+      prev.username === d.username &&
+      prev.displayName === d.displayName &&
+      prev.bio === d.bio &&
+      prev.avatarUrl === d.avatarUrl &&
+      prev.theme === d.theme &&
+      prev.discordUserId === d.discordUserId &&
+      prev.useDiscordAvatar === d.useDiscordAvatar
+        ? prev
+        : d
+    );
+  }, []);
 
   const copyUrl = () => {
     navigator.clipboard.writeText(publicUrl);
@@ -100,7 +127,7 @@ export function DashboardClient() {
     );
   }
 
-  if (!profile) {
+  if (!profile || !previewProfile) {
     return (
       <div className="mx-auto max-w-3xl px-5 py-24 text-center text-sm text-faint">
         Couldn&apos;t load your profile.
@@ -119,42 +146,34 @@ export function DashboardClient() {
   ];
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 px-5 py-10 sm:py-14">
-      {showQr && (
-        <QrCodeModal url={publicUrl} code={profile.username} onClose={() => setShowQr(false)} />
-      )}
-
+    <div className="mx-auto max-w-6xl px-5 py-10 sm:py-14">
       <div className="flex flex-col gap-4 border-b border-line pb-7 sm:flex-row sm:items-end sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <h1 className="font-display text-2xl font-semibold tracking-tight">Your page</h1>
           <a
             href={publicUrl}
             target="_blank"
             rel="noreferrer"
-            className="mt-1 inline-block text-sm text-muted hover:text-ink"
+            className="mt-1 inline-block max-w-full truncate text-sm text-muted hover:text-ink"
           >
             {publicUrl.replace(/^https?:\/\//, "")}
           </a>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <Button size="sm" variant="outline" onClick={copyUrl}>
             {copied ? <Check className="h-4 w-4 text-[var(--color-positive)]" /> : <Copy className="h-4 w-4" />}
-            Copy
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => setShowQr(true)}>
-            <QrCode className="h-4 w-4" />
-            QR
+            Copy link
           </Button>
           <Button asChild size="sm">
             <a href={publicUrl} target="_blank" rel="noreferrer">
               <ExternalLink className="h-4 w-4" />
-              View
+              Open page
             </a>
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
         {stats.map(({ label, value, sub }) => (
           <div key={label} className="surface-card p-5">
             <div className="text-sm text-muted">{label}</div>
@@ -164,9 +183,36 @@ export function DashboardClient() {
         ))}
       </div>
 
-      <ProfileEditor profile={profile} onSaved={(p) => setProfile(p)} />
+      {/* Mobile / tablet: collapsible preview */}
+      <div className="mt-8 lg:hidden">
+        <button
+          type="button"
+          onClick={() => setPreviewOpen((v) => !v)}
+          className="flex w-full items-center justify-between rounded-[var(--radius-md)] border border-[var(--color-control-border)] bg-surface px-4 py-3 text-sm font-medium"
+          aria-expanded={previewOpen}
+        >
+          {previewOpen ? "Hide preview" : "Show live preview"}
+          <ChevronDown className={`h-4 w-4 transition-transform ${previewOpen ? "rotate-180" : ""}`} />
+        </button>
+        {previewOpen && (
+          <div className="mt-4">
+            <ProfilePreview profile={previewProfile} publicUrl={publicUrl} />
+          </div>
+        )}
+      </div>
 
-      <LinkManager links={profile.links} onChange={handleLinksChange} clicksByLink={clicksByLink} />
+      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="min-w-0 space-y-8">
+          <ProfileEditor profile={profile} onSaved={setProfile} onDraftChange={handleDraftChange} />
+          <LinkManager links={profile.links} onChange={handleLinksChange} clicksByLink={clicksByLink} />
+        </div>
+
+        <div className="hidden lg:block">
+          <div className="sticky top-24">
+            <ProfilePreview profile={previewProfile} publicUrl={publicUrl} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

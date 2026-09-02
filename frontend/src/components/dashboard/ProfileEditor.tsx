@@ -1,22 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { saveMyProfile, type OwnerProfile } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Music2 } from "lucide-react";
 
-const THEMES = ["minimal", "midnight", "paper", "sunset"];
+const THEMES: { key: string; bg: string; card: string; fg: string }[] = [
+  { key: "minimal", bg: "#fbfbf9", card: "#ffffff", fg: "#17150f" },
+  { key: "midnight", bg: "#0e0f13", card: "#17181d", fg: "#f2f3f7" },
+  { key: "paper", bg: "#f3efe6", card: "#fffdf7", fg: "#26221a" },
+  { key: "sunset", bg: "#1b1016", card: "#271820", fg: "#ffece2" },
+];
 const labelClass = "text-sm font-medium text-ink";
 const hintClass = "text-sm text-muted";
+
+export interface ProfileDraft {
+  username: string;
+  displayName: string;
+  bio: string;
+  avatarUrl: string;
+  theme: string;
+  discordUserId: string;
+  useDiscordAvatar: boolean;
+}
 
 interface Props {
   profile: OwnerProfile;
   onSaved: (profile: OwnerProfile) => void;
+  onDraftChange?: (draft: ProfileDraft) => void;
 }
 
-export function ProfileEditor({ profile, onSaved }: Props) {
+export function ProfileEditor({ profile, onSaved, onDraftChange }: Props) {
   const { showToast } = useToast();
   const [username, setUsername] = useState(profile.username);
   const [displayName, setDisplayName] = useState(profile.displayName);
@@ -27,6 +43,15 @@ export function ProfileEditor({ profile, onSaved }: Props) {
   const [discordUserId, setDiscordUserId] = useState(profile.discordUserId || "");
   const [useDiscordAvatar, setUseDiscordAvatar] = useState(profile.useDiscordAvatar);
   const [saving, setSaving] = useState(false);
+
+  const lastSent = useRef("");
+  useEffect(() => {
+    const draft = { username, displayName, bio, avatarUrl, theme, discordUserId, useDiscordAvatar };
+    const key = JSON.stringify(draft);
+    if (key === lastSent.current) return;
+    lastSent.current = key;
+    onDraftChange?.(draft);
+  }, [username, displayName, bio, avatarUrl, theme, discordUserId, useDiscordAvatar, onDraftChange]);
 
   const dirty =
     username !== profile.username ||
@@ -62,18 +87,18 @@ export function ProfileEditor({ profile, onSaved }: Props) {
   };
 
   return (
-    <form onSubmit={handleSave} className="surface-card space-y-5 p-6">
+    <form onSubmit={handleSave} autoComplete="off" className="surface-card space-y-5 p-6">
       <h2 className="font-display text-lg font-semibold tracking-tight">Profile</h2>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1.5">
           <span className={labelClass}>Username</span>
-          <div className="flex h-11 items-center gap-1 rounded-[var(--radius-sm)] border border-line-strong bg-surface px-3">
+          <div className="flex h-11 items-center gap-1 rounded-[var(--radius-sm)] border border-[var(--color-control-border)] bg-surface px-3 focus-within:border-ink focus-within:shadow-[0_0_0_3px_rgba(23,21,15,0.06)]">
             <span className="text-sm text-faint">wsio.lol/</span>
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value.toLowerCase())}
-              className="h-full flex-1 bg-transparent text-[0.95rem] text-ink outline-none"
+              className="h-full flex-1 bg-transparent text-[0.95rem] text-ink outline-none focus-visible:outline-none"
               minLength={2}
               maxLength={32}
               pattern="[a-z0-9_-]+"
@@ -95,7 +120,7 @@ export function ProfileEditor({ profile, onSaved }: Props) {
           onChange={(e) => setBio(e.target.value)}
           rows={3}
           maxLength={500}
-          className="w-full rounded-[var(--radius-sm)] border border-line-strong bg-surface px-3.5 py-2.5 text-[0.95rem] text-ink outline-none transition-[border-color,box-shadow] placeholder:text-faint focus:border-ink focus:shadow-[0_0_0_3px_rgba(23,21,15,0.06)]"
+          className="w-full rounded-[var(--radius-sm)] border border-[var(--color-control-border)] bg-surface px-3.5 py-2.5 text-[0.95rem] text-ink outline-none transition-[border-color,box-shadow] placeholder:text-faint focus:border-ink focus:shadow-[0_0_0_3px_rgba(23,21,15,0.06)]"
         />
       </label>
 
@@ -135,6 +160,8 @@ export function ProfileEditor({ profile, onSaved }: Props) {
           onChange={(e) => setDiscordUserId(e.target.value.replace(/[^\d]/g, ""))}
           placeholder="e.g. 190916650143318016"
           inputMode="numeric"
+          autoComplete="off"
+          name="discord-user-id"
           maxLength={32}
         />
         <p className={hintClass}>
@@ -162,19 +189,27 @@ export function ProfileEditor({ profile, onSaved }: Props) {
 
       <div className="space-y-2">
         <span className={labelClass}>Theme</span>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {THEMES.map((t) => (
             <button
-              key={t}
+              key={t.key}
               type="button"
-              onClick={() => setTheme(t)}
-              className={`rounded-[var(--radius-pill)] border px-4 py-1.5 text-sm capitalize transition-colors ${
-                theme === t
-                  ? "border-ink bg-ink text-canvas"
-                  : "border-line-strong text-muted hover:border-ink hover:text-ink"
+              onClick={() => setTheme(t.key)}
+              aria-pressed={theme === t.key}
+              className={`flex items-center gap-2 rounded-[var(--radius-sm)] border px-3 py-2 text-sm capitalize transition-colors ${
+                theme === t.key
+                  ? "border-ink bg-raised text-ink"
+                  : "border-[var(--color-control-border)] text-muted hover:border-ink hover:text-ink"
               }`}
             >
-              {t}
+              <span
+                className="h-5 w-5 shrink-0 rounded-full border"
+                style={{
+                  background: `linear-gradient(135deg, ${t.card} 0 50%, ${t.bg} 50% 100%)`,
+                  borderColor: t.fg + "33",
+                }}
+              />
+              {t.key}
             </button>
           ))}
         </div>

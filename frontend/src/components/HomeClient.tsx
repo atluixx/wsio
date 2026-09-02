@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Plus, Minus } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Plus, Minus } from "lucide-react";
 
 const features = [
   {
@@ -77,7 +77,7 @@ export function HomeClient() {
 
           <form
             onSubmit={claim}
-            className="mx-auto mt-9 flex max-w-md items-center gap-1.5 rounded-[var(--radius-pill)] border border-line-strong bg-surface p-1.5 pl-4"
+            className="mx-auto mt-9 flex max-w-md items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--color-control-border)] bg-surface p-1.5 pl-4 focus-within:border-ink"
           >
             <span className="text-sm text-faint">wsio.lol/</span>
             <input
@@ -85,7 +85,7 @@ export function HomeClient() {
               onChange={(e) => setUsername(e.target.value.toLowerCase())}
               placeholder="yourname"
               maxLength={32}
-              className="h-10 flex-1 bg-transparent text-[0.95rem] text-ink outline-none placeholder:text-faint"
+              className="h-10 flex-1 bg-transparent text-[0.95rem] text-ink outline-none focus-visible:outline-none placeholder:text-faint"
             />
             <Button type="submit" className="shrink-0">
               Claim
@@ -102,7 +102,9 @@ export function HomeClient() {
         {/* Preview */}
         <div className="mx-auto mt-16 max-w-sm">
           <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-7 shadow-[0_1px_3px_rgba(23,21,15,0.05)]">
-            <div className="mx-auto h-16 w-16 rounded-full bg-raised" />
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-line bg-raised font-display text-lg font-semibold text-faint">
+              {(username || "yn").slice(0, 2).toUpperCase()}
+            </div>
             <p className="mt-4 text-center font-display text-lg font-semibold">
               {username ? username : "Your name"}
             </p>
@@ -113,10 +115,10 @@ export function HomeClient() {
               {["Website", "Newsletter", "Latest project", "Say hello"].map((l) => (
                 <div
                   key={l}
-                  className="flex items-center justify-between rounded-[var(--radius-sm)] border border-line px-4 py-3 text-sm"
+                  className="flex items-center gap-3 rounded-[var(--radius-md)] border border-line bg-surface px-4 py-3.5 text-sm font-medium shadow-[0_1px_2px_rgba(23,21,15,0.05)]"
                 >
-                  <span>{l}</span>
-                  <ArrowRight className="h-3.5 w-3.5 text-faint" />
+                  <span className="flex-1 truncate text-center">{l}</span>
+                  <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-faint opacity-40" />
                 </div>
               ))}
             </div>

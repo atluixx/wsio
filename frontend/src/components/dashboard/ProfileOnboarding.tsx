@@ -44,14 +44,14 @@ export function ProfileOnboarding({ onCreated }: Props) {
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-3">
-        <div className="flex h-12 items-center gap-1 rounded-[var(--radius-sm)] border border-line-strong bg-surface px-3.5">
+        <div className="flex h-12 items-center gap-1 rounded-[var(--radius-sm)] border border-[var(--color-control-border)] bg-surface px-3.5 focus-within:border-ink focus-within:shadow-[0_0_0_3px_rgba(23,21,15,0.06)]">
           <span className="text-sm text-faint">wsio.lol/</span>
           <input
             autoFocus
             value={username}
             onChange={(e) => setUsername(e.target.value.toLowerCase())}
             placeholder="username"
-            className="h-full flex-1 bg-transparent text-[0.95rem] text-ink outline-none placeholder:text-faint"
+            className="h-full flex-1 bg-transparent text-[0.95rem] text-ink outline-none focus-visible:outline-none placeholder:text-faint"
             minLength={2}
             maxLength={32}
             pattern="[a-z0-9_-]+"
@@ -64,7 +64,7 @@ export function ProfileOnboarding({ onCreated }: Props) {
           onChange={(e) => setDisplayName(e.target.value)}
           placeholder="Display name (optional)"
           maxLength={80}
-          className="h-12 w-full rounded-[var(--radius-sm)] border border-line-strong bg-surface px-3.5 text-[0.95rem] text-ink outline-none placeholder:text-faint focus:border-ink focus:shadow-[0_0_0_3px_rgba(23,21,15,0.06)]"
+          className="h-12 w-full rounded-[var(--radius-sm)] border border-[var(--color-control-border)] bg-surface px-3.5 text-[0.95rem] text-ink outline-none placeholder:text-faint focus:border-ink focus:shadow-[0_0_0_3px_rgba(23,21,15,0.06)]"
         />
 
         <Button type="submit" disabled={saving} className="w-full">

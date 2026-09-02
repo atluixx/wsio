@@ -43,7 +43,7 @@ import { LINK_ICON_KEYS } from "@/lib/linkIcons";
 const ICON_OPTIONS = ["", ...LINK_ICON_KEYS];
 
 const selectClass =
-  "h-11 rounded-[var(--radius-sm)] border border-line-strong bg-surface px-2.5 text-[0.95rem] text-ink outline-none focus:border-ink";
+  "h-11 rounded-[var(--radius-sm)] border border-[var(--color-control-border)] bg-surface px-2.5 text-[0.95rem] text-ink outline-none focus:border-ink";
 
 interface Props {
   links: ProfileLink[];
@@ -145,7 +145,7 @@ export function LinkManager({ links, onChange, clicksByLink }: Props) {
         </p>
       </div>
 
-      <form onSubmit={handleAdd} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+      <form onSubmit={handleAdd} autoComplete="off" className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
         <Input
           placeholder="Label — e.g. My newsletter"
           value={label}
@@ -312,45 +312,50 @@ function SortableLinkRow({
         {clicks} {clicks === 1 ? "click" : "clicks"}
       </span>
 
-      <div className="flex items-center gap-0.5">
-        <button
-          type="button"
-          onClick={onToggle}
-          disabled={busy}
-          className="p-2 text-muted hover:text-ink"
-          title={link.active ? "Hide from page" : "Show on page"}
-        >
-          {link.active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-        </button>
-        <button
-          type="button"
-          onClick={onEdit}
-          className="p-2 text-muted hover:text-ink"
-          title="Edit"
-        >
-          <Pencil className="h-4 w-4" />
-        </button>
-        {confirmDelete ? (
+      {confirmDelete ? (
+        <div className="flex items-center gap-2">
+          <span className="hidden text-xs text-muted sm:block">Delete this link?</span>
+          <button
+            type="button"
+            onClick={() => setConfirmDelete(false)}
+            className="icon-btn"
+            title="Keep link"
+          >
+            <X className="h-4 w-4" />
+          </button>
           <button
             type="button"
             onClick={onDelete}
             disabled={busy}
-            className="rounded-[var(--radius-xs)] bg-[var(--color-negative)] px-2.5 py-1 text-xs font-medium text-white"
+            className="rounded-[var(--radius-xs)] bg-[var(--color-negative)] px-2.5 py-1.5 text-xs font-medium text-white disabled:opacity-50"
           >
             Delete
           </button>
-        ) : (
+        </div>
+      ) : (
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={onToggle}
+            disabled={busy}
+            className="icon-btn"
+            title={link.active ? "Hide from page" : "Show on page"}
+          >
+            {link.active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+          </button>
+          <button type="button" onClick={onEdit} className="icon-btn" title="Edit">
+            <Pencil className="h-4 w-4" />
+          </button>
           <button
             type="button"
             onClick={() => setConfirmDelete(true)}
-            onMouseLeave={() => setConfirmDelete(false)}
-            className="p-2 text-faint hover:text-[var(--color-negative)]"
+            className="icon-btn hover:!text-[var(--color-negative)]"
             title="Delete"
           >
             <Trash2 className="h-4 w-4" />
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </li>
   );
 }

@@ -4,6 +4,7 @@ import { ProfileLinks } from "@/components/ProfileLinks";
 import { ProfileMusic } from "@/components/ProfileMusic";
 import { ProfileDiscord } from "@/components/ProfileDiscord";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
+import { ProfileShare } from "@/components/ProfileShare";
 
 export function PublicProfile({ profile }: { profile: PublicProfileData }) {
   const name = profile.displayName || `@${profile.username}`;
@@ -13,6 +14,8 @@ export function PublicProfile({ profile }: { profile: PublicProfileData }) {
       className="profile-surface flex min-h-screen w-full flex-col items-center px-5 py-16 sm:py-20"
       data-theme={profile.theme || "minimal"}
     >
+      <ProfileShare username={profile.username} />
+
       <div className="flex w-full max-w-[26rem] flex-1 flex-col items-center">
         <ProfileAvatar
           avatarUrl={profile.avatarUrl}

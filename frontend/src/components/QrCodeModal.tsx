@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
-import { X, Download, Copy, Check } from "lucide-react";
+import { X, Download, Copy, Check, Share2 } from "lucide-react";
 
 interface QrCodeModalProps {
   url: string;
@@ -13,6 +13,8 @@ interface QrCodeModalProps {
 export function QrCodeModal({ url, code, onClose }: QrCodeModalProps) {
   const [copied, setCopied] = useState(false);
   const [dataUrl, setDataUrl] = useState<string>("");
+  const canShare =
+    typeof navigator !== "undefined" && typeof navigator.share === "function";
 
   useEffect(() => {
     QRCode.toDataURL(url, {
@@ -40,9 +42,17 @@ export function QrCodeModal({ url, code, onClose }: QrCodeModalProps) {
     }
   };
 
+  const share = async () => {
+    try {
+      await navigator.share({ title: code, url });
+    } catch {
+      /* user dismissed */
+    }
+  };
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(23,21,15,0.4)] p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(23,21,15,0.45)] p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
@@ -51,13 +61,13 @@ export function QrCodeModal({ url, code, onClose }: QrCodeModalProps) {
       >
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-[var(--radius-xs)] p-1.5 text-faint transition-colors hover:bg-raised hover:text-ink"
+          className="icon-btn absolute right-3 top-3"
           aria-label="Close"
         >
           <X className="h-4 w-4" />
         </button>
 
-        <h3 className="font-display text-lg font-semibold tracking-tight">Scan to open</h3>
+        <h3 className="font-display text-lg font-semibold tracking-tight">Share this page</h3>
         <p className="mx-auto mt-1 max-w-[16rem] truncate text-sm text-faint">
           {url.replace(/^https?:\/\//, "")}
         </p>
@@ -77,38 +87,49 @@ export function QrCodeModal({ url, code, onClose }: QrCodeModalProps) {
           )}
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-2">
-          {dataUrl ? (
-            <a
-              href={dataUrl}
-              download={`wsio-${code}.png`}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-pill)] bg-ink px-4 text-sm font-medium text-canvas"
+        <div className="mt-5 grid gap-2">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={copyUrl}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-pill)] border border-[var(--color-control-border)] px-4 text-sm font-medium text-ink transition-colors hover:bg-raised"
             >
-              <Download className="h-4 w-4" />
-              PNG
-            </a>
-          ) : (
-            <span className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-pill)] bg-raised px-4 text-sm text-muted opacity-60">
-              <Download className="h-4 w-4" />
-              PNG
-            </span>
-          )}
-          <button
-            onClick={copyUrl}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-pill)] border border-line-strong px-4 text-sm font-medium text-ink transition-colors hover:bg-raised"
-          >
-            {copied ? (
-              <>
-                <Check className="h-4 w-4 text-[var(--color-positive)]" />
-                Copied
-              </>
+              {copied ? (
+                <>
+                  <Check className="h-4 w-4 text-[var(--color-positive)]" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                  Copy link
+                </>
+              )}
+            </button>
+            {dataUrl ? (
+              <a
+                href={dataUrl}
+                download={`wsio-${code}.png`}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-pill)] border border-[var(--color-control-border)] px-4 text-sm font-medium text-ink transition-colors hover:bg-raised"
+              >
+                <Download className="h-4 w-4" />
+                Save QR
+              </a>
             ) : (
-              <>
-                <Copy className="h-4 w-4" />
-                Copy link
-              </>
+              <span className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-pill)] border border-line px-4 text-sm text-muted opacity-60">
+                <Download className="h-4 w-4" />
+                Save QR
+              </span>
             )}
-          </button>
+          </div>
+          {canShare && (
+            <button
+              onClick={share}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-pill)] bg-ink px-4 text-sm font-medium text-canvas transition-colors hover:bg-[#322d20]"
+            >
+              <Share2 className="h-4 w-4" />
+              Share…
+            </button>
+          )}
         </div>
       </div>
     </div>
