@@ -41,14 +41,16 @@ export async function fileToAvatarDataUrl(blob: Blob): Promise<string> {
   canvas.height = out;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Couldn't process that image.");
+  // white matte so JPEG (no alpha) doesn't turn transparent PNGs black
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, out, out);
   ctx.drawImage(source, (w - side) / 2, (h - side) / 2, side, side, 0, 0, out, out);
   if ("close" in source) source.close();
 
+  // JPEG, not WebP: renders everywhere the avatar shows up, including the
+  // server-generated Open Graph card (satori can't decode WebP).
   for (const quality of [0.85, 0.72, 0.6, 0.45]) {
-    const webp = canvas.toDataURL("image/webp", quality);
-    const data = webp.startsWith("data:image/webp")
-      ? webp
-      : canvas.toDataURL("image/jpeg", quality);
+    const data = canvas.toDataURL("image/jpeg", quality);
     if (data.length <= MAX_BYTES) return data;
   }
   throw new Error("That image is too detailed to shrink — try a smaller one.");

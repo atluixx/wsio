@@ -40,6 +40,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LINK_ICON_KEYS } from "@/lib/linkIcons";
 import { resolveLinkIcon } from "@/lib/socialIcons";
+import { groupLinks, sectionNames } from "@/lib/linkSections";
+
+const SECTION_LIST_ID = "wsio-link-sections";
 
 const ICON_OPTIONS = ["", ...LINK_ICON_KEYS];
 
@@ -65,7 +68,9 @@ export function LinkManager({ links, onChange, clicksByLink }: Props) {
   const [label, setLabel] = useState("");
   const [url, setUrl] = useState("");
   const [icon, setIcon] = useState("");
+  const [section, setSection] = useState("");
   const [adding, setAdding] = useState(false);
+  const sections = sectionNames(links);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -78,7 +83,12 @@ export function LinkManager({ links, onChange, clicksByLink }: Props) {
     e.preventDefault();
     if (!label.trim() || !url.trim()) return;
     setAdding(true);
-    const res = await createProfileLink({ label: label.trim(), url: url.trim(), icon });
+    const res = await createProfileLink({
+      label: label.trim(),
+      url: url.trim(),
+      icon,
+      section: section.trim(),
+    });
     setAdding(false);
     if (res.error || !res.link) {
       showToast(res.error || "Couldn't add the link", "error");
@@ -88,6 +98,7 @@ export function LinkManager({ links, onChange, clicksByLink }: Props) {
     setLabel("");
     setUrl("");
     setIcon("");
+    // keep `section` so consecutive links land in the same group
     showToast("Link added", "success");
   };
 
@@ -116,7 +127,7 @@ export function LinkManager({ links, onChange, clicksByLink }: Props) {
 
   const handleSaveEdit = async (
     id: string,
-    patch: { label: string; url: string; icon: string }
+    patch: { label: string; url: string; icon: string; section: string }
   ) => {
     setBusyId(id);
     const res = await updateProfileLink(id, patch);
@@ -150,25 +161,34 @@ export function LinkManager({ links, onChange, clicksByLink }: Props) {
       <div>
         <h2 className="font-display text-lg font-medium tracking-tight">Links</h2>
         <p className="mt-1 text-sm text-muted">
-          Drag to reorder. Hidden links stay off your public page.
+          Drag to reorder. Give links the same section name to group them under a
+          heading.
         </p>
       </div>
 
-      <form onSubmit={handleAdd} autoComplete="off" className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-        <Input
-          placeholder="Label — e.g. My newsletter"
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          maxLength={80}
-          required
-        />
-        <Input
-          placeholder="https://…"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          required
-        />
-        <div className="flex gap-2">
+      <datalist id={SECTION_LIST_ID}>
+        {sections.map((s) => (
+          <option key={s} value={s} />
+        ))}
+      </datalist>
+
+      <form onSubmit={handleAdd} autoComplete="off" className="space-y-2">
+        <div className="grid gap-2 sm:grid-cols-[1fr_1fr]">
+          <Input
+            placeholder="Label — e.g. My newsletter"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            maxLength={80}
+            required
+          />
+          <Input
+            placeholder="https://…"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            required
+          />
+        </div>
+        <div className="flex flex-wrap gap-2">
           <IconPreview url={url} icon={icon} />
           <select
             value={icon}
@@ -182,6 +202,15 @@ export function LinkManager({ links, onChange, clicksByLink }: Props) {
               </option>
             ))}
           </select>
+          <Input
+            list={SECTION_LIST_ID}
+            placeholder="Section (optional)"
+            value={section}
+            onChange={(e) => setSection(e.target.value)}
+            maxLength={60}
+            className="flex-1 sm:max-w-[12rem]"
+            aria-label="Section"
+          />
           <Button type="submit" size="sm" disabled={adding} className="shrink-0">
             <Plus className="h-4 w-4" />
             Add
@@ -196,22 +225,32 @@ export function LinkManager({ links, onChange, clicksByLink }: Props) {
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={links.map((l) => l.id)} strategy={verticalListSortingStrategy}>
-            <ul className="space-y-2">
-              {links.map((link) => (
-                <SortableLinkRow
-                  key={link.id}
-                  link={link}
-                  clicks={clicksByLink[link.id] ?? 0}
-                  busy={busyId === link.id}
-                  editing={editingId === link.id}
-                  onEdit={() => setEditingId(link.id)}
-                  onCancelEdit={() => setEditingId(null)}
-                  onSaveEdit={(patch) => handleSaveEdit(link.id, patch)}
-                  onToggle={() => handleToggle(link)}
-                  onDelete={() => handleDelete(link.id)}
-                />
+            <div className="space-y-5">
+              {groupLinks(links).map((group) => (
+                <div key={group.title || "_"} className="space-y-2">
+                  <div className="px-1 text-xs font-semibold uppercase tracking-[0.12em] text-faint">
+                    {group.title || "No section"}
+                  </div>
+                  <ul className="space-y-2">
+                    {group.links.map((link) => (
+                      <SortableLinkRow
+                        key={link.id}
+                        link={link}
+                        clicks={clicksByLink[link.id] ?? 0}
+                        busy={busyId === link.id}
+                        editing={editingId === link.id}
+                        sectionListId={SECTION_LIST_ID}
+                        onEdit={() => setEditingId(link.id)}
+                        onCancelEdit={() => setEditingId(null)}
+                        onSaveEdit={(patch) => handleSaveEdit(link.id, patch)}
+                        onToggle={() => handleToggle(link)}
+                        onDelete={() => handleDelete(link.id)}
+                      />
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
+            </div>
           </SortableContext>
         </DndContext>
       )}
@@ -224,9 +263,10 @@ interface RowProps {
   clicks: number;
   busy: boolean;
   editing: boolean;
+  sectionListId: string;
   onEdit: () => void;
   onCancelEdit: () => void;
-  onSaveEdit: (patch: { label: string; url: string; icon: string }) => void;
+  onSaveEdit: (patch: { label: string; url: string; icon: string; section: string }) => void;
   onToggle: () => void;
   onDelete: () => void;
 }
@@ -236,6 +276,7 @@ function SortableLinkRow({
   clicks,
   busy,
   editing,
+  sectionListId,
   onEdit,
   onCancelEdit,
   onSaveEdit,
@@ -248,6 +289,7 @@ function SortableLinkRow({
   const [label, setLabel] = useState(link.label);
   const [url, setUrl] = useState(link.url);
   const [icon, setIcon] = useState(link.icon ?? "");
+  const [section, setSection] = useState(link.section ?? "");
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const style = {
@@ -263,24 +305,33 @@ function SortableLinkRow({
         style={style}
         className="space-y-2 rounded-[var(--radius-sm)] border border-line-strong bg-raised p-3"
       >
-        <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+        <div className="grid gap-2 sm:grid-cols-2">
           <Input value={label} onChange={(e) => setLabel(e.target.value)} maxLength={80} />
           <Input value={url} onChange={(e) => setUrl(e.target.value)} />
-          <div className="flex gap-2">
-            <IconPreview url={url} icon={icon} />
-            <select
-              value={icon}
-              onChange={(e) => setIcon(e.target.value)}
-              className={selectClass}
-              aria-label="Link icon"
-            >
-              {ICON_OPTIONS.map((o) => (
-                <option key={o} value={o}>
-                  {o === "" ? "Auto" : o}
-                </option>
-              ))}
-            </select>
-          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <IconPreview url={url} icon={icon} />
+          <select
+            value={icon}
+            onChange={(e) => setIcon(e.target.value)}
+            className={selectClass}
+            aria-label="Link icon"
+          >
+            {ICON_OPTIONS.map((o) => (
+              <option key={o} value={o}>
+                {o === "" ? "Auto" : o}
+              </option>
+            ))}
+          </select>
+          <Input
+            list={sectionListId}
+            value={section}
+            onChange={(e) => setSection(e.target.value)}
+            placeholder="Section"
+            maxLength={60}
+            className="flex-1 sm:max-w-[12rem]"
+            aria-label="Section"
+          />
         </div>
         <div className="flex justify-end gap-2">
           <Button size="sm" variant="ghost" onClick={onCancelEdit}>
@@ -289,7 +340,14 @@ function SortableLinkRow({
           <Button
             size="sm"
             disabled={busy || !label.trim() || !url.trim()}
-            onClick={() => onSaveEdit({ label: label.trim(), url: url.trim(), icon })}
+            onClick={() =>
+              onSaveEdit({
+                label: label.trim(),
+                url: url.trim(),
+                icon,
+                section: section.trim(),
+              })
+            }
           >
             <Check className="h-4 w-4" /> Save
           </Button>

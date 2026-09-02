@@ -197,6 +197,7 @@ func (r *inMemoryProfileLinkRepository) Update(link *domain.ProfileLink) error {
 	existing.Label = link.Label
 	existing.URL = link.URL
 	existing.Icon = link.Icon
+	existing.Section = link.Section
 	existing.Active = link.Active
 	return nil
 }

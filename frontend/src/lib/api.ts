@@ -18,6 +18,7 @@ export interface ProfileLink {
   label: string;
   url: string;
   icon?: string;
+  section?: string;
   position: number;
   active: boolean;
 }
@@ -39,6 +40,7 @@ export interface PublicProfileLink {
   label: string;
   url: string;
   icon?: string;
+  section?: string;
 }
 
 export interface PublicProfile {
@@ -83,6 +85,7 @@ export interface LinkInput {
   label: string;
   url: string;
   icon?: string;
+  section?: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

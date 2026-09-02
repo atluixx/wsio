@@ -125,14 +125,27 @@ func TestProfileLifecycle(t *testing.T) {
 		t.Fatalf("create link: got %d body %s", w.Code, w.Body)
 	}
 	json.Unmarshal(w.Body.Bytes(), &link1)
-	w = do(t, r, http.MethodPost, "/api/v1/me/profile/links", session, map[string]string{"label": "Site", "url": "https://creator.dev"})
+	w = do(t, r, http.MethodPost, "/api/v1/me/profile/links", session, map[string]string{
+		"label": "Site", "url": "https://creator.dev", "section": "Work",
+	})
 	if w.Code != http.StatusCreated {
 		t.Fatalf("create link 2: got %d", w.Code)
 	}
 	var link2 struct {
-		ID string `json:"id"`
+		ID      string `json:"id"`
+		Section string `json:"section"`
 	}
 	json.Unmarshal(w.Body.Bytes(), &link2)
+	if link2.Section != "Work" {
+		t.Fatalf("link section not stored: %q", link2.Section)
+	}
+	// move the section
+	newSection := "Elsewhere"
+	if w := do(t, r, http.MethodPut, "/api/v1/me/profile/links/"+link2.ID, session, map[string]*string{
+		"section": &newSection,
+	}); w.Code != http.StatusOK {
+		t.Fatalf("update section: got %d %s", w.Code, w.Body)
+	}
 
 	// reorder (exercises the static "reorder" path segment)
 	w = do(t, r, http.MethodPut, "/api/v1/me/profile/links/reorder", session, map[string][]string{

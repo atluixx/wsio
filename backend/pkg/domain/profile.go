@@ -34,6 +34,7 @@ type ProfileLink struct {
 	Label     string    `gorm:"type:varchar(80);not null" json:"label"`
 	URL       string    `gorm:"type:text;not null" json:"url"`
 	Icon      string    `gorm:"type:varchar(32)" json:"icon,omitempty"`
+	Section   string    `gorm:"type:varchar(60)" json:"section,omitempty"`
 	Position  int       `gorm:"not null;default:0" json:"position"`
 	Active    bool      `gorm:"not null;default:true" json:"active"`
 	CreatedAt time.Time `json:"createdAt"`
@@ -54,17 +55,19 @@ type UpsertProfileRequest struct {
 
 // CreateProfileLinkRequest is the payload for appending a link to a profile.
 type CreateProfileLinkRequest struct {
-	Label string `json:"label" binding:"required,max=80"`
-	URL   string `json:"url" binding:"required"`
-	Icon  string `json:"icon" binding:"max=32"`
+	Label   string `json:"label" binding:"required,max=80"`
+	URL     string `json:"url" binding:"required"`
+	Icon    string `json:"icon" binding:"max=32"`
+	Section string `json:"section" binding:"max=60"`
 }
 
 // UpdateProfileLinkRequest is a partial update; nil fields are left unchanged.
 type UpdateProfileLinkRequest struct {
-	Label  *string `json:"label"`
-	URL    *string `json:"url"`
-	Icon   *string `json:"icon"`
-	Active *bool   `json:"active"`
+	Label   *string `json:"label"`
+	URL     *string `json:"url"`
+	Icon    *string `json:"icon"`
+	Section *string `json:"section"`
+	Active  *bool   `json:"active"`
 }
 
 // ReorderProfileLinksRequest carries the full ordered list of link IDs for a

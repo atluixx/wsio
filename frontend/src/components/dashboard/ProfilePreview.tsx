@@ -1,6 +1,7 @@
 import { ArrowUpRight } from "lucide-react";
 import type { OwnerProfile } from "@/lib/api";
 import { resolveLinkIcon } from "@/lib/socialIcons";
+import { groupLinks } from "@/lib/linkSections";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
 import { ProfileDiscord } from "@/components/ProfileDiscord";
 
@@ -68,31 +69,47 @@ export function ProfilePreview({ profile, publicUrl }: Props) {
                 </p>
               )}
 
-              <div className="mt-7 flex w-full flex-col gap-2.5">
+              <div className="mt-7 flex w-full flex-col gap-6">
                 {links.length === 0 ? (
                   <p className="text-center text-[0.85rem]" style={{ color: "var(--p-muted)" }}>
                     No links yet.
                   </p>
                 ) : (
-                  links.map((link) => {
-                    const Icon = resolveLinkIcon(link);
-                    return (
-                      <div
-                        key={link.id}
-                        className="flex items-center gap-3 px-3.5 py-3.5 text-[0.85rem] font-medium"
-                        style={{
-                          background: "var(--p-card)",
-                          border: "1px solid var(--p-border)",
-                          borderRadius: "var(--p-radius)",
-                          boxShadow: "var(--p-shadow)",
-                        }}
-                      >
-                        <Icon className="h-4 w-4 shrink-0" />
-                        <span className="flex-1 truncate text-center">{link.label}</span>
-                        <ArrowUpRight className="h-3.5 w-3.5 shrink-0 opacity-30" />
-                      </div>
-                    );
-                  })
+                  groupLinks(links).map((group) => (
+                    <div key={group.title || "_"} className="flex w-full flex-col gap-2.5">
+                      {group.title && (
+                        <span
+                          className="text-center text-[0.62rem] font-semibold uppercase tracking-[0.16em]"
+                          style={{ color: "var(--p-muted)" }}
+                        >
+                          {group.title}
+                        </span>
+                      )}
+                      {group.links.map((link) => {
+                        const Icon = resolveLinkIcon(link);
+                        return (
+                          <a
+                            key={link.id}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 px-3.5 py-3.5 text-[0.85rem] font-medium transition-transform hover:-translate-y-0.5"
+                            style={{
+                              background: "var(--p-card)",
+                              border: "1px solid var(--p-border)",
+                              borderRadius: "var(--p-radius)",
+                              boxShadow: "var(--p-shadow)",
+                              color: "inherit",
+                            }}
+                          >
+                            <Icon className="h-4 w-4 shrink-0" />
+                            <span className="flex-1 truncate text-center">{link.label}</span>
+                            <ArrowUpRight className="h-3.5 w-3.5 shrink-0 opacity-30" />
+                          </a>
+                        );
+                      })}
+                    </div>
+                  ))
                 )}
               </div>
             </div>

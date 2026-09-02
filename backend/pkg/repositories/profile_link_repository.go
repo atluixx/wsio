@@ -42,7 +42,7 @@ func (r *profileLinkRepository) Create(link *domain.ProfileLink) error {
 
 func (r *profileLinkRepository) Update(link *domain.ProfileLink) error {
 	return r.db.Model(link).
-		Select("label", "url", "icon", "active").
+		Select("label", "url", "icon", "section", "active").
 		Updates(link).Error
 }
 

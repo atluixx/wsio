@@ -53,6 +53,6 @@ export default async function Image() {
         </div>
       </div>
     ),
-    { ...size, fonts: fonts.length ? fonts : undefined }
+    fonts.length ? { ...size, fonts } : { ...size }
   );
 }

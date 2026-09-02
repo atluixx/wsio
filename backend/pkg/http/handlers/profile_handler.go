@@ -54,10 +54,11 @@ func NewProfileHandler(
 // --- response DTOs ---
 
 type publicLinkDTO struct {
-	ID    uuid.UUID `json:"id"`
-	Label string    `json:"label"`
-	URL   string    `json:"url"`
-	Icon  string    `json:"icon,omitempty"`
+	ID      uuid.UUID `json:"id"`
+	Label   string    `json:"label"`
+	URL     string    `json:"url"`
+	Icon    string    `json:"icon,omitempty"`
+	Section string    `json:"section,omitempty"`
 }
 
 type publicProfileDTO struct {
@@ -76,6 +77,7 @@ type ownerLinkDTO struct {
 	Label    string    `json:"label"`
 	URL      string    `json:"url"`
 	Icon     string    `json:"icon,omitempty"`
+	Section  string    `json:"section,omitempty"`
 	Position int       `json:"position"`
 	Active   bool      `json:"active"`
 }
@@ -98,6 +100,7 @@ func toOwnerLinkDTO(l *domain.ProfileLink) ownerLinkDTO {
 		Label:    l.Label,
 		URL:      l.URL,
 		Icon:     l.Icon,
+		Section:  l.Section,
 		Position: l.Position,
 		Active:   l.Active,
 	}
@@ -175,7 +178,7 @@ func (h *ProfileHandler) GetPublicProfile(c *gin.Context) {
 		Links:            make([]publicLinkDTO, 0, len(links)),
 	}
 	for _, l := range links {
-		out.Links = append(out.Links, publicLinkDTO{ID: l.ID, Label: l.Label, URL: l.URL, Icon: l.Icon})
+		out.Links = append(out.Links, publicLinkDTO{ID: l.ID, Label: l.Label, URL: l.URL, Icon: l.Icon, Section: l.Section})
 	}
 
 	c.JSON(http.StatusOK, out)
@@ -418,6 +421,7 @@ func (h *ProfileHandler) CreateMyProfileLink(c *gin.Context) {
 		Label:     strings.TrimSpace(req.Label),
 		URL:       normalized,
 		Icon:      strings.TrimSpace(req.Icon),
+		Section:   clip(strings.TrimSpace(req.Section), 60),
 		Position:  position,
 		Active:    true,
 	}
@@ -455,6 +459,9 @@ func (h *ProfileHandler) UpdateMyProfileLink(c *gin.Context) {
 	}
 	if req.Icon != nil {
 		link.Icon = strings.TrimSpace(*req.Icon)
+	}
+	if req.Section != nil {
+		link.Section = clip(strings.TrimSpace(*req.Section), 60)
 	}
 	if req.Active != nil {
 		link.Active = *req.Active

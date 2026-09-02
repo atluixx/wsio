@@ -43,9 +43,12 @@ export default async function Image({ params }: { params: Promise<{ username: st
   const bioRaw = profile?.bio ?? "";
   const bio = bioRaw.length > 150 ? `${bioRaw.slice(0, 149).trimEnd()}…` : bioRaw;
   const address = `wsio.lol/${profile?.username ?? username}`;
-  const avatar = profile?.avatarUrl && /^(https?:|data:image\/)/.test(profile.avatarUrl)
-    ? profile.avatarUrl
-    : null;
+  // satori decodes png/jpeg/gif/svg — not webp — so screen data URIs tightly.
+  const avatar =
+    profile?.avatarUrl &&
+    /^(https?:\/\/|data:image\/(?:png|jpe?g|gif);base64,)/i.test(profile.avatarUrl)
+      ? profile.avatarUrl
+      : null;
 
   const glyphs = `${name}${handle}${bio}${address}wsio.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,!?@#&/:—–-'"()`;
   const [serif, sans] = await Promise.all([
@@ -127,6 +130,6 @@ export default async function Image({ params }: { params: Promise<{ username: st
         </div>
       </div>
     ),
-    { ...size, fonts: fonts.length ? fonts : undefined }
+    fonts.length ? { ...size, fonts } : { ...size }
   );
 }

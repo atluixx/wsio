@@ -30,11 +30,13 @@ export function ProfileAvatar({
   const lanyard = useLanyard(
     useDiscordAvatar && discordUserId ? discordUserId : undefined
   );
-  const [failed, setFailed] = useState(false);
+  // Remember which src failed rather than a sticky boolean, so swapping in a new
+  // image (e.g. after a bad URL) clears the error on its own.
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
-  const discordSrc =
-    useDiscordAvatar && !failed ? discordAvatarUrl(lanyard?.discord_user) : null;
-  const src = discordSrc || (!failed ? avatarUrl : "") || "";
+  const discordSrc = useDiscordAvatar ? discordAvatarUrl(lanyard?.discord_user) : null;
+  const candidate = discordSrc || avatarUrl || "";
+  const src = candidate && candidate !== failedSrc ? candidate : "";
   const box = size === "sm" ? "h-20 w-20 text-xl" : "h-24 w-24 text-2xl";
 
   if (src) {
@@ -43,7 +45,7 @@ export function ProfileAvatar({
       <img
         src={src}
         alt={displayName || username}
-        onError={() => setFailed(true)}
+        onError={() => setFailedSrc(src)}
         className={`${box} rounded-full object-cover`}
         style={{ border: "1px solid var(--p-border)" }}
       />
