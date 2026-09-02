@@ -139,7 +139,7 @@ export function LinkManager({ links, onChange, clicksByLink }: Props) {
   return (
     <div className="surface-card space-y-5 p-6">
       <div>
-        <h2 className="font-display text-lg font-semibold tracking-tight">Links</h2>
+        <h2 className="font-display text-lg font-medium tracking-tight">Links</h2>
         <p className="mt-1 text-sm text-muted">
           Drag to reorder. Hidden links stay off your public page.
         </p>

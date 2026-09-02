@@ -49,7 +49,7 @@ export function ProfileAvatar({
 
   return (
     <div
-      className="flex h-24 w-24 items-center justify-center rounded-full text-2xl font-semibold"
+      className="flex h-24 w-24 items-center justify-center rounded-full text-2xl font-medium"
       style={{ background: "var(--p-card)", border: "1px solid var(--p-border)" }}
     >
       {initials(displayName, username)}

@@ -51,7 +51,7 @@ export function RegisterClient() {
     <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-5 py-16">
       <div className="w-full max-w-[24rem]">
         <div className="text-center">
-          <h1 className="font-display text-2xl font-semibold tracking-tight">
+          <h1 className="font-display text-2xl font-medium tracking-tight">
             Create your page
           </h1>
           <p className="mt-2 text-sm text-muted">

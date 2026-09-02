@@ -37,7 +37,7 @@ export function ProfileOnboarding({ onCreated }: Props) {
 
   return (
     <div className="mx-auto max-w-[26rem] px-5 py-20 sm:py-28">
-      <h1 className="font-display text-2xl font-semibold tracking-tight">Claim your page</h1>
+      <h1 className="font-display text-2xl font-medium tracking-tight">Claim your page</h1>
       <p className="mt-2 text-sm text-muted">
         Pick a username. Your page will live at{" "}
         <span className="text-ink">wsio.lol/{username || "you"}</span>.

@@ -65,7 +65,7 @@ export default function PrivacyPage() {
         Home
       </Link>
 
-      <h1 className="mt-6 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+      <h1 className="mt-6 font-display text-3xl font-medium tracking-tight sm:text-4xl">
         Privacy
       </h1>
       <p className="mt-2 text-sm text-faint">Last updated 17 August 2026 · GDPR &amp; LGPD aligned</p>
@@ -79,7 +79,7 @@ export default function PrivacyPage() {
       <div className="mt-10 space-y-10">
         {sections.map((s) => (
           <section key={s.h}>
-            <h2 className="font-display text-lg font-semibold tracking-tight">{s.h}</h2>
+            <h2 className="font-display text-lg font-medium tracking-tight">{s.h}</h2>
             {s.p && <p className="mt-2.5 leading-relaxed text-muted">{s.p}</p>}
             {s.list && (
               <ul className="mt-3 space-y-2">

@@ -149,7 +149,7 @@ export function DashboardClient() {
     <div className="mx-auto max-w-6xl px-5 py-10 sm:py-14">
       <div className="flex flex-col gap-4 border-b border-line pb-7 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="font-display text-2xl font-semibold tracking-tight">Your page</h1>
+          <h1 className="font-display text-2xl font-medium tracking-tight">Your page</h1>
           <a
             href={publicUrl}
             target="_blank"
@@ -177,7 +177,7 @@ export function DashboardClient() {
         {stats.map(({ label, value, sub }) => (
           <div key={label} className="surface-card p-5">
             <div className="text-sm text-muted">{label}</div>
-            <div className="mt-1.5 font-display text-3xl font-semibold tracking-tight">{value}</div>
+            <div className="mt-1.5 font-display text-3xl font-medium tracking-tight">{value}</div>
             <div className="mt-0.5 text-sm text-faint">{sub}</div>
           </div>
         ))}

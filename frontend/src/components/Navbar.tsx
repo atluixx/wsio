@@ -12,9 +12,9 @@ function Wordmark({ onClick }: { onClick?: () => void }) {
     <Link
       href="/"
       onClick={onClick}
-      className="font-display text-xl font-semibold tracking-tight text-ink transition-opacity hover:opacity-70"
+      className="font-display text-[1.4rem] font-medium leading-none tracking-[-0.01em] text-ink transition-opacity hover:opacity-70"
     >
-      wsio
+      wsio<span className="text-accent">.</span>
     </Link>
   );
 }
@@ -26,8 +26,8 @@ export function Navbar() {
   const close = () => setOpen(false);
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-line bg-canvas/85 backdrop-blur-sm">
-      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-5 sm:px-8">
+    <header className="sticky top-0 z-40 w-full border-b border-line bg-canvas">
+      <div className="mx-auto flex h-[68px] max-w-5xl items-center justify-between px-5 sm:px-8">
         <Wordmark onClick={close} />
 
         <nav className="hidden items-center gap-7 text-sm text-muted md:flex">

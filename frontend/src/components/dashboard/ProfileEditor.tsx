@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { saveMyProfile, type OwnerProfile } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Music2 } from "lucide-react";
 
 const THEMES: { key: string; bg: string; card: string; fg: string }[] = [
-  { key: "minimal", bg: "#fbfbf9", card: "#ffffff", fg: "#17150f" },
+  { key: "minimal", bg: "#faf9f5", card: "#fffdf8", fg: "#1c1913" },
   { key: "midnight", bg: "#0e0f13", card: "#17181d", fg: "#f2f3f7" },
   { key: "paper", bg: "#f3efe6", card: "#fffdf7", fg: "#26221a" },
   { key: "sunset", bg: "#1b1016", card: "#271820", fg: "#ffece2" },
@@ -26,6 +26,21 @@ export interface ProfileDraft {
   useDiscordAvatar: boolean;
 }
 
+type Fields = ProfileDraft & { musicUrl: string };
+
+function toFields(p: OwnerProfile): Fields {
+  return {
+    username: p.username,
+    displayName: p.displayName,
+    bio: p.bio,
+    avatarUrl: p.avatarUrl,
+    theme: p.theme || "minimal",
+    musicUrl: p.musicUrl || "",
+    discordUserId: p.discordUserId || "",
+    useDiscordAvatar: p.useDiscordAvatar,
+  };
+}
+
 interface Props {
   profile: OwnerProfile;
   onSaved: (profile: OwnerProfile) => void;
@@ -34,47 +49,42 @@ interface Props {
 
 export function ProfileEditor({ profile, onSaved, onDraftChange }: Props) {
   const { showToast } = useToast();
-  const [username, setUsername] = useState(profile.username);
-  const [displayName, setDisplayName] = useState(profile.displayName);
-  const [bio, setBio] = useState(profile.bio);
-  const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl);
-  const [theme, setTheme] = useState(profile.theme || "minimal");
-  const [musicUrl, setMusicUrl] = useState(profile.musicUrl || "");
-  const [discordUserId, setDiscordUserId] = useState(profile.discordUserId || "");
-  const [useDiscordAvatar, setUseDiscordAvatar] = useState(profile.useDiscordAvatar);
+  const [fields, setFields] = useState<Fields>(() => toFields(profile));
   const [saving, setSaving] = useState(false);
 
-  const lastSent = useRef("");
-  useEffect(() => {
-    const draft = { username, displayName, bio, avatarUrl, theme, discordUserId, useDiscordAvatar };
-    const key = JSON.stringify(draft);
-    if (key === lastSent.current) return;
-    lastSent.current = key;
-    onDraftChange?.(draft);
-  }, [username, displayName, bio, avatarUrl, theme, discordUserId, useDiscordAvatar, onDraftChange]);
+  // Kept in sync by `update` so we can build the next value without an effect —
+  // the preview then updates in the same render as the keystroke, no cascade.
+  const fieldsRef = useRef(fields);
+
+  const update = (patch: Partial<Fields>) => {
+    const next = { ...fieldsRef.current, ...patch };
+    fieldsRef.current = next;
+    setFields(next);
+    onDraftChange?.(next);
+  };
 
   const dirty =
-    username !== profile.username ||
-    displayName !== profile.displayName ||
-    bio !== profile.bio ||
-    avatarUrl !== profile.avatarUrl ||
-    theme !== profile.theme ||
-    musicUrl !== (profile.musicUrl || "") ||
-    discordUserId !== (profile.discordUserId || "") ||
-    useDiscordAvatar !== profile.useDiscordAvatar;
+    fields.username !== profile.username ||
+    fields.displayName !== profile.displayName ||
+    fields.bio !== profile.bio ||
+    fields.avatarUrl !== profile.avatarUrl ||
+    fields.theme !== profile.theme ||
+    fields.musicUrl !== (profile.musicUrl || "") ||
+    fields.discordUserId !== (profile.discordUserId || "") ||
+    fields.useDiscordAvatar !== profile.useDiscordAvatar;
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     const res = await saveMyProfile({
-      username,
-      displayName,
-      bio,
-      avatarUrl,
-      theme,
-      musicUrl,
-      discordUserId,
-      useDiscordAvatar,
+      username: fields.username,
+      displayName: fields.displayName,
+      bio: fields.bio,
+      avatarUrl: fields.avatarUrl,
+      theme: fields.theme,
+      musicUrl: fields.musicUrl,
+      discordUserId: fields.discordUserId,
+      useDiscordAvatar: fields.useDiscordAvatar,
     });
     setSaving(false);
     if (res.error || !res.profile) {
@@ -82,22 +92,22 @@ export function ProfileEditor({ profile, onSaved, onDraftChange }: Props) {
       return;
     }
     onSaved(res.profile);
-    setMusicUrl(res.profile.musicUrl || "");
+    update({ musicUrl: res.profile.musicUrl || "" });
     showToast("Profile saved", "success");
   };
 
   return (
     <form onSubmit={handleSave} autoComplete="off" className="surface-card space-y-5 p-6">
-      <h2 className="font-display text-lg font-semibold tracking-tight">Profile</h2>
+      <h2 className="font-display text-lg font-medium tracking-tight">Profile</h2>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1.5">
           <span className={labelClass}>Username</span>
-          <div className="flex h-11 items-center gap-1 rounded-[var(--radius-sm)] border border-[var(--color-control-border)] bg-surface px-3 focus-within:border-ink focus-within:shadow-[0_0_0_3px_rgba(23,21,15,0.06)]">
+          <div className="flex h-11 items-center gap-1 rounded-[var(--radius-sm)] border border-[var(--color-control-border)] bg-surface px-3 focus-within:border-ink focus-within:shadow-[0_0_0_3px_rgba(28,25,19,0.06)]">
             <span className="text-sm text-faint">wsio.lol/</span>
             <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value.toLowerCase())}
+              value={fields.username}
+              onChange={(e) => update({ username: e.target.value.toLowerCase() })}
               className="h-full flex-1 bg-transparent text-[0.95rem] text-ink outline-none focus-visible:outline-none"
               minLength={2}
               maxLength={32}
@@ -109,36 +119,44 @@ export function ProfileEditor({ profile, onSaved, onDraftChange }: Props) {
 
         <label className="space-y-1.5">
           <span className={labelClass}>Display name</span>
-          <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={80} />
+          <Input
+            value={fields.displayName}
+            onChange={(e) => update({ displayName: e.target.value })}
+            maxLength={80}
+          />
         </label>
       </div>
 
       <label className="block space-y-1.5">
         <span className={labelClass}>Bio</span>
         <textarea
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
+          value={fields.bio}
+          onChange={(e) => update({ bio: e.target.value })}
           rows={3}
           maxLength={500}
-          className="w-full rounded-[var(--radius-sm)] border border-[var(--color-control-border)] bg-surface px-3.5 py-2.5 text-[0.95rem] text-ink outline-none transition-[border-color,box-shadow] placeholder:text-faint focus:border-ink focus:shadow-[0_0_0_3px_rgba(23,21,15,0.06)]"
+          className="w-full rounded-[var(--radius-sm)] border border-[var(--color-control-border)] bg-surface px-3.5 py-2.5 text-[0.95rem] text-ink outline-none transition-[border-color,box-shadow] placeholder:text-faint focus:border-ink focus:shadow-[0_0_0_3px_rgba(28,25,19,0.06)]"
         />
       </label>
 
       <label className="block space-y-1.5">
         <span className={labelClass}>Avatar URL</span>
-        <Input value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="https://…" />
+        <Input
+          value={fields.avatarUrl}
+          onChange={(e) => update({ avatarUrl: e.target.value })}
+          placeholder="https://…"
+        />
       </label>
 
       {/* Music */}
       <div className="space-y-1.5">
         <span className={labelClass}>Featured track</span>
         <Input
-          value={musicUrl}
-          onChange={(e) => setMusicUrl(e.target.value)}
+          value={fields.musicUrl}
+          onChange={(e) => update({ musicUrl: e.target.value })}
           placeholder="YouTube / Spotify / SoundCloud link, an mp3 URL, or a song name"
           maxLength={400}
         />
-        {profile.music && musicUrl === (profile.musicUrl || "") && (
+        {profile.music && fields.musicUrl === (profile.musicUrl || "") && (
           <div className="flex items-center gap-2 pt-1 text-sm text-muted">
             <Music2 className="h-4 w-4 shrink-0" />
             <span className="truncate">
@@ -156,8 +174,8 @@ export function ProfileEditor({ profile, onSaved, onDraftChange }: Props) {
       <div className="space-y-1.5">
         <span className={labelClass}>Discord user ID</span>
         <Input
-          value={discordUserId}
-          onChange={(e) => setDiscordUserId(e.target.value.replace(/[^\d]/g, ""))}
+          value={fields.discordUserId}
+          onChange={(e) => update({ discordUserId: e.target.value.replace(/[^\d]/g, "") })}
           placeholder="e.g. 190916650143318016"
           inputMode="numeric"
           autoComplete="off"
@@ -179,8 +197,8 @@ export function ProfileEditor({ profile, onSaved, onDraftChange }: Props) {
         <label className="flex items-center gap-2 pt-1 text-sm text-ink">
           <input
             type="checkbox"
-            checked={useDiscordAvatar}
-            onChange={(e) => setUseDiscordAvatar(e.target.checked)}
+            checked={fields.useDiscordAvatar}
+            onChange={(e) => update({ useDiscordAvatar: e.target.checked })}
             className="h-4 w-4 accent-[var(--color-accent)]"
           />
           Use my Discord avatar
@@ -194,10 +212,10 @@ export function ProfileEditor({ profile, onSaved, onDraftChange }: Props) {
             <button
               key={t.key}
               type="button"
-              onClick={() => setTheme(t.key)}
-              aria-pressed={theme === t.key}
+              onClick={() => update({ theme: t.key })}
+              aria-pressed={fields.theme === t.key}
               className={`flex items-center gap-2 rounded-[var(--radius-sm)] border px-3 py-2 text-sm capitalize transition-colors ${
-                theme === t.key
+                fields.theme === t.key
                   ? "border-ink bg-raised text-ink"
                   : "border-[var(--color-control-border)] text-muted hover:border-ink hover:text-ink"
               }`}

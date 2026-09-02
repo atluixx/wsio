@@ -4,9 +4,9 @@ import { HomeClient } from "@/components/HomeClient";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://wsio.lol";
 
 export const metadata: Metadata = {
-  title: { absolute: "wsio — your links, one calm page" },
+  title: { absolute: "wsio — one link, everything behind it" },
   description:
-    "A calm, fast link-in-bio page. Put every link you share in one place, arrange it with a drag, and see what gets clicked.",
+    "A link-in-bio page made with some care. Claim wsio.lol/yourname, add the links you'd otherwise send one by one, and see what gets opened.",
   alternates: { canonical: APP_URL },
 };
 

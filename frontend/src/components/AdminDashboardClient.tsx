@@ -83,7 +83,7 @@ export function AdminDashboardClient() {
     <div className="mx-auto max-w-3xl space-y-8 px-5 py-10 sm:py-14">
       <div className="flex items-end justify-between border-b border-line pb-7">
         <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">Admin</h1>
+          <h1 className="font-display text-2xl font-medium tracking-tight">Admin</h1>
           <p className="mt-1 text-sm text-muted">
             {stats?.systemStatus ?? "—"} · database {stats?.dbStatus ?? "—"}
           </p>
@@ -98,14 +98,14 @@ export function AdminDashboardClient() {
         {cards.map(({ label, value }) => (
           <div key={label} className="surface-card p-5">
             <div className="text-sm text-muted">{label}</div>
-            <div className="mt-1.5 font-display text-3xl font-semibold tracking-tight">{value}</div>
+            <div className="mt-1.5 font-display text-3xl font-medium tracking-tight">{value}</div>
           </div>
         ))}
       </div>
 
       <div className="surface-card p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="font-display text-lg font-semibold tracking-tight">
+          <h2 className="font-display text-lg font-medium tracking-tight">
             Users ({users.length})
           </h2>
           <div className="relative w-52">

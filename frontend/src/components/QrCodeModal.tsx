@@ -20,7 +20,7 @@ export function QrCodeModal({ url, code, onClose }: QrCodeModalProps) {
     QRCode.toDataURL(url, {
       width: 320,
       margin: 1,
-      color: { dark: "#17150f", light: "#ffffff" },
+      color: { dark: "#1c1913", light: "#ffffff" },
     })
       .then(setDataUrl)
       .catch((err) => console.error("QR generation error:", err));
@@ -67,7 +67,7 @@ export function QrCodeModal({ url, code, onClose }: QrCodeModalProps) {
           <X className="h-4 w-4" />
         </button>
 
-        <h3 className="font-display text-lg font-semibold tracking-tight">Share this page</h3>
+        <h3 className="font-display text-lg font-medium tracking-tight">Share this page</h3>
         <p className="mx-auto mt-1 max-w-[16rem] truncate text-sm text-faint">
           {url.replace(/^https?:\/\//, "")}
         </p>
@@ -91,7 +91,7 @@ export function QrCodeModal({ url, code, onClose }: QrCodeModalProps) {
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={copyUrl}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-pill)] border border-[var(--color-control-border)] px-4 text-sm font-medium text-ink transition-colors hover:bg-raised"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-control-border)] px-4 text-sm font-medium text-ink transition-colors hover:bg-raised"
             >
               {copied ? (
                 <>
@@ -109,13 +109,13 @@ export function QrCodeModal({ url, code, onClose }: QrCodeModalProps) {
               <a
                 href={dataUrl}
                 download={`wsio-${code}.png`}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-pill)] border border-[var(--color-control-border)] px-4 text-sm font-medium text-ink transition-colors hover:bg-raised"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-control-border)] px-4 text-sm font-medium text-ink transition-colors hover:bg-raised"
               >
                 <Download className="h-4 w-4" />
                 Save QR
               </a>
             ) : (
-              <span className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-pill)] border border-line px-4 text-sm text-muted opacity-60">
+              <span className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-line px-4 text-sm text-muted opacity-60">
                 <Download className="h-4 w-4" />
                 Save QR
               </span>
@@ -124,7 +124,7 @@ export function QrCodeModal({ url, code, onClose }: QrCodeModalProps) {
           {canShare && (
             <button
               onClick={share}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-pill)] bg-ink px-4 text-sm font-medium text-canvas transition-colors hover:bg-[#322d20]"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-sm)] bg-ink px-4 text-sm font-medium text-canvas transition-colors hover:bg-[#2c2619]"
             >
               <Share2 className="h-4 w-4" />
               Share…

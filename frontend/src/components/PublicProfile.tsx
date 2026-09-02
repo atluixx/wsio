@@ -26,7 +26,7 @@ export function PublicProfile({ profile }: { profile: PublicProfileData }) {
         />
 
         <h1
-          className="mt-6 text-center text-[1.55rem] font-semibold tracking-[-0.02em]"
+          className="mt-6 text-center text-[1.7rem] font-medium leading-tight tracking-[-0.01em]"
           style={{ fontFamily: "var(--font-display)" }}
         >
           {name}
@@ -55,10 +55,10 @@ export function PublicProfile({ profile }: { profile: PublicProfileData }) {
 
       <Link
         href="/"
-        className="mt-14 inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] px-3.5 py-1.5 text-[0.8rem]"
+        className="mt-16 inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] px-3.5 py-1.5 text-[0.8rem] transition-opacity hover:opacity-70"
         style={{ color: "var(--p-muted)", border: "1px solid var(--p-border)" }}
       >
-        <span style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>wsio</span>
+        <span style={{ fontFamily: "var(--font-display)", fontWeight: 500 }}>wsio</span>
         <span>— make your own</span>
       </Link>
     </div>

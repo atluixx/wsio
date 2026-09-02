@@ -26,7 +26,7 @@ export function ProfilePreview({ profile, publicUrl }: Props) {
 
   return (
     <div className="w-full">
-      <div className="mx-auto max-w-[340px] rounded-[2.2rem] border border-[var(--color-control-border)] bg-[#232019] p-2.5 shadow-[0_28px_60px_-24px_rgba(23,21,15,0.45)]">
+      <div className="mx-auto max-w-[340px] rounded-[2.2rem] border border-[var(--color-control-border)] bg-[#211d16] p-2.5 shadow-[0_28px_60px_-24px_rgba(28,25,19,0.4)]">
         <div className="overflow-hidden rounded-[1.7rem] bg-white">
           <div className="flex items-center gap-2 border-b border-line bg-canvas px-3.5 py-2">
             <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-line-strong" />
@@ -48,7 +48,7 @@ export function ProfilePreview({ profile, publicUrl }: Props) {
                 />
               ) : (
                 <div
-                  className="flex h-20 w-20 items-center justify-center rounded-full text-xl font-semibold"
+                  className="flex h-20 w-20 items-center justify-center rounded-full text-xl font-medium"
                   style={{ background: "var(--p-card)", border: "1px solid var(--p-border)" }}
                 >
                   {initials(profile.displayName, profile.username)}
@@ -56,7 +56,7 @@ export function ProfilePreview({ profile, publicUrl }: Props) {
               )}
 
               <h2
-                className="mt-5 text-center text-[1.35rem] font-semibold tracking-[-0.02em]"
+                className="mt-5 text-center text-[1.35rem] font-medium tracking-[-0.01em]"
                 style={{ fontFamily: "var(--font-display)" }}
               >
                 {name}
